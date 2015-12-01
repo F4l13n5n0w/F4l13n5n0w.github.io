@@ -4,7 +4,7 @@
   <title><![CDATA[Category: xss | F4l13n5n0w]]></title>
   <link href="http://f4l13n5n0w.github.io/blog/categories/xss/atom.xml" rel="self"/>
   <link href="http://f4l13n5n0w.github.io/"/>
-  <updated>2015-11-23T08:01:25-05:00</updated>
+  <updated>2015-12-01T00:37:25-05:00</updated>
   <id>http://f4l13n5n0w.github.io/</id>
   <author>
     <name><![CDATA[F4l13n5n0w]]></name>
@@ -337,14 +337,16 @@ Due to there is no validation on parameter &ldquo;<strong><a href="http://php.ne
 
 <p>Difficulty: 2 / 5</p>
 
+<!-- more -->
+
+
+
+
 <h2>Links</h2>
 
 
 <p>watch video online:
 <iframe src='http://player.vimeo.com/video/114390804?byline=0&amp;portrait=0&amp;color=c9ff23' width='720' height='360' frameborder='0' webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe></p>
-
-<!-- more -->
-
 
 <h2>Method</h2>
 

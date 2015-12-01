@@ -4,7 +4,7 @@
   <title><![CDATA[Category: knock-knock | F4l13n5n0w]]></title>
   <link href="http://f4l13n5n0w.github.io/blog/categories/knock-knock/atom.xml" rel="self"/>
   <link href="http://f4l13n5n0w.github.io/"/>
-  <updated>2015-11-23T08:01:25-05:00</updated>
+  <updated>2015-12-01T00:37:25-05:00</updated>
   <id>http://f4l13n5n0w.github.io/</id>
   <author>
     <name><![CDATA[F4l13n5n0w]]></name>
@@ -22,7 +22,7 @@
 Your job is to escalate to root, and find the flag.
 Since I&rsquo;ve gotten a few PM&rsquo;s, remember: There is a difference between "Port Unreachable&rdquo; and &ldquo;Host Unreachable&rdquo;. DHCP is not broken ;)
 Gotta give a huge shoutout to c0ne for helping to creating the binary challenge, and rasta_mouse and recrudesce for testing :)
-Also, gotta thank barrebas who was able to find a way to make things easier&hellip; but of course that is fixed with this update! ;)&ldquo; &ndash; <font color="green"><em>zer0w1re</em></font></p>
+Also, gotta thank barrebas who was able to find a way to make things easier&hellip; but of course that is fixed with this update! ;)&ldquo; &ndash; <a href="http://blog.zer0w1re.net/">zer0w1re</a></p>
 
 <p>More information and OVA file download please check <a href="https://www.vulnhub.com/entry/knock-knock-11,105/">here</a>.</p>
 

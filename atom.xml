@@ -4,7 +4,7 @@
   <title><![CDATA[F4l13n5n0w]]></title>
   <link href="http://f4l13n5n0w.github.io/atom.xml" rel="self"/>
   <link href="http://f4l13n5n0w.github.io/"/>
-  <updated>2015-11-23T08:01:25-05:00</updated>
+  <updated>2015-12-01T00:37:25-05:00</updated>
   <id>http://f4l13n5n0w.github.io/</id>
   <author>
     <name><![CDATA[F4l13n5n0w]]></name>
@@ -1677,12 +1677,12 @@
     <link href="http://f4l13n5n0w.github.io/blog/2015/10/03/welcome-and-thanks/"/>
     <updated>2015-10-03T07:05:12-04:00</updated>
     <id>http://f4l13n5n0w.github.io/blog/2015/10/03/welcome-and-thanks</id>
-    <content type="html"><![CDATA[<h1>Setup jekyll theme blog on <a href="https://pages.github.com/" title="GitHub Pages">github pages</a></h1>
-
-<p><strong><font color="red">[!!]</font> Now I have moved my blog back to <a href="http://octopress.org/" title="Octopress -- A blogging framework for hackers">Octopress</a> with <a href="https://github.com/macjasp/cleanpress" title="Octopress Theme CleanPress">CleanPress</a> theme. However the last two days playing with Harmony pushed me to get a further understanding about github, github pages and jekyll.</strong></p>
+    <content type="html"><![CDATA[<p><strong><font color="red">[!!]</font></strong> Now I have moved my blog back to <a href="http://octopress.org/" title="Octopress -- A blogging framework for hackers">Octopress</a> with <a href="https://github.com/macjasp/cleanpress" title="Octopress Theme CleanPress">CleanPress</a> theme. However the last two days playing with Harmony pushed me to get a further understanding about <a href="https://github.com/" title="GitHub">github</a>, <a href="https://pages.github.com/" title="GitHub Pages">github pages</a> and <a href="https://jekyllrb.com/" title="All about Jekyll">jekyll</a>.</p>
 
 <!-- more -->
 
+
+<hr />
 
 <p>I am using the Jekyll theme: <a href="https://github.com/gayanvirajith/Harmony" title="Jekyll Theme Harmony">Harmony</a></p>
 
@@ -1841,18 +1841,18 @@ The coder of the Harmony theme, whom is very patient and helpful. Very nice and 
     <link href="http://f4l13n5n0w.github.io/blog/2015/09/12/acid-reloaded/"/>
     <updated>2015-09-12T07:49:42-04:00</updated>
     <id>http://f4l13n5n0w.github.io/blog/2015/09/12/acid-reloaded</id>
-    <content type="html"><![CDATA[<p>Acid: Reloaded is created by <a href="https://twitter.com/@m_avinash143">Avinash Kumar Thapa</a></p>
+    <content type="html"><![CDATA[<p><strong>Acid: Reloaded</strong> is created by <a href="https://twitter.com/@m_avinash143">Avinash Kumar Thapa</a></p>
 
 <p>More information and OVA file download please check <a href="https://www.vulnhub.com/entry/acid-reloaded,127/">here</a>.</p>
+
+<!-- more -->
+
 
 <h2>Links</h2>
 
 <p>watch video online:</p>
 
 <iframe src='http://player.vimeo.com/video/139052982?byline=0&amp;portrait=0&amp;color=c9ff23' width='720' height='360' frameborder='0' webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe>
-
-
-<!-- more -->
 
 
 <h2>Attacker &amp; Target</h2>
@@ -2590,18 +2590,18 @@ The coder of the Harmony theme, whom is very patient and helpful. Very nice and 
     <link href="http://f4l13n5n0w.github.io/blog/2015/09/03/vulnhub-acid-server/"/>
     <updated>2015-09-03T05:36:37-04:00</updated>
     <id>http://f4l13n5n0w.github.io/blog/2015/09/03/vulnhub-acid-server</id>
-    <content type="html"><![CDATA[<p>Acid:Server is created by <a href="https://twitter.com/@m_avinash143">Avinash Kumar Thapa</a></p>
+    <content type="html"><![CDATA[<p><strong>Acid:Server</strong> is created by <a href="https://twitter.com/@m_avinash143">Avinash Kumar Thapa</a></p>
 
 <p>More information and OVA file download please check <a href="https://www.vulnhub.com/entry/acid-server,125/">here</a>.</p>
+
+<!-- more -->
+
 
 <h2>Links</h2>
 
 <p>watch video online:</p>
 
 <iframe src='http://player.vimeo.com/video/138178348?byline=0&amp;portrait=0&amp;color=c9ff23' width='720' height='360' frameborder='0' webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe>
-
-
-<!-- more -->
 
 
 <h2>Attacker &amp; Target</h2>
@@ -2848,18 +2848,18 @@ The coder of the Harmony theme, whom is very patient and helpful. Very nice and 
     <link href="http://f4l13n5n0w.github.io/blog/2015/08/18/vulnhub-nullbyte-1/"/>
     <updated>2015-08-18T09:12:46-04:00</updated>
     <id>http://f4l13n5n0w.github.io/blog/2015/08/18/vulnhub-nullbyte-1</id>
-    <content type="html"><![CDATA[<p><img class="left" src="http://f4l13n5n0w.github.io/downloads/nullbyte1/main.png"></p>
-
-<p>NullByte challenge 0x01</p>
+    <content type="html"><![CDATA[<p><strong>NullByte challenge 0x01</strong></p>
 
 <p>Difficulty is Basic to intermediate.</p>
 
-<p>&ldquo;Use your lateral thinking skills, maybe you’ll need to write some code.&rdquo; &ndash; <font color="green">ly0n</font> (<a href="http://ly0n.me/2015/08/01/nullbyte-challenge-0x01/">http://ly0n.me/2015/08/01/nullbyte-challenge-0x01/</a>)</p>
+<p>&ldquo;Use your lateral thinking skills, maybe you’ll need to write some code.&rdquo; &ndash; <a href="http://ly0n.me/2015/08/01/nullbyte-challenge-0x01/">ly0n</a></p>
 
 <p>More information and OVA file download please check <a href="https://www.vulnhub.com/entry/nullbyte-1,126/">here</a>.</p>
 
 <!-- more -->
 
+
+<p><img class="left" src="http://f4l13n5n0w.github.io/downloads/nullbyte1/main.png"></p>
 
 <h2>Attacker &amp; Target</h2>
 
@@ -5661,7 +5661,7 @@ I also got mysql&rsquo;s login credential is <em><font color="red">www-data</fon
     <link href="http://f4l13n5n0w.github.io/blog/2015/07/07/vulnhub-sokar-1/"/>
     <updated>2015-07-07T02:41:59-04:00</updated>
     <id>http://f4l13n5n0w.github.io/blog/2015/07/07/vulnhub-sokar-1</id>
-    <content type="html"><![CDATA[<p>Sokar is created by <a href="http://rastamouse.me/">Rasta Mouse</a> and it also is the first competition in 2015 run by VulnHub team.</p>
+    <content type="html"><![CDATA[<p><strong>Sokar</strong> is created by <a href="http://rastamouse.me/">Rasta Mouse</a> and it also is the first competition in 2015 run by VulnHub team.</p>
 
 <p>More information and OVA file download please check <a href="https://www.vulnhub.com/entry/sokar-1,113/">here</a>.</p>
 
@@ -6101,9 +6101,7 @@ I also got mysql&rsquo;s login credential is <em><font color="red">www-data</fon
     <link href="http://f4l13n5n0w.github.io/blog/2015/06/24/vulnhub-tr0ll-2/"/>
     <updated>2015-06-24T04:31:06-04:00</updated>
     <id>http://f4l13n5n0w.github.io/blog/2015/06/24/vulnhub-tr0ll-2</id>
-    <content type="html"><![CDATA[<p>&ldquo;The next machine in the Tr0ll series of VMs. This one is a step up in difficulty from the original Tr0ll but the time required to solve is approximately the same, and make no mistake, trolls are still present! :)</p>
-
-<p>Difficulty is beginner++ to intermediate.&ldquo; &ndash; <font color="green">Maleus</font> (<a href="www.overflowsecurity.com">www.overflowsecurity.com</a>)</p>
+    <content type="html"><![CDATA[<p>&ldquo;The next machine in the Tr0ll series of VMs. This one is a step up in difficulty from the original Tr0ll but the time required to solve is approximately the same, and make no mistake, trolls are still present! :) Difficulty is beginner++ to intermediate.&rdquo; &ndash; <a href="www.overflowsecurity.com">Maleus</a></p>
 
 <p>More information and OVA file download please check <a href="https://www.vulnhub.com/entry/tr0ll-2,107/">here</a>.</p>
 
@@ -6782,7 +6780,7 @@ I also got mysql&rsquo;s login credential is <em><font color="red">www-data</fon
 Your job is to escalate to root, and find the flag.
 Since I&rsquo;ve gotten a few PM&rsquo;s, remember: There is a difference between "Port Unreachable&rdquo; and &ldquo;Host Unreachable&rdquo;. DHCP is not broken ;)
 Gotta give a huge shoutout to c0ne for helping to creating the binary challenge, and rasta_mouse and recrudesce for testing :)
-Also, gotta thank barrebas who was able to find a way to make things easier&hellip; but of course that is fixed with this update! ;)&ldquo; &ndash; <font color="green"><em>zer0w1re</em></font></p>
+Also, gotta thank barrebas who was able to find a way to make things easier&hellip; but of course that is fixed with this update! ;)&ldquo; &ndash; <a href="http://blog.zer0w1re.net/">zer0w1re</a></p>
 
 <p>More information and OVA file download please check <a href="https://www.vulnhub.com/entry/knock-knock-11,105/">here</a>.</p>
 
@@ -7140,20 +7138,20 @@ Also, gotta thank barrebas who was able to find a way to make things easier&hell
     <updated>2015-06-13T04:57:26-04:00</updated>
     <id>http://f4l13n5n0w.github.io/blog/2015/06/13/vulnhub-tophatsec-freshly</id>
     <content type="html"><![CDATA[<p>&ldquo;The goal of this challenge is to break into the machine via the web and find the secret hidden in a sensitive file. If you can find the secret, send me an email for verification. :)
-There are a couple of different ways that you can go with this one. Good luck!&rdquo; &ndash; <font color="green"><em>TopHatSec</em></font></p>
+There are a couple of different ways that you can go with this one. Good luck!&rdquo; &ndash; <a href="http://www.top-hat-sec.com/">TopHatSec</a></p>
 
-<p>&ldquo;VulnHub note: You may have issues when importing to VMware. If this is the case. extract the HDD from the OVA file (using something like 7zip), and attach to a new VM. Please see the following guide: <a href="https://jkad.github.io/blog/2015/04/12/how-to-import-the-top-hat-sec-vms-into-vmware/.">https://jkad.github.io/blog/2015/04/12/how-to-import-the-top-hat-sec-vms-into-vmware/.</a>&rdquo; &ndash; <font color="green"><em>VulnHub</em></font></p>
+<p>&ldquo;VulnHub note: You may have issues when importing to VMware. If this is the case. extract the HDD from the OVA file (using something like 7zip), and attach to a new VM. Please see the following guide: <a href="https://jkad.github.io/blog/2015/04/12/how-to-import-the-top-hat-sec-vms-into-vmware/.">https://jkad.github.io/blog/2015/04/12/how-to-import-the-top-hat-sec-vms-into-vmware/.</a>&rdquo; &ndash; <a href="https://www.vulnhub.com/">VulnHub</a></p>
 
 <p>More information and OVA file download please check <a href="https://www.vulnhub.com/entry/tophatsec-freshly,118/">here</a>.</p>
+
+<!-- more -->
+
 
 <h2>Links</h2>
 
 <p>watch video online:</p>
 
 <iframe src='http://player.vimeo.com/video/130604105?byline=0&amp;portrait=0&amp;color=c9ff23' width='720' height='360' frameborder='0' webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe>
-
-
-<!-- more -->
 
 
 <h2>Attacker &amp; Target</h2>
@@ -7309,20 +7307,20 @@ There are a couple of different ways that you can go with this one. Good luck!&r
     <updated>2015-05-31T05:19:10-04:00</updated>
     <id>http://f4l13n5n0w.github.io/blog/2015/05/31/pentesterlab-php-lfi-and-post-exploitation</id>
     <content type="html"><![CDATA[<p>&ldquo;This course details the discovery and the exploitation of PHP include vulnerabilities in a limited environment.
-Then it introduces the basics of post exploitation: shell, reverse-shell and TCP redirection.&rdquo; &ndash; <font color="green"><em>PentesterLab</em></font></p>
+Then it introduces the basics of post exploitation: shell, reverse-shell and TCP redirection.&rdquo; &ndash; <a href="https://www.pentesterlab.com/">PentesterLab</a></p>
 
 <p>More information and ISO download please check <a href="https://www.pentesterlab.com/exercises/php_include_and_post_exploitation/">here</a>. The official <a href="https://www.pentesterlab.com/exercises/php_include_and_post_exploitation/course">course</a> is highly recommanded to read.</p>
 
 <p>Difficulty: 2 / 5</p>
+
+<!-- more -->
+
 
 <h2>Links</h2>
 
 <p>watch video online:</p>
 
 <iframe src='http://player.vimeo.com/video/101763491?byline=0&amp;portrait=0&amp;color=c9ff23' width='720' height='360' frameborder='0' webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe>
-
-
-<!-- more -->
 
 
 <h2>Method</h2>
@@ -7391,7 +7389,7 @@ Then it introduces the basics of post exploitation: shell, reverse-shell and TCP
     <link href="http://f4l13n5n0w.github.io/blog/2015/05/30/pentesterlab-axis2-web-service-and-tomcat-manager/"/>
     <updated>2015-05-30T08:16:43-04:00</updated>
     <id>http://f4l13n5n0w.github.io/blog/2015/05/30/pentesterlab-axis2-web-service-and-tomcat-manager</id>
-    <content type="html"><![CDATA[<p>&ldquo;This course details the exploitation of an issue in an Axis2 Web service and how using this issue it is possible to retrieve arbitrary files. Then using this, we will see how an attacker can retrieve Tomcat users' file to access the Tomcat Manager and gain commands execution on the server.&rdquo; &ndash; <font color="green"><em>PentesterLab</em></font></p>
+    <content type="html"><![CDATA[<p>&ldquo;This course details the exploitation of an issue in an Axis2 Web service and how using this issue it is possible to retrieve arbitrary files. Then using this, we will see how an attacker can retrieve Tomcat users' file to access the Tomcat Manager and gain commands execution on the server.&rdquo; &ndash; <a href="https://www.pentesterlab.com/">PentesterLab</a></p>
 
 <p>More information and ISO download please check <a href="https://www.pentesterlab.com/exercises/axis2_and_tomcat_manager/">here</a>. The official <a href="https://www.pentesterlab.com/exercises/axis2_and_tomcat_manager/course">course</a> is highly recommanded to read.</p>
 
@@ -7481,14 +7479,14 @@ Then it introduces the basics of post exploitation: shell, reverse-shell and TCP
 
 <p>So back to Kioptrix 2014, more details can be found in this vulnhub website <a href="https://www.vulnhub.com/entry/kioptrix-2014-5,62/">link</a>, which including VM download links, walkthroughs, bug fixes (highly recommended to read Description when first running the VM) and blah blah blah &hellip;</p>
 
+<!-- more -->
+
+
 <h2>Links</h2>
 
 <p>watch video online:</p>
 
 <iframe src='http://player.vimeo.com/video/128762761?byline=0&amp;portrait=0&amp;color=c9ff23' width='720' height='360' frameborder='0' webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe>
-
-
-<!-- more -->
 
 
 <h2>Attacker &amp; Target</h2>
@@ -8570,6 +8568,11 @@ Due to there is no validation on parameter &ldquo;<strong><a href="http://php.ne
 
 <p>Difficulty: 3 / 5</p>
 
+<!-- more -->
+
+
+
+
 <h2>Links</h2>
 
 
@@ -8578,7 +8581,6 @@ Due to there is no validation on parameter &ldquo;<strong><a href="http://php.ne
 <iframe src='http://player.vimeo.com/video/127586134?byline=0&amp;portrait=0&amp;color=c9ff23' width='720' height='360' frameborder='0' webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe>
 
 
-<!-- more -->
 
 
 <h2>Method</h2>
@@ -8741,6 +8743,11 @@ Due to there is no validation on parameter &ldquo;<strong><a href="http://php.ne
 
 <p>Difficulty: 3 / 5</p>
 
+<!-- more -->
+
+
+
+
 <h2>Links</h2>
 
 
@@ -8749,7 +8756,6 @@ Due to there is no validation on parameter &ldquo;<strong><a href="http://php.ne
 <iframe src='http://player.vimeo.com/video/103324009?byline=0&amp;portrait=0&amp;color=c9ff23' width='720' height='360' frameborder='0' webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe>
 
 
-<!-- more -->
 
 
 <h2>Method</h2>
@@ -8833,6 +8839,11 @@ Due to there is no validation on parameter &ldquo;<strong><a href="http://php.ne
 
 <p>Difficulty: 2 / 5</p>
 
+<!-- more -->
+
+
+
+
 <h2>Links</h2>
 
 
@@ -8841,7 +8852,6 @@ Due to there is no validation on parameter &ldquo;<strong><a href="http://php.ne
 <iframe src='http://player.vimeo.com/video/114390804?byline=0&amp;portrait=0&amp;color=c9ff23' width='720' height='360' frameborder='0' webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe>
 
 
-<!-- more -->
 
 
 <h2>Method</h2>

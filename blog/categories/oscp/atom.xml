@@ -4,7 +4,7 @@
   <title><![CDATA[Category: oscp | F4l13n5n0w]]></title>
   <link href="http://f4l13n5n0w.github.io/blog/categories/oscp/atom.xml" rel="self"/>
   <link href="http://f4l13n5n0w.github.io/"/>
-  <updated>2015-11-23T08:01:25-05:00</updated>
+  <updated>2015-12-01T00:37:25-05:00</updated>
   <id>http://f4l13n5n0w.github.io/</id>
   <author>
     <name><![CDATA[F4l13n5n0w]]></name>
@@ -18,12 +18,13 @@
     <link href="http://f4l13n5n0w.github.io/blog/2015/05/05/jing-yan-fen-xiang-oscp-shen-tou-ce-shi-ren-zheng/"/>
     <updated>2015-05-05T06:48:31-04:00</updated>
     <id>http://f4l13n5n0w.github.io/blog/2015/05/05/jing-yan-fen-xiang-oscp-shen-tou-ce-shi-ren-zheng</id>
-    <content type="html"><![CDATA[<p><img class="center" src="/downloads/oscp-certs.png" width="250" height="150">
-“120天的旅程即将结束，以一场历时24小时没有选择题的考试，收获屠龙路上第一座里程碑。…” 这是我通过OSCP认证考试时，第一时间的感受。自豪和欣喜之情不亚于2008年我拿下CCIE R&amp;S的时候。
+    <content type="html"><![CDATA[<p>“120天的旅程即将结束，以一场历时24小时没有选择题的考试，收获屠龙路上第一座里程碑。…” 这是我通过OSCP认证考试时，第一时间的感受。自豪和欣喜之情不亚于2008年我拿下CCIE R&amp;S的时候。
 关于 PWK (Pentesting with Kali Linux) 和OSCP (Offensive Security Certified Professional)，我想很多人会觉着陌生。但说起Offensive Security，BackTrack，Kali，NetHunter和Metasploit，圈里的朋友应该就熟悉多了。</p>
 
 <!-- more -->
 
+
+<p><img class="center" src="/downloads/oscp-certs.png" width="250" height="150"></p>
 
 <p>作为在老外圈子里备受推崇的渗透测试技术类认证，国外从业人员对它的介绍和评价已经足够丰富了：</br>
 <a href="http://netsec.ws/?p=398">http://netsec.ws/?p=398</a></br>

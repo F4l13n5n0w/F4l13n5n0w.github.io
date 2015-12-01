@@ -4,7 +4,7 @@
   <title><![CDATA[Category: freshly | F4l13n5n0w]]></title>
   <link href="http://f4l13n5n0w.github.io/blog/categories/freshly/atom.xml" rel="self"/>
   <link href="http://f4l13n5n0w.github.io/"/>
-  <updated>2015-11-23T08:01:25-05:00</updated>
+  <updated>2015-12-01T00:37:25-05:00</updated>
   <id>http://f4l13n5n0w.github.io/</id>
   <author>
     <name><![CDATA[F4l13n5n0w]]></name>
@@ -19,19 +19,19 @@
     <updated>2015-06-13T04:57:26-04:00</updated>
     <id>http://f4l13n5n0w.github.io/blog/2015/06/13/vulnhub-tophatsec-freshly</id>
     <content type="html"><![CDATA[<p>&ldquo;The goal of this challenge is to break into the machine via the web and find the secret hidden in a sensitive file. If you can find the secret, send me an email for verification. :)
-There are a couple of different ways that you can go with this one. Good luck!&rdquo; &ndash; <font color="green"><em>TopHatSec</em></font></p>
+There are a couple of different ways that you can go with this one. Good luck!&rdquo; &ndash; <a href="http://www.top-hat-sec.com/">TopHatSec</a></p>
 
-<p>&ldquo;VulnHub note: You may have issues when importing to VMware. If this is the case. extract the HDD from the OVA file (using something like 7zip), and attach to a new VM. Please see the following guide: <a href="https://jkad.github.io/blog/2015/04/12/how-to-import-the-top-hat-sec-vms-into-vmware/.">https://jkad.github.io/blog/2015/04/12/how-to-import-the-top-hat-sec-vms-into-vmware/.</a>&rdquo; &ndash; <font color="green"><em>VulnHub</em></font></p>
+<p>&ldquo;VulnHub note: You may have issues when importing to VMware. If this is the case. extract the HDD from the OVA file (using something like 7zip), and attach to a new VM. Please see the following guide: <a href="https://jkad.github.io/blog/2015/04/12/how-to-import-the-top-hat-sec-vms-into-vmware/.">https://jkad.github.io/blog/2015/04/12/how-to-import-the-top-hat-sec-vms-into-vmware/.</a>&rdquo; &ndash; <a href="https://www.vulnhub.com/">VulnHub</a></p>
 
 <p>More information and OVA file download please check <a href="https://www.vulnhub.com/entry/tophatsec-freshly,118/">here</a>.</p>
+
+<!-- more -->
+
 
 <h2>Links</h2>
 
 <p>watch video online:
 <iframe src='http://player.vimeo.com/video/130604105?byline=0&amp;portrait=0&amp;color=c9ff23' width='720' height='360' frameborder='0' webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe></p>
-
-<!-- more -->
-
 
 <h2>Attacker &amp; Target</h2>
 
