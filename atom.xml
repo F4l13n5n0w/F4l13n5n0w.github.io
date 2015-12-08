@@ -4,7 +4,7 @@
   <title><![CDATA[F4l13n5n0w]]></title>
   <link href="http://f4l13n5n0w.github.io/atom.xml" rel="self"/>
   <link href="http://f4l13n5n0w.github.io/"/>
-  <updated>2015-12-08T05:13:54-05:00</updated>
+  <updated>2015-12-08T05:15:04-05:00</updated>
   <id>http://f4l13n5n0w.github.io/</id>
   <author>
     <name><![CDATA[F4l13n5n0w]]></name>
@@ -730,7 +730,7 @@
 
 <p>Open and listen it carefully, there is moss code playing in the background. after run some audio analyze tools to curve the morse code out (more details please check <a href="https://highon.coffee/blog/the-wall-walkthrough/" title="Arr0way's walkthrough">Arr0way&rsquo;s walkthrough</a>):</p>
 
-<p><font size='3'><strong><code>.-. .. -.-. .... .- .-. -.. .-- .-. .. --. .... - .---- ----. ....- ...-- ..-. .- .-. ..-. .. ... .-</code></strong></font></p>
+<p><font size='2'><strong><code>.-. .. -.-. .... .- .-. -.. .-- .-. .. --. .... - .---- ----. ....- ...-- ..-. .- .-. ..-. .. ... .-</code></strong></font></p>
 
 <p>Crack the morse code <a href="http://morsecode.scphillips.com/translator.html/" title="Morse Code Translator">online</a> and we got the plaintext which is <code>RICHARDWRIGHT1943FARFISA</code>. So now we got a new login credential: username is <code>RichardWright</code> and password is <font color="red"><code>1943farfisa</code></font>.</p>
 
