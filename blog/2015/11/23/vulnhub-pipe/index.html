@@ -109,7 +109,7 @@ $(document).ready(
 
 <p>Attacker: Kali2 Linux (<em>10.1.1.130/24</em>)</p>
 
-<p>Target: /dev/random: Sleepy (<em>10.1.1.143/24</em>)</p>
+<p>Target: The Wall: 1 (<em>10.1.1.143/24</em>)</p>
 
 <h2>Vulnerability &amp; Exploit</h2>
 
@@ -126,7 +126,7 @@ $(document).ready(
 <ul>
 <li>Scanned the network to discover the target server [<font color="FF8000">arp-scan</font>]</li>
 <li>Port scanned the target to discover running services and open ports [<font color="FF8000">masscan</font> &amp;&amp; <font color="FF8000">nmap</font>]</li>
-<li>Using <code>HTTP method tamper</code> to bypass the Basic Authentication on resource page <code>index.php</code> [<font color="FF8000">nmap with script</font>]</li>
+<li>Using HTTP method tamper to bypass the Basic Authentication on resource page <code>index.php</code> [<font color="FF8000">nmap with script</font>]</li>
 <li>Brute force scan to find hidden path [<font color="FF8000">dirbuster</font>]</li>
 <li>Found and analysed source code in finding files <code>php.js</code> and <code>Log.php.BAK</code>, as a result, find a file upload function.</li>
 <li>Write web shell to target server and use <code>nc</code> to get a reverse shell [<font color="FF8000">nc</font>]</li>
@@ -152,7 +152,7 @@ $(document).ready(
 
 <h2>Walkthrough</h2>
 
-<p>Using <code>arp-scan</code> as routine to detect the target&rsquo;s IP address (10.1.1.142 in this case).</p>
+<p>Using <code>arp-scan</code> as routine to detect the target&rsquo;s IP address (10.1.1.143 in this case).</p>
 
 <figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -768,7 +768,9 @@ $(document).ready(
 </span><span class='line'>rm -f /home/rene/backup/*.BAK</span></code></pre></td></tr></table></div></figure>
 
 
-<p>Here I noticed that <code>tar</code> is used with wildcard <code>*</code>, which can be exploited to execute arbitrary commands. <a href="http://www.defensecode.com/public/DefenseCode_Unix_WildCards_Gone_Wild.txt" title="Wildcards exploit">Here</a> is the details about Unix wildcard exploit, the relevant information about <code>tar</code> can be found in point 4.3.</p>
+<p>Here I noticed that <code>tar</code> is used with wildcard <code>*</code>, which can be exploited to execute arbitrary commands.</p>
+
+<p><a href="http://www.defensecode.com/public/DefenseCode_Unix_WildCards_Gone_Wild.txt" title="Wildcards exploit">Here</a> is the details about Unix wildcard exploit, the relevant information about <code>tar</code> can be found in point 4.3.</p>
 
 <p>I will use setuid a shell command to get a ROOT shell, first of all, I have to check what kind of shell installed in the server.:</p>
 
@@ -986,7 +988,7 @@ $(document).ready(
 
 <div class="tags">
 
-	<a class='category' href='/blog/categories/jdwp/'>jdwp</a>, <a class='category' href='/blog/categories/sleepy/'>sleepy</a>, <a class='category' href='/blog/categories/tomcat/'>tomcat</a>, <a class='category' href='/blog/categories/vulnhub/'>vulnhub</a>
+	<a class='category' href='/blog/categories/pipe/'>pipe</a>, <a class='category' href='/blog/categories/vulnhub/'>vulnhub</a>, <a class='category' href='/blog/categories/wildcard-exploit/'>wildcard exploit</a>
 
 </div>
 
@@ -1010,7 +1012,7 @@ $(document).ready(
 </div>
 	<footer id="footer" class="inner">Copyright &copy; 2015
 
-    F4l13n5n0w
+    <font color="green">F4l13n5n0w</font>
 
 <br>
 Powered by Octopress.
