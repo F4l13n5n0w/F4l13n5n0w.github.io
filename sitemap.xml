@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>http://f4l13n5n0w.github.io/blog/2016/06/05/vulnhub-sickos-1-dot-2/</loc>
+    <lastmod>2016-06-05T03:03:17-04:00</lastmod>
+  </url>
+  <url>
     <loc>http://f4l13n5n0w.github.io/blog/2016/05/29/vulnhub-kevgir-1/</loc>
     <lastmod>2016-05-29T00:26:08-04:00</lastmod>
   </url>
@@ -278,5 +282,8 @@
   </url>
   <url>
     <loc>http://f4l13n5n0w.github.io/blog/categories/kevgir/</loc>
+  </url>
+  <url>
+    <loc>http://f4l13n5n0w.github.io/blog/categories/sickos1-dot-2/</loc>
   </url>
 </urlset>

