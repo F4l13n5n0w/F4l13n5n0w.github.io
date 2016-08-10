@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>http://f4l13n5n0w.github.io/blog/2016/08/10/vulnhub-mr-robot-1/</loc>
+    <lastmod>2016-08-10T06:46:39-04:00</lastmod>
+  </url>
+  <url>
     <loc>http://f4l13n5n0w.github.io/blog/2016/06/08/vulnhub-sectalks-bne0x03-simple/</loc>
     <lastmod>2016-06-08T08:07:21-04:00</lastmod>
   </url>
@@ -295,5 +299,8 @@
   </url>
   <url>
     <loc>http://f4l13n5n0w.github.io/blog/categories/simple/</loc>
+  </url>
+  <url>
+    <loc>http://f4l13n5n0w.github.io/blog/categories/mr-robot/</loc>
   </url>
 </urlset>

