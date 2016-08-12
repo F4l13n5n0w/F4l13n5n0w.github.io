@@ -4,7 +4,7 @@
   <title><![CDATA[Category: sql injection | F4l13n5n0w]]></title>
   <link href="http://f4l13n5n0w.github.io/blog/categories/sql-injection/atom.xml" rel="self"/>
   <link href="http://f4l13n5n0w.github.io/"/>
-  <updated>2016-08-11T03:47:41-04:00</updated>
+  <updated>2016-08-12T20:39:49+10:00</updated>
   <id>http://f4l13n5n0w.github.io/</id>
   <author>
     <name><![CDATA[F4l13n5n0w]]></name>
@@ -16,7 +16,7 @@
   <entry>
     <title type="html"><![CDATA[[Vulnhub]acid_reloaded]]></title>
     <link href="http://f4l13n5n0w.github.io/blog/2015/09/12/acid-reloaded/"/>
-    <updated>2015-09-12T07:49:42-04:00</updated>
+    <updated>2015-09-12T21:49:42+10:00</updated>
     <id>http://f4l13n5n0w.github.io/blog/2015/09/12/acid-reloaded</id>
     <content type="html"><![CDATA[<p><strong>Acid: Reloaded</strong> is created by <a href="https://twitter.com/@m_avinash143">Avinash Kumar Thapa</a></p>
 
@@ -162,7 +162,7 @@
 </span><span class='line'>&lt;p>Wanna Knock me out ???
 </span><span class='line'>3.2.1 Let&rsquo;s Start the Game.&lt;/p>
 </span><span class='line'>
-</span><span class='line'>&lt;p>&lt;a href="&#x6d;&#97;&#105;&#x6c;&#116;&#111;&#x3a;&#x72;&#x6f;&#111;&#x74;&#64;&#49;&#x30;&#46;&#49;&#x2e;&#49;&#46;&#x31;&#51;&#57;">&#114;&#x6f;&#x6f;&#x74;&#64;&#49;&#48;&#46;&#x31;&#x2e;&#49;&#x2e;&#49;&#x33;&#x39;&lt;/a>&rsquo;s password:</span></code></pre></td></tr></table></div></figure></p>
+</span><span class='line'>&lt;p>&lt;a href="&#109;&#x61;&#x69;&#108;&#x74;&#x6f;&#58;&#114;&#x6f;&#111;&#116;&#x40;&#x31;&#x30;&#x2e;&#x31;&#x2e;&#49;&#46;&#49;&#x33;&#x39;">&#x72;&#111;&#111;&#x74;&#64;&#49;&#x30;&#46;&#x31;&#x2e;&#49;&#x2e;&#x31;&#x33;&#57;&lt;/a>&rsquo;s password:</span></code></pre></td></tr></table></div></figure></p>
 
 <p>Looks like we need ports knocking to find hidden ports. Then the following python script will do the port knocking</p>
 
@@ -492,7 +492,7 @@
 </span><span class='line'>makke
 </span><span class='line'>acid
 </span><span class='line'>acid.exploit
-</span><span class='line'>&lt;a href="&#x6d;&#97;&#105;&#x6c;&#x74;&#111;&#58;&#x61;&#99;&#105;&#100;&#46;&#101;&#120;&#112;&#108;&#111;&#x69;&#116;&#x40;&#x67;&#109;&#x61;&#105;&#x6c;&#46;&#99;&#x6f;&#109;">&#x61;&#99;&#x69;&#x64;&#x2e;&#x65;&#x78;&#x70;&#x6c;&#111;&#105;&#x74;&#64;&#103;&#x6d;&#97;&#x69;&#x6c;&#46;&#99;&#x6f;&#109;&lt;/a>
+</span><span class='line'>&lt;a href="&#x6d;&#97;&#x69;&#108;&#116;&#111;&#x3a;&#x61;&#x63;&#105;&#100;&#46;&#101;&#x78;&#x70;&#x6c;&#111;&#x69;&#116;&#x40;&#103;&#109;&#x61;&#105;&#108;&#46;&#99;&#x6f;&#109;">&#97;&#x63;&#x69;&#100;&#46;&#x65;&#120;&#112;&#x6c;&#111;&#105;&#x74;&#64;&#103;&#109;&#x61;&#x69;&#x6c;&#46;&#x63;&#x6f;&#x6d;&lt;/a>
 </span><span class='line'>NooB@123</span></code></pre></td></tr></table></div></figure></p>
 
 <p>Then I use hydra with the file dict.txt to brute force SSH login, and found <code>makke/NooB@123</code>:</p>
@@ -571,7 +571,7 @@
 <span class='line-number'>46</span>
 <span class='line-number'>47</span>
 <span class='line-number'>48</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>root@kali:~/acid_reload# ssh &lt;a href="&#109;&#97;&#x69;&#108;&#x74;&#111;&#58;&#109;&#97;&#107;&#x6b;&#101;&#x40;&#49;&#x30;&#46;&#x31;&#46;&#49;&#x2e;&#x31;&#x33;&#57;">&#109;&#x61;&#x6b;&#x6b;&#101;&#x40;&#x31;&#48;&#x2e;&#x31;&#x2e;&#x31;&#46;&#x31;&#51;&#x39;&lt;/a>
+</pre></td><td class='code'><pre><code class=''><span class='line'>root@kali:~/acid_reload# ssh &lt;a href="&#x6d;&#97;&#105;&#x6c;&#116;&#x6f;&#58;&#x6d;&#x61;&#107;&#107;&#101;&#64;&#49;&#48;&#46;&#49;&#x2e;&#49;&#46;&#49;&#x33;&#57;">&#109;&#97;&#107;&#107;&#101;&#x40;&#x31;&#48;&#46;&#x31;&#46;&#x31;&#x2e;&#x31;&#x33;&#57;&lt;/a>
 </span><span class='line'>    _    &lt;em>&lt;strong>&lt;em> &lt;/em>&lt;/strong> &lt;/em>&lt;em>&lt;strong>        &lt;/strong>&lt;strong>  &lt;/strong>&lt;/em>&lt;strong> _     &lt;/strong>&lt;em>    _    &lt;/em>&lt;strong>&lt;em>  &lt;/em>&lt;/strong>&lt;strong> &lt;/strong>&lt;strong>&lt;br/>
 </span><span class='line'>   / \  / &lt;/strong>&lt;em>|&lt;/em> &lt;em>|  _ \      |  _ | &lt;/em>&lt;em>&lt;strong>| |   / _ \  / \  |  _ | &lt;/strong>&lt;strong>|  _ \
 </span><span class='line'>  / _ | |    | || | | |&lt;/strong>&lt;/em>&lt;strong>| |&lt;em>) |  &lt;/em>| | |  | | | |/ _ \ | | | |  &lt;em>| | | | |
@@ -584,7 +584,7 @@
 </span><span class='line'>&lt;p>Wanna Knock me out ???
 </span><span class='line'>3.2.1 Let&rsquo;s Start the Game.&lt;/p>
 </span><span class='line'>
-</span><span class='line'>&lt;p>&lt;a href="&#109;&#97;&#105;&#108;&#x74;&#111;&#x3a;&#109;&#x61;&#x6b;&#107;&#x65;&#64;&#x31;&#x30;&#46;&#x31;&#46;&#x31;&#x2e;&#x31;&#51;&#x39;">&#x6d;&#x61;&#107;&#107;&#101;&#64;&#49;&#x30;&#46;&#49;&#x2e;&#49;&#46;&#x31;&#x33;&#57;&lt;/a>&rsquo;s password:
+</span><span class='line'>&lt;p>&lt;a href="&#109;&#x61;&#105;&#x6c;&#x74;&#111;&#x3a;&#109;&#x61;&#107;&#107;&#x65;&#64;&#x31;&#48;&#x2e;&#49;&#46;&#x31;&#46;&#x31;&#51;&#57;">&#x6d;&#97;&#x6b;&#107;&#x65;&#64;&#49;&#48;&#x2e;&#x31;&#46;&#49;&#x2e;&#x31;&#x33;&#x39;&lt;/a>&rsquo;s password:
 </span><span class='line'>Welcome to Ubuntu 15.04 (GNU/Linux 3.19.0-15-generic i686)&lt;/p>
 </span><span class='line'>
 </span><span class='line'>&lt;ul>
@@ -850,7 +850,7 @@
   <entry>
     <title type="html"><![CDATA[[Vulnhub]NullByte: 1]]></title>
     <link href="http://f4l13n5n0w.github.io/blog/2015/08/18/vulnhub-nullbyte-1/"/>
-    <updated>2015-08-18T09:12:46-04:00</updated>
+    <updated>2015-08-18T23:12:46+10:00</updated>
     <id>http://f4l13n5n0w.github.io/blog/2015/08/18/vulnhub-nullbyte-1</id>
     <content type="html"><![CDATA[<p><strong>NullByte challenge 0x01</strong></p>
 
@@ -1511,8 +1511,8 @@
 <span class='line-number'>13</span>
 <span class='line-number'>14</span>
 <span class='line-number'>15</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>F4l13n@kali:~/vulnhub/NullByte/sqlmap_rst$ ssh &lt;a href="&#109;&#97;&#105;&#x6c;&#116;&#111;&#58;&#114;&#x61;&#109;&#x73;&#101;&#115;&#64;&#x31;&#x30;&#x2e;&#x31;&#x2e;&#x31;&#x2e;&#49;&#51;&#x34;">&#114;&#x61;&#x6d;&#115;&#101;&#115;&#64;&#x31;&#48;&#x2e;&#49;&#46;&#x31;&#x2e;&#49;&#51;&#x34;&lt;/a> -p 777
-</span><span class='line'>&lt;a href="&#109;&#97;&#x69;&#108;&#x74;&#111;&#x3a;&#114;&#97;&#x6d;&#115;&#101;&#x73;&#x40;&#49;&#x30;&#x2e;&#x31;&#x2e;&#x31;&#x2e;&#49;&#51;&#52;">&#x72;&#97;&#x6d;&#115;&#x65;&#x73;&#x40;&#x31;&#x30;&#x2e;&#x31;&#46;&#x31;&#46;&#x31;&#x33;&#x34;&lt;/a>&rsquo;s password:&lt;/p>
+</pre></td><td class='code'><pre><code class=''><span class='line'>F4l13n@kali:~/vulnhub/NullByte/sqlmap_rst$ ssh &lt;a href="&#109;&#x61;&#x69;&#x6c;&#x74;&#x6f;&#x3a;&#114;&#x61;&#x6d;&#x73;&#x65;&#115;&#64;&#49;&#x30;&#46;&#x31;&#46;&#x31;&#x2e;&#49;&#x33;&#52;">&#x72;&#97;&#109;&#115;&#x65;&#x73;&#x40;&#x31;&#48;&#x2e;&#49;&#46;&#49;&#46;&#49;&#x33;&#x34;&lt;/a> -p 777
+</span><span class='line'>&lt;a href="&#109;&#97;&#105;&#108;&#116;&#x6f;&#58;&#x72;&#x61;&#x6d;&#x73;&#x65;&#x73;&#x40;&#x31;&#x30;&#46;&#x31;&#46;&#x31;&#x2e;&#x31;&#51;&#52;">&#x72;&#97;&#109;&#x73;&#101;&#x73;&#x40;&#49;&#x30;&#x2e;&#49;&#46;&#49;&#46;&#x31;&#51;&#52;&lt;/a>&rsquo;s password:&lt;/p>
 </span><span class='line'>
 </span><span class='line'>&lt;p>The programs included with the Debian GNU/Linux system are free software;
 </span><span class='line'>the exact distribution terms for each program are described in the
@@ -1645,8 +1645,8 @@
 </span><span class='line'>
 </span><span class='line'>&lt;p>It seems that you have pwned the box, congrats.
 </span><span class='line'>Now you done that I wanna talk with you. Write a walk &amp; mail at
-</span><span class='line'>&lt;a href="&#x6d;&#x61;&#x69;&#108;&#116;&#111;&#x3a;&#x78;&#x6c;&#x79;&#48;&#110;&#x40;&#x73;&#x69;&#x67;&#97;&#x69;&#110;&#116;&#46;&#x6f;&#x72;&#x67;">&#120;&#108;&#x79;&#x30;&#x6e;&#64;&#115;&#105;&#103;&#x61;&#105;&#110;&#x74;&#46;&#x6f;&#x72;&#x67;&lt;/a> attach the walk and proof.txt
-</span><span class='line'>If sigaint.org is down you may mail at &lt;a href="&#x6d;&#x61;&#105;&#108;&#116;&#x6f;&#x3a;&#x6e;&#98;&#x73;&#x6c;&#x79;&#48;&#x6e;&#64;&#103;&#109;&#x61;&#x69;&#108;&#x2e;&#x63;&#111;&#x6d;">&#110;&#98;&#115;&#108;&#x79;&#x30;&#x6e;&#x40;&#103;&#x6d;&#x61;&#105;&#108;&#46;&#x63;&#111;&#x6d;&lt;/a>&lt;/p>
+</span><span class='line'>&lt;a href="&#109;&#x61;&#x69;&#108;&#116;&#111;&#58;&#120;&#108;&#x79;&#x30;&#x6e;&#x40;&#x73;&#105;&#x67;&#x61;&#105;&#110;&#116;&#x2e;&#111;&#x72;&#103;">&#x78;&#x6c;&#121;&#x30;&#x6e;&#64;&#x73;&#x69;&#103;&#97;&#x69;&#110;&#116;&#x2e;&#111;&#114;&#x67;&lt;/a> attach the walk and proof.txt
+</span><span class='line'>If sigaint.org is down you may mail at &lt;a href="&#x6d;&#x61;&#105;&#108;&#116;&#111;&#x3a;&#110;&#98;&#x73;&#x6c;&#121;&#x30;&#x6e;&#x40;&#103;&#x6d;&#x61;&#x69;&#108;&#46;&#x63;&#111;&#x6d;">&#110;&#98;&#x73;&#108;&#x79;&#48;&#x6e;&#64;&#x67;&#x6d;&#x61;&#x69;&#x6c;&#46;&#x63;&#x6f;&#109;&lt;/a>&lt;/p>
 </span><span class='line'>
 </span><span class='line'>&lt;p>USE THIS PGP PUBLIC KEY&lt;/p>
 </span><span class='line'>
@@ -1676,7 +1676,7 @@
   <entry>
     <title type="html"><![CDATA[[PentesterLab] Web for Pentester - SQL Injection]]></title>
     <link href="http://f4l13n5n0w.github.io/blog/2015/05/22/pentesterlab-web-for-pentester-sql-injection/"/>
-    <updated>2015-05-22T05:53:28-04:00</updated>
+    <updated>2015-05-22T19:53:28+10:00</updated>
     <id>http://f4l13n5n0w.github.io/blog/2015/05/22/pentesterlab-web-for-pentester-sql-injection</id>
     <content type="html"><![CDATA[<p>&ldquo;This course details all you need to know to start doing web penetration testing. PentesterLab tried to put together the basics of web testing and a summary of the most common vulnerabilities with the LiveCD to test them.&rdquo; &ndash; PentesterLab</p>
 
@@ -2047,7 +2047,7 @@ In sqlmap, we can set parameter &ldquo;<em><font color="red">&ndash;tamper=space
   <entry>
     <title type="html"><![CDATA[[PentesterLab] From SQL to Shell II]]></title>
     <link href="http://f4l13n5n0w.github.io/blog/2015/05/12/pentesterlab-from-sql-to-shell-ii/"/>
-    <updated>2015-05-12T06:33:13-04:00</updated>
+    <updated>2015-05-12T20:33:13+10:00</updated>
     <id>http://f4l13n5n0w.github.io/blog/2015/05/12/pentesterlab-from-sql-to-shell-ii</id>
     <content type="html"><![CDATA[<p>This is an upgraded version from previous course &ldquo;<a href='https://www.pentesterlab.com/exercises/from_sqli_to_shell'>From SQL Injection to Shell</a>&rdquo; which is talking about how to exploit basic error-based SQL injection vulnerability, in this course &ldquo;From SQL Injection to Shell II&rdquo;, more advanced techniques will be used to exploit complicated Blind-SQL injection vulnerability.</p>
 

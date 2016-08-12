@@ -4,7 +4,7 @@
   <title><![CDATA[F4l13n5n0w]]></title>
   <link href="http://f4l13n5n0w.github.io/atom.xml" rel="self"/>
   <link href="http://f4l13n5n0w.github.io/"/>
-  <updated>2016-08-11T03:47:41-04:00</updated>
+  <updated>2016-08-12T20:39:49+10:00</updated>
   <id>http://f4l13n5n0w.github.io/</id>
   <author>
     <name><![CDATA[F4l13n5n0w]]></name>
@@ -16,7 +16,7 @@
   <entry>
     <title type="html"><![CDATA[[VulnHub] Mr-Robot: 1]]></title>
     <link href="http://f4l13n5n0w.github.io/blog/2016/08/10/vulnhub-mr-robot-1/"/>
-    <updated>2016-08-10T06:46:39-04:00</updated>
+    <updated>2016-08-10T20:46:39+10:00</updated>
     <id>http://f4l13n5n0w.github.io/blog/2016/08/10/vulnhub-mr-robot-1</id>
     <content type="html"><![CDATA[<hr />
 
@@ -809,7 +809,7 @@
   <entry>
     <title type="html"><![CDATA[[VulnHub] SecTalks: BNE0x03 - Simple]]></title>
     <link href="http://f4l13n5n0w.github.io/blog/2016/06/08/vulnhub-sectalks-bne0x03-simple/"/>
-    <updated>2016-06-08T08:07:21-04:00</updated>
+    <updated>2016-06-08T22:07:21+10:00</updated>
     <id>http://f4l13n5n0w.github.io/blog/2016/06/08/vulnhub-sectalks-bne0x03-simple</id>
     <content type="html"><![CDATA[<p>&ldquo;Simple CTF is a boot2root that focuses on the basics of web based hacking. Once you load the VM, treat it as a machine you can see on the network, i.e. you don&rsquo;t have physical access to this machine. Therefore, tricks like editing the VM&rsquo;s BIOS or Grub configuration are not allowed. Only remote attacks are permitted. /root/flag.txt is your ultimate goal.&rdquo; &ndash; <a href="https://www.vulnhub.com/author/robert-winkel,190/">Robert Winkel</a></p>
 
@@ -1179,7 +1179,7 @@
   <entry>
     <title type="html"><![CDATA[[VulnHub] SickOS 1.2]]></title>
     <link href="http://f4l13n5n0w.github.io/blog/2016/06/05/vulnhub-sickos-1-dot-2/"/>
-    <updated>2016-06-05T03:03:17-04:00</updated>
+    <updated>2016-06-05T17:03:17+10:00</updated>
     <id>http://f4l13n5n0w.github.io/blog/2016/06/05/vulnhub-sickos-1-dot-2</id>
     <content type="html"><![CDATA[<p>&ldquo;This is second in following series from SickOs and is independent of the prior releases, scope of challenge is to gain highest privileges on the system.&rdquo; &ndash; <a href="https://www.vulnhub.com/author/d4rk,199/">D4rk</a></p>
 
@@ -1722,7 +1722,7 @@
   <entry>
     <title type="html"><![CDATA[[VulnHub] Kevgir: 1]]></title>
     <link href="http://f4l13n5n0w.github.io/blog/2016/05/29/vulnhub-kevgir-1/"/>
-    <updated>2016-05-29T00:26:08-04:00</updated>
+    <updated>2016-05-29T14:26:08+10:00</updated>
     <id>http://f4l13n5n0w.github.io/blog/2016/05/29/vulnhub-kevgir-1</id>
     <content type="html"><![CDATA[<p>&ldquo;For Educational Purposes</p>
 
@@ -3150,7 +3150,7 @@
   <entry>
     <title type="html"><![CDATA[[VulnHub] PRIMER:1.0.1]]></title>
     <link href="http://f4l13n5n0w.github.io/blog/2016/04/12/vulnhub-primer-1-dot-0-1/"/>
-    <updated>2016-04-12T08:43:27-04:00</updated>
+    <updated>2016-04-12T22:43:27+10:00</updated>
     <id>http://f4l13n5n0w.github.io/blog/2016/04/12/vulnhub-primer-1-dot-0-1</id>
     <content type="html"><![CDATA[<p>&ldquo;Teach some basic well known techniques and attacks. Spark some curiosity, make the user look at the source code and try to figure out what&rsquo;s going on behind the scenes. The main goal is to give a nice welcoming intro to the scene and hopefully also teach something about ethics and responsibility.&rdquo; &ndash; <a href="https://www.vulnhub.com/author/arne-rick,217/">Arne Rick(@couchsofa)</a></p>
 
@@ -3759,7 +3759,7 @@ I decided to test some basic SQL injection, and it is vulnerable!</p>
   <entry>
     <title type="html"><![CDATA[[VulnHub] FristiLeaks: 1.3]]></title>
     <link href="http://f4l13n5n0w.github.io/blog/2015/12/29/vulnhub-fristileaks-1-dot-3/"/>
-    <updated>2015-12-29T01:40:24-05:00</updated>
+    <updated>2015-12-29T17:40:24+11:00</updated>
     <id>http://f4l13n5n0w.github.io/blog/2015/12/29/vulnhub-fristileaks-1-dot-3</id>
     <content type="html"><![CDATA[<p>&ldquo;A small VM made for a Dutch informal hacker meetup called Fristileaks. Meant to be broken in a few hours without requiring debuggers, reverse engineering, etc..&rdquo;  &ndash; <a href="https://www.vulnhub.com/author/ar0xa,203/">Ar0xA</a></p>
 
@@ -5052,9 +5052,9 @@ I decided to test some basic SQL injection, and it is vulnerable!</p>
   
   <entry>
     <title type="html"><![CDATA[[VulnHub] SickOs 1.1]]></title>
-    <link href="http://f4l13n5n0w.github.io/blog/2015/12/24/vulnhub-sickos-1-dot-1/"/>
-    <updated>2015-12-24T22:22:17-05:00</updated>
-    <id>http://f4l13n5n0w.github.io/blog/2015/12/24/vulnhub-sickos-1-dot-1</id>
+    <link href="http://f4l13n5n0w.github.io/blog/2015/12/25/vulnhub-sickos-1-dot-1/"/>
+    <updated>2015-12-25T14:22:17+11:00</updated>
+    <id>http://f4l13n5n0w.github.io/blog/2015/12/25/vulnhub-sickos-1-dot-1</id>
     <content type="html"><![CDATA[<p>&ldquo;This CTF gives a clear analogy how hacking strategies can be performed on a network to compromise it in a safe environment. This vm is very similar to labs I faced in OSCP. The objective being to compromise the network/machine and gain Administrative/root privileges on them.&rdquo; &ndash; <a href="https://www.vulnhub.com/author/d4rk,199/">D4rk</a></p>
 
 <p>More information and OVA file download please check <a href="https://www.vulnhub.com/entry/sickos-11,132/">here</a>.</p>
@@ -5712,9 +5712,9 @@ I decided to test some basic SQL injection, and it is vulnerable!</p>
   
   <entry>
     <title type="html"><![CDATA[[Vulnhub] The Wall: 1]]></title>
-    <link href="http://f4l13n5n0w.github.io/blog/2015/12/07/vulnhub-the-wall-1/"/>
-    <updated>2015-12-07T23:13:16-05:00</updated>
-    <id>http://f4l13n5n0w.github.io/blog/2015/12/07/vulnhub-the-wall-1</id>
+    <link href="http://f4l13n5n0w.github.io/blog/2015/12/08/vulnhub-the-wall-1/"/>
+    <updated>2015-12-08T15:13:16+11:00</updated>
+    <id>http://f4l13n5n0w.github.io/blog/2015/12/08/vulnhub-the-wall-1</id>
     <content type="html"><![CDATA[<p>&ldquo;In 1965, one of the most influential bands of our times was formed.. Pink Floyd. This boot2root box has been created to celebrate 50 years of Pink Floyd&rsquo;s contribution to the music industry, with each challenge giving the attacker an introduction to each member of the Floyd.</p>
 
 <p>You challenge is simple&hellip; set your controls for the heart of the sun, get root, and grab the flag! Rock on!&ldquo; &ndash; <a href="http://www.mogozobo.com/">Xerubus</a></p>
@@ -6840,7 +6840,7 @@ I decided to test some basic SQL injection, and it is vulnerable!</p>
   <entry>
     <title type="html"><![CDATA[[Vulnhub] Pipe]]></title>
     <link href="http://f4l13n5n0w.github.io/blog/2015/11/23/vulnhub-pipe/"/>
-    <updated>2015-11-23T05:43:52-05:00</updated>
+    <updated>2015-11-23T21:43:52+11:00</updated>
     <id>http://f4l13n5n0w.github.io/blog/2015/11/23/vulnhub-pipe</id>
     <content type="html"><![CDATA[<p><strong>/dev/random: Pipe</strong> is another one CTF challange in the series <strong>/dev/random</strong>, which is created by <a href="https://www.vulnhub.com/author/sagi-,36/">Sagi-</a>.</p>
 
@@ -7724,7 +7724,7 @@ I decided to test some basic SQL injection, and it is vulnerable!</p>
   <entry>
     <title type="html"><![CDATA[[Vulnhub] Sleepy]]></title>
     <link href="http://f4l13n5n0w.github.io/blog/2015/11/13/vulnhub-sleepy/"/>
-    <updated>2015-11-13T00:44:46-05:00</updated>
+    <updated>2015-11-13T16:44:46+11:00</updated>
     <id>http://f4l13n5n0w.github.io/blog/2015/11/13/vulnhub-sleepy</id>
     <content type="html"><![CDATA[<p><strong>/dev/random: Sleepy</strong> is the latest one in the series <strong>/dev/random</strong>, which is created by <a href="https://www.vulnhub.com/author/sagi-,36/">Sagi-</a>.</p>
 
@@ -8501,7 +8501,7 @@ I decided to test some basic SQL injection, and it is vulnerable!</p>
   <entry>
     <title type="html"><![CDATA[[Notes] Setup jekyll Harmony theme on GitHub]]></title>
     <link href="http://f4l13n5n0w.github.io/blog/2015/10/03/welcome-and-thanks/"/>
-    <updated>2015-10-03T07:05:12-04:00</updated>
+    <updated>2015-10-03T21:05:12+10:00</updated>
     <id>http://f4l13n5n0w.github.io/blog/2015/10/03/welcome-and-thanks</id>
     <content type="html"><![CDATA[<p><strong><font color="red">[!!]</font></strong> Now I have moved my blog back to <a href="http://octopress.org/" title="Octopress -- A blogging framework for hackers">Octopress</a> with <a href="https://github.com/macjasp/cleanpress" title="Octopress Theme CleanPress">CleanPress</a> theme. However the last two days playing with Harmony pushed me to get a further understanding about <a href="https://github.com/" title="GitHub">github</a>, <a href="https://pages.github.com/" title="GitHub Pages">github pages</a> and <a href="https://jekyllrb.com/" title="All about Jekyll">jekyll</a>.</p>
 
@@ -8665,7 +8665,7 @@ The coder of the Harmony theme, whom is very patient and helpful. Very nice and 
   <entry>
     <title type="html"><![CDATA[[Vulnhub]acid_reloaded]]></title>
     <link href="http://f4l13n5n0w.github.io/blog/2015/09/12/acid-reloaded/"/>
-    <updated>2015-09-12T07:49:42-04:00</updated>
+    <updated>2015-09-12T21:49:42+10:00</updated>
     <id>http://f4l13n5n0w.github.io/blog/2015/09/12/acid-reloaded</id>
     <content type="html"><![CDATA[<p><strong>Acid: Reloaded</strong> is created by <a href="https://twitter.com/@m_avinash143">Avinash Kumar Thapa</a></p>
 
@@ -9414,7 +9414,7 @@ The coder of the Harmony theme, whom is very patient and helpful. Very nice and 
   <entry>
     <title type="html"><![CDATA[[Vulnhub]Acid: Server]]></title>
     <link href="http://f4l13n5n0w.github.io/blog/2015/09/03/vulnhub-acid-server/"/>
-    <updated>2015-09-03T05:36:37-04:00</updated>
+    <updated>2015-09-03T19:36:37+10:00</updated>
     <id>http://f4l13n5n0w.github.io/blog/2015/09/03/vulnhub-acid-server</id>
     <content type="html"><![CDATA[<p><strong>Acid:Server</strong> is created by <a href="https://twitter.com/@m_avinash143">Avinash Kumar Thapa</a></p>
 
@@ -9672,7 +9672,7 @@ The coder of the Harmony theme, whom is very patient and helpful. Very nice and 
   <entry>
     <title type="html"><![CDATA[[Vulnhub]NullByte: 1]]></title>
     <link href="http://f4l13n5n0w.github.io/blog/2015/08/18/vulnhub-nullbyte-1/"/>
-    <updated>2015-08-18T09:12:46-04:00</updated>
+    <updated>2015-08-18T23:12:46+10:00</updated>
     <id>http://f4l13n5n0w.github.io/blog/2015/08/18/vulnhub-nullbyte-1</id>
     <content type="html"><![CDATA[<p><strong>NullByte challenge 0x01</strong></p>
 
@@ -10420,7 +10420,7 @@ The coder of the Harmony theme, whom is very patient and helpful. Very nice and 
   <entry>
     <title type="html"><![CDATA[[Vulnhub]Hell: 1]]></title>
     <link href="http://f4l13n5n0w.github.io/blog/2015/07/17/vulnhub-hell-1/"/>
-    <updated>2015-07-17T00:01:30-04:00</updated>
+    <updated>2015-07-17T14:01:30+10:00</updated>
     <id>http://f4l13n5n0w.github.io/blog/2015/07/17/vulnhub-hell-1</id>
     <content type="html"><![CDATA[<p>&ldquo;This VM is designed to try and entertain the more advanced information security enthusiast. This doesn&rsquo;t exclude beginners however and I&rsquo;m sure that a few of you could meet the challenge. There is no &lsquo;one&rsquo; focus on the machine, a range of skills such as web exploitation, password cracking, exploit development, binary examination and most of all logical thinking is required to crack the box in the intended way - but who knows there might be some short cuts!</p>
 
@@ -12485,7 +12485,7 @@ I also got mysql&rsquo;s login credential is <em><font color="red">www-data</fon
   <entry>
     <title type="html"><![CDATA[[Vulnhub]Sokar: 1]]></title>
     <link href="http://f4l13n5n0w.github.io/blog/2015/07/07/vulnhub-sokar-1/"/>
-    <updated>2015-07-07T02:41:59-04:00</updated>
+    <updated>2015-07-07T16:41:59+10:00</updated>
     <id>http://f4l13n5n0w.github.io/blog/2015/07/07/vulnhub-sokar-1</id>
     <content type="html"><![CDATA[<p><strong>Sokar</strong> is created by <a href="http://rastamouse.me/">Rasta Mouse</a> and it also is the first competition in 2015 run by VulnHub team.</p>
 
@@ -12925,7 +12925,7 @@ I also got mysql&rsquo;s login credential is <em><font color="red">www-data</fon
   <entry>
     <title type="html"><![CDATA[[Vulnhub]Tr0ll: 2]]></title>
     <link href="http://f4l13n5n0w.github.io/blog/2015/06/24/vulnhub-tr0ll-2/"/>
-    <updated>2015-06-24T04:31:06-04:00</updated>
+    <updated>2015-06-24T18:31:06+10:00</updated>
     <id>http://f4l13n5n0w.github.io/blog/2015/06/24/vulnhub-tr0ll-2</id>
     <content type="html"><![CDATA[<p>&ldquo;The next machine in the Tr0ll series of VMs. This one is a step up in difficulty from the original Tr0ll but the time required to solve is approximately the same, and make no mistake, trolls are still present! :) Difficulty is beginner++ to intermediate.&rdquo; &ndash; <a href="www.overflowsecurity.com">Maleus</a></p>
 
@@ -13600,7 +13600,7 @@ I also got mysql&rsquo;s login credential is <em><font color="red">www-data</fon
   <entry>
     <title type="html"><![CDATA[[Vulnhub]Knock-Knock: 1.1]]></title>
     <link href="http://f4l13n5n0w.github.io/blog/2015/06/21/vulnhub-knock-knock-1-dot-1/"/>
-    <updated>2015-06-21T04:49:54-04:00</updated>
+    <updated>2015-06-21T18:49:54+10:00</updated>
     <id>http://f4l13n5n0w.github.io/blog/2015/06/21/vulnhub-knock-knock-1-dot-1</id>
     <content type="html"><![CDATA[<p>&ldquo;Pretty much thought of a pretty neat idea I hadn&rsquo;t seen done before with a VM, and I wanted to turn it into reality!
 Your job is to escalate to root, and find the flag.
@@ -13961,7 +13961,7 @@ Also, gotta thank barrebas who was able to find a way to make things easier&hell
   <entry>
     <title type="html"><![CDATA[[Vulnhub]TopHatSec: Freshly]]></title>
     <link href="http://f4l13n5n0w.github.io/blog/2015/06/13/vulnhub-tophatsec-freshly/"/>
-    <updated>2015-06-13T04:57:26-04:00</updated>
+    <updated>2015-06-13T18:57:26+10:00</updated>
     <id>http://f4l13n5n0w.github.io/blog/2015/06/13/vulnhub-tophatsec-freshly</id>
     <content type="html"><![CDATA[<p>&ldquo;The goal of this challenge is to break into the machine via the web and find the secret hidden in a sensitive file. If you can find the secret, send me an email for verification. :)
 There are a couple of different ways that you can go with this one. Good luck!&rdquo; &ndash; <a href="http://www.top-hat-sec.com/">TopHatSec</a></p>
@@ -14130,7 +14130,7 @@ There are a couple of different ways that you can go with this one. Good luck!&r
   <entry>
     <title type="html"><![CDATA[[PentesterLab] PHP LFI &amp; Post Exploitation]]></title>
     <link href="http://f4l13n5n0w.github.io/blog/2015/05/31/pentesterlab-php-lfi-and-post-exploitation/"/>
-    <updated>2015-05-31T05:19:10-04:00</updated>
+    <updated>2015-05-31T19:19:10+10:00</updated>
     <id>http://f4l13n5n0w.github.io/blog/2015/05/31/pentesterlab-php-lfi-and-post-exploitation</id>
     <content type="html"><![CDATA[<p>&ldquo;This course details the discovery and the exploitation of PHP include vulnerabilities in a limited environment.
 Then it introduces the basics of post exploitation: shell, reverse-shell and TCP redirection.&rdquo; &ndash; <a href="https://www.pentesterlab.com/">PentesterLab</a></p>

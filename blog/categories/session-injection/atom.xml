@@ -4,7 +4,7 @@
   <title><![CDATA[Category: session injection | F4l13n5n0w]]></title>
   <link href="http://f4l13n5n0w.github.io/blog/categories/session-injection/atom.xml" rel="self"/>
   <link href="http://f4l13n5n0w.github.io/"/>
-  <updated>2016-08-11T03:47:41-04:00</updated>
+  <updated>2016-08-12T20:39:49+10:00</updated>
   <id>http://f4l13n5n0w.github.io/</id>
   <author>
     <name><![CDATA[F4l13n5n0w]]></name>
@@ -16,7 +16,7 @@
   <entry>
     <title type="html"><![CDATA[[PentesterLab] Play Session Injection]]></title>
     <link href="http://f4l13n5n0w.github.io/blog/2015/05/09/pentesterlab-play-session-injection/"/>
-    <updated>2015-05-09T07:34:13-04:00</updated>
+    <updated>2015-05-09T21:34:13+10:00</updated>
     <id>http://f4l13n5n0w.github.io/blog/2015/05/09/pentesterlab-play-session-injection</id>
     <content type="html"><![CDATA[<p>This is an exercise from <a href='https://www.pentesterlab.com/'>PentesterLab</a> to reproduce &amp; demonstrate how to exploit XSS and SQL injection vulnerabilities. More information and ISO download please check <a href='https://ptl.io/play_session_injection.iso'>here</a>. The <a href='https://www.pentesterlab.com/exercises/play_session_injection/course'>official course</a> is highly recommended to read, which explains how the vulnerabilities happened and the ways to exploit.</p>
 
