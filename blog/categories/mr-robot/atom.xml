@@ -4,7 +4,7 @@
   <title><![CDATA[Category: mr-robot | F4l13n5n0w]]></title>
   <link href="http://f4l13n5n0w.github.io/blog/categories/mr-robot/atom.xml" rel="self"/>
   <link href="http://f4l13n5n0w.github.io/"/>
-  <updated>2016-08-12T20:39:49+10:00</updated>
+  <updated>2016-08-12T20:44:19+10:00</updated>
   <id>http://f4l13n5n0w.github.io/</id>
   <author>
     <name><![CDATA[F4l13n5n0w]]></name>
@@ -18,9 +18,7 @@
     <link href="http://f4l13n5n0w.github.io/blog/2016/08/10/vulnhub-mr-robot-1/"/>
     <updated>2016-08-10T20:46:39+10:00</updated>
     <id>http://f4l13n5n0w.github.io/blog/2016/08/10/vulnhub-mr-robot-1</id>
-    <content type="html"><![CDATA[<hr />
-
-<p>&ldquo;Based on the show, Mr. Robot. This VM has three keys hidden in different locations. Your goal is to find all three. Each key is progressively difficult to find. The VM isn&rsquo;t too difficult. There isn&rsquo;t any advanced exploitation or reverse engineering. The level is considered beginner-intermediate.&rdquo; &ndash; <a href="https://www.vulnhub.com/author/jason,292/">Jason</a></p>
+    <content type="html"><![CDATA[<p>&ldquo;Based on the show, Mr. Robot. This VM has three keys hidden in different locations. Your goal is to find all three. Each key is progressively difficult to find. The VM isn&rsquo;t too difficult. There isn&rsquo;t any advanced exploitation or reverse engineering. The level is considered beginner-intermediate.&rdquo; &ndash; <a href="https://www.vulnhub.com/author/jason,292/">Jason</a></p>
 
 <p>More information and OVA file download please check <a href="https://www.vulnhub.com/entry/mr-robot-1,151/">here</a>.</p>
 
