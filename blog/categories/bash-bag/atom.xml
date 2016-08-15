@@ -4,7 +4,7 @@
   <title><![CDATA[Category: bash bag | F4l13n5n0w]]></title>
   <link href="http://f4l13n5n0w.github.io/blog/categories/bash-bag/atom.xml" rel="self"/>
   <link href="http://f4l13n5n0w.github.io/"/>
-  <updated>2016-08-11T03:47:41-04:00</updated>
+  <updated>2016-08-15T21:18:22+10:00</updated>
   <id>http://f4l13n5n0w.github.io/</id>
   <author>
     <name><![CDATA[F4l13n5n0w]]></name>
@@ -16,7 +16,7 @@
   <entry>
     <title type="html"><![CDATA[[PentesterLab] CVE-2014-6271/Shellshock]]></title>
     <link href="http://f4l13n5n0w.github.io/blog/2015/05/07/pentesterlab-cve-2014-6271-slash-shellshock/"/>
-    <updated>2015-05-07T07:33:16-04:00</updated>
+    <updated>2015-05-07T21:33:16+10:00</updated>
     <id>http://f4l13n5n0w.github.io/blog/2015/05/07/pentesterlab-cve-2014-6271-slash-shellshock</id>
     <content type="html"><![CDATA[<p>This is an exercise from <a href='https://www.pentesterlab.com/'>PentesterLab</a> to reproduce &amp; demonstrate how to exploit CVE-2014-6271 [Shellshock] vulnerability. More information and ISO download please check <a href='https://www.pentesterlab.com/exercises/cve-2014-6271'>here</a>. The <a href='https://www.pentesterlab.com/exercises/cve-2014-6271/course'>official course</a> is highly recommended to read, which explains how the bug works and the ways to exploit it for different purposes.</p>
 

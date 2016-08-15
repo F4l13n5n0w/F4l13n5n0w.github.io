@@ -4,7 +4,7 @@
   <title><![CDATA[Category: knock-knock | F4l13n5n0w]]></title>
   <link href="http://f4l13n5n0w.github.io/blog/categories/knock-knock/atom.xml" rel="self"/>
   <link href="http://f4l13n5n0w.github.io/"/>
-  <updated>2016-08-11T03:47:41-04:00</updated>
+  <updated>2016-08-15T21:18:22+10:00</updated>
   <id>http://f4l13n5n0w.github.io/</id>
   <author>
     <name><![CDATA[F4l13n5n0w]]></name>
@@ -16,7 +16,7 @@
   <entry>
     <title type="html"><![CDATA[[Vulnhub]Knock-Knock: 1.1]]></title>
     <link href="http://f4l13n5n0w.github.io/blog/2015/06/21/vulnhub-knock-knock-1-dot-1/"/>
-    <updated>2015-06-21T04:49:54-04:00</updated>
+    <updated>2015-06-21T18:49:54+10:00</updated>
     <id>http://f4l13n5n0w.github.io/blog/2015/06/21/vulnhub-knock-knock-1-dot-1</id>
     <content type="html"><![CDATA[<p>&ldquo;Pretty much thought of a pretty neat idea I hadn&rsquo;t seen done before with a VM, and I wanted to turn it into reality!
 Your job is to escalate to root, and find the flag.

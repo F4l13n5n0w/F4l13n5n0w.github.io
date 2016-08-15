@@ -4,7 +4,7 @@
   <title><![CDATA[Category: kioptrix2014 | F4l13n5n0w]]></title>
   <link href="http://f4l13n5n0w.github.io/blog/categories/kioptrix2014/atom.xml" rel="self"/>
   <link href="http://f4l13n5n0w.github.io/"/>
-  <updated>2016-08-11T03:47:41-04:00</updated>
+  <updated>2016-08-15T21:18:22+10:00</updated>
   <id>http://f4l13n5n0w.github.io/</id>
   <author>
     <name><![CDATA[F4l13n5n0w]]></name>
@@ -16,7 +16,7 @@
   <entry>
     <title type="html"><![CDATA[[Vulnhub] Kioptrix 2014]]></title>
     <link href="http://f4l13n5n0w.github.io/blog/2015/05/25/vulnhub-kioptrix-2014/"/>
-    <updated>2015-05-25T00:54:33-04:00</updated>
+    <updated>2015-05-25T14:54:33+10:00</updated>
     <id>http://f4l13n5n0w.github.io/blog/2015/05/25/vulnhub-kioptrix-2014</id>
     <content type="html"><![CDATA[<p>This is probably the last/final version of Kioptrix challenge VM, after played with all of those well designed vulnerable boxes, I would say they are challenging and enjoyable, not only for juniors like me :) but also the Pen tester pros will make fun from them. Cheers to <strong><em>loneferret</em></strong> and <strong><em>haken29a</em></strong>.</p>
 

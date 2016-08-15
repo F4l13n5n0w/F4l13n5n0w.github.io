@@ -4,7 +4,7 @@
   <title><![CDATA[Category: pipe | F4l13n5n0w]]></title>
   <link href="http://f4l13n5n0w.github.io/blog/categories/pipe/atom.xml" rel="self"/>
   <link href="http://f4l13n5n0w.github.io/"/>
-  <updated>2016-08-11T03:47:41-04:00</updated>
+  <updated>2016-08-15T21:18:22+10:00</updated>
   <id>http://f4l13n5n0w.github.io/</id>
   <author>
     <name><![CDATA[F4l13n5n0w]]></name>
@@ -16,7 +16,7 @@
   <entry>
     <title type="html"><![CDATA[[Vulnhub] Pipe]]></title>
     <link href="http://f4l13n5n0w.github.io/blog/2015/11/23/vulnhub-pipe/"/>
-    <updated>2015-11-23T05:43:52-05:00</updated>
+    <updated>2015-11-23T21:43:52+11:00</updated>
     <id>http://f4l13n5n0w.github.io/blog/2015/11/23/vulnhub-pipe</id>
     <content type="html"><![CDATA[<p><strong>/dev/random: Pipe</strong> is another one CTF challange in the series <strong>/dev/random</strong>, which is created by <a href="https://www.vulnhub.com/author/sagi-,36/">Sagi-</a>.</p>
 

@@ -4,7 +4,7 @@
   <title><![CDATA[Category: tomcat | F4l13n5n0w]]></title>
   <link href="http://f4l13n5n0w.github.io/blog/categories/tomcat/atom.xml" rel="self"/>
   <link href="http://f4l13n5n0w.github.io/"/>
-  <updated>2016-08-11T03:47:41-04:00</updated>
+  <updated>2016-08-15T21:18:22+10:00</updated>
   <id>http://f4l13n5n0w.github.io/</id>
   <author>
     <name><![CDATA[F4l13n5n0w]]></name>
@@ -16,7 +16,7 @@
   <entry>
     <title type="html"><![CDATA[[Vulnhub] Sleepy]]></title>
     <link href="http://f4l13n5n0w.github.io/blog/2015/11/13/vulnhub-sleepy/"/>
-    <updated>2015-11-13T00:44:46-05:00</updated>
+    <updated>2015-11-13T16:44:46+11:00</updated>
     <id>http://f4l13n5n0w.github.io/blog/2015/11/13/vulnhub-sleepy</id>
     <content type="html"><![CDATA[<p><strong>/dev/random: Sleepy</strong> is the latest one in the series <strong>/dev/random</strong>, which is created by <a href="https://www.vulnhub.com/author/sagi-,36/">Sagi-</a>.</p>
 
@@ -797,7 +797,7 @@
   <entry>
     <title type="html"><![CDATA[[PentesterLab] Axis2 Web service and Tomcat Manager]]></title>
     <link href="http://f4l13n5n0w.github.io/blog/2015/05/30/pentesterlab-axis2-web-service-and-tomcat-manager/"/>
-    <updated>2015-05-30T08:16:43-04:00</updated>
+    <updated>2015-05-30T22:16:43+10:00</updated>
     <id>http://f4l13n5n0w.github.io/blog/2015/05/30/pentesterlab-axis2-web-service-and-tomcat-manager</id>
     <content type="html"><![CDATA[<p>&ldquo;This course details the exploitation of an issue in an Axis2 Web service and how using this issue it is possible to retrieve arbitrary files. Then using this, we will see how an attacker can retrieve Tomcat users' file to access the Tomcat Manager and gain commands execution on the server.&rdquo; &ndash; <a href="https://www.pentesterlab.com/">PentesterLab</a></p>
 

@@ -4,7 +4,7 @@
   <title><![CDATA[Category: primer | F4l13n5n0w]]></title>
   <link href="http://f4l13n5n0w.github.io/blog/categories/primer/atom.xml" rel="self"/>
   <link href="http://f4l13n5n0w.github.io/"/>
-  <updated>2016-08-11T03:47:41-04:00</updated>
+  <updated>2016-08-15T21:18:22+10:00</updated>
   <id>http://f4l13n5n0w.github.io/</id>
   <author>
     <name><![CDATA[F4l13n5n0w]]></name>
@@ -16,7 +16,7 @@
   <entry>
     <title type="html"><![CDATA[[VulnHub] PRIMER:1.0.1]]></title>
     <link href="http://f4l13n5n0w.github.io/blog/2016/04/12/vulnhub-primer-1-dot-0-1/"/>
-    <updated>2016-04-12T08:43:27-04:00</updated>
+    <updated>2016-04-12T22:43:27+10:00</updated>
     <id>http://f4l13n5n0w.github.io/blog/2016/04/12/vulnhub-primer-1-dot-0-1</id>
     <content type="html"><![CDATA[<p>&ldquo;Teach some basic well known techniques and attacks. Spark some curiosity, make the user look at the source code and try to figure out what&rsquo;s going on behind the scenes. The main goal is to give a nice welcoming intro to the scene and hopefully also teach something about ethics and responsibility.&rdquo; &ndash; <a href="https://www.vulnhub.com/author/arne-rick,217/">Arne Rick(@couchsofa)</a></p>
 
