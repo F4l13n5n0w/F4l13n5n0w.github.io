@@ -4,7 +4,7 @@
   <title><![CDATA[Category: sickos | F4l13n5n0w]]></title>
   <link href="http://f4l13n5n0w.github.io/blog/categories/sickos/atom.xml" rel="self"/>
   <link href="http://f4l13n5n0w.github.io/"/>
-  <updated>2017-03-25T03:11:43-04:00</updated>
+  <updated>2017-03-28T04:34:57-04:00</updated>
   <id>http://f4l13n5n0w.github.io/</id>
   <author>
     <name><![CDATA[F4l13n5n0w]]></name>
@@ -582,8 +582,8 @@
 <span class='line-number'>27</span>
 <span class='line-number'>28</span>
 <span class='line-number'>29</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:~# ssh &lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;&amp;#x6d;&amp;#97;&amp;#x69;&amp;#108;&amp;#116;&amp;#111;&amp;#x3a;&amp;#x73;&amp;#x69;&amp;#99;&amp;#x6b;&amp;#x6f;&amp;#x73;&amp;#x40;&amp;#x31;&amp;#x30;&amp;#46;&amp;#49;&amp;#46;&amp;#49;&amp;#x2e;&amp;#49;&amp;#x34;&amp;#x39;&quot;</span>&gt;<span class="p">&amp;</span><span class="c">#x73;&amp;#x69;&amp;#99;&amp;#107;&amp;#111;&amp;#115;&amp;#x40;&amp;#x31;&amp;#48;&amp;#46;&amp;#x31;&amp;#x2e;&amp;#x31;&amp;#46;&amp;#49;&amp;#52;&amp;#57;&lt;/a&gt;</span>
-</span><span class='line'>&lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;&amp;#109;&amp;#x61;&amp;#x69;&amp;#x6c;&amp;#116;&amp;#x6f;&amp;#x3a;&amp;#115;&amp;#x69;&amp;#99;&amp;#107;&amp;#111;&amp;#x73;&amp;#x40;&amp;#x31;&amp;#x30;&amp;#x2e;&amp;#x31;&amp;#x2e;&amp;#x31;&amp;#46;&amp;#49;&amp;#52;&amp;#x39;&quot;</span>&gt;<span class="p">&amp;</span><span class="c">#x73;&amp;#x69;&amp;#99;&amp;#107;&amp;#x6f;&amp;#115;&amp;#64;&amp;#x31;&amp;#48;&amp;#46;&amp;#49;&amp;#46;&amp;#x31;&amp;#46;&amp;#x31;&amp;#52;&amp;#57;&lt;/a&gt;&amp;rsquo;s password:</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:~# ssh &lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;&amp;#x6d;&amp;#97;&amp;#105;&amp;#x6c;&amp;#x74;&amp;#111;&amp;#x3a;&amp;#115;&amp;#x69;&amp;#x63;&amp;#x6b;&amp;#x6f;&amp;#115;&amp;#64;&amp;#x31;&amp;#x30;&amp;#46;&amp;#x31;&amp;#x2e;&amp;#49;&amp;#46;&amp;#x31;&amp;#x34;&amp;#57;&quot;</span>&gt;<span class="p">&amp;</span><span class="c">#x73;&amp;#x69;&amp;#x63;&amp;#x6b;&amp;#111;&amp;#115;&amp;#x40;&amp;#x31;&amp;#48;&amp;#x2e;&amp;#x31;&amp;#x2e;&amp;#x31;&amp;#46;&amp;#x31;&amp;#52;&amp;#x39;&lt;/a&gt;</span>
+</span><span class='line'>&lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;&amp;#109;&amp;#x61;&amp;#x69;&amp;#x6c;&amp;#116;&amp;#111;&amp;#x3a;&amp;#x73;&amp;#105;&amp;#x63;&amp;#107;&amp;#x6f;&amp;#115;&amp;#64;&amp;#x31;&amp;#x30;&amp;#x2e;&amp;#49;&amp;#46;&amp;#x31;&amp;#x2e;&amp;#x31;&amp;#x34;&amp;#57;&quot;</span>&gt;<span class="p">&amp;</span><span class="c">#115;&amp;#x69;&amp;#x63;&amp;#107;&amp;#111;&amp;#x73;&amp;#x40;&amp;#x31;&amp;#48;&amp;#46;&amp;#49;&amp;#46;&amp;#x31;&amp;#x2e;&amp;#x31;&amp;#x34;&amp;#57;&lt;/a&gt;&amp;rsquo;s password:</span>
 </span><span class='line'>Welcome to Ubuntu 12.04.4 LTS <span class="o">(</span>GNU/Linux 3.11.0-15-generic i686<span class="o">)</span>&lt;/p&gt;
 </span><span class='line'>
 </span><span class='line'>&lt;ul&gt;
