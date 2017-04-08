@@ -4,7 +4,7 @@
   <title><![CDATA[Category: acid_reloaded | F4l13n5n0w]]></title>
   <link href="http://f4l13n5n0w.github.io/blog/categories/acid-reloaded/atom.xml" rel="self"/>
   <link href="http://f4l13n5n0w.github.io/"/>
-  <updated>2017-03-28T04:34:57-04:00</updated>
+  <updated>2017-04-08T06:53:28-04:00</updated>
   <id>http://f4l13n5n0w.github.io/</id>
   <author>
     <name><![CDATA[F4l13n5n0w]]></name>
@@ -162,7 +162,7 @@
 </span><span class='line'>&lt;p>Wanna Knock me out ???
 </span><span class='line'>3.2.1 Let&rsquo;s Start the Game.&lt;/p>
 </span><span class='line'>
-</span><span class='line'>&lt;p>&lt;a href="&#x6d;&#97;&#105;&#x6c;&#x74;&#111;&#58;&#114;&#111;&#111;&#x74;&#x40;&#x31;&#48;&#46;&#49;&#x2e;&#x31;&#46;&#x31;&#51;&#57;">&#x72;&#x6f;&#111;&#x74;&#x40;&#49;&#x30;&#x2e;&#49;&#46;&#x31;&#46;&#x31;&#51;&#57;&lt;/a>&rsquo;s password:</span></code></pre></td></tr></table></div></figure></p>
+</span><span class='line'>&lt;p>&lt;a href="&#x6d;&#x61;&#x69;&#x6c;&#116;&#111;&#x3a;&#114;&#x6f;&#111;&#x74;&#x40;&#49;&#48;&#x2e;&#49;&#x2e;&#x31;&#x2e;&#49;&#51;&#57;">&#x72;&#111;&#x6f;&#116;&#64;&#49;&#48;&#46;&#49;&#x2e;&#49;&#46;&#x31;&#51;&#57;&lt;/a>&rsquo;s password:</span></code></pre></td></tr></table></div></figure></p>
 
 <p>Looks like we need ports knocking to find hidden ports. Then the following python script will do the port knocking</p>
 
@@ -492,7 +492,7 @@
 </span><span class='line'>makke
 </span><span class='line'>acid
 </span><span class='line'>acid.exploit
-</span><span class='line'>&lt;a href="&#x6d;&#x61;&#105;&#x6c;&#116;&#111;&#58;&#97;&#99;&#x69;&#x64;&#x2e;&#x65;&#x78;&#x70;&#108;&#111;&#x69;&#116;&#x40;&#103;&#109;&#x61;&#x69;&#108;&#x2e;&#99;&#111;&#x6d;">&#x61;&#x63;&#105;&#100;&#x2e;&#101;&#120;&#x70;&#108;&#x6f;&#105;&#x74;&#64;&#x67;&#x6d;&#x61;&#x69;&#x6c;&#x2e;&#99;&#x6f;&#x6d;&lt;/a>
+</span><span class='line'>&lt;a href="&#109;&#97;&#x69;&#108;&#x74;&#111;&#x3a;&#97;&#99;&#x69;&#x64;&#x2e;&#101;&#x78;&#112;&#108;&#111;&#105;&#x74;&#64;&#103;&#109;&#97;&#x69;&#108;&#46;&#x63;&#111;&#x6d;">&#x61;&#99;&#x69;&#100;&#x2e;&#x65;&#x78;&#112;&#108;&#x6f;&#105;&#116;&#64;&#x67;&#109;&#x61;&#x69;&#x6c;&#46;&#x63;&#111;&#109;&lt;/a>
 </span><span class='line'>NooB@123</span></code></pre></td></tr></table></div></figure></p>
 
 <p>Then I use hydra with the file dict.txt to brute force SSH login, and found <code>makke/NooB@123</code>:</p>
@@ -571,7 +571,7 @@
 <span class='line-number'>46</span>
 <span class='line-number'>47</span>
 <span class='line-number'>48</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>root@kali:~/acid_reload# ssh &lt;a href="&#109;&#97;&#105;&#108;&#116;&#x6f;&#58;&#x6d;&#97;&#x6b;&#107;&#x65;&#x40;&#x31;&#x30;&#46;&#x31;&#x2e;&#x31;&#x2e;&#x31;&#x33;&#57;">&#109;&#x61;&#x6b;&#x6b;&#101;&#x40;&#49;&#x30;&#46;&#49;&#x2e;&#49;&#x2e;&#x31;&#51;&#57;&lt;/a>
+</pre></td><td class='code'><pre><code class=''><span class='line'>root@kali:~/acid_reload# ssh &lt;a href="&#109;&#97;&#x69;&#x6c;&#x74;&#x6f;&#58;&#x6d;&#97;&#x6b;&#107;&#x65;&#x40;&#x31;&#48;&#x2e;&#x31;&#x2e;&#49;&#x2e;&#x31;&#x33;&#x39;">&#x6d;&#97;&#107;&#107;&#101;&#64;&#x31;&#x30;&#46;&#x31;&#46;&#x31;&#46;&#x31;&#x33;&#57;&lt;/a>
 </span><span class='line'>    _    &lt;em>&lt;strong>&lt;em> &lt;/em>&lt;/strong> &lt;/em>&lt;em>&lt;strong>        &lt;/strong>&lt;strong>  &lt;/strong>&lt;/em>&lt;strong> _     &lt;/strong>&lt;em>    _    &lt;/em>&lt;strong>&lt;em>  &lt;/em>&lt;/strong>&lt;strong> &lt;/strong>&lt;strong>&lt;br/>
 </span><span class='line'>   / \  / &lt;/strong>&lt;em>|&lt;/em> &lt;em>|  _ \      |  _ | &lt;/em>&lt;em>&lt;strong>| |   / _ \  / \  |  _ | &lt;/strong>&lt;strong>|  _ \
 </span><span class='line'>  / _ | |    | || | | |&lt;/strong>&lt;/em>&lt;strong>| |&lt;em>) |  &lt;/em>| | |  | | | |/ _ \ | | | |  &lt;em>| | | | |
@@ -584,7 +584,7 @@
 </span><span class='line'>&lt;p>Wanna Knock me out ???
 </span><span class='line'>3.2.1 Let&rsquo;s Start the Game.&lt;/p>
 </span><span class='line'>
-</span><span class='line'>&lt;p>&lt;a href="&#x6d;&#97;&#105;&#108;&#x74;&#x6f;&#x3a;&#x6d;&#97;&#x6b;&#107;&#x65;&#64;&#49;&#48;&#46;&#x31;&#x2e;&#x31;&#x2e;&#x31;&#x33;&#x39;">&#x6d;&#97;&#107;&#x6b;&#x65;&#x40;&#x31;&#x30;&#x2e;&#x31;&#x2e;&#x31;&#x2e;&#49;&#x33;&#57;&lt;/a>&rsquo;s password:
+</span><span class='line'>&lt;p>&lt;a href="&#x6d;&#97;&#105;&#108;&#116;&#x6f;&#58;&#x6d;&#x61;&#x6b;&#x6b;&#101;&#64;&#49;&#x30;&#46;&#x31;&#46;&#49;&#x2e;&#49;&#x33;&#57;">&#109;&#x61;&#107;&#x6b;&#x65;&#x40;&#49;&#x30;&#46;&#49;&#x2e;&#49;&#46;&#x31;&#x33;&#x39;&lt;/a>&rsquo;s password:
 </span><span class='line'>Welcome to Ubuntu 15.04 (GNU/Linux 3.19.0-15-generic i686)&lt;/p>
 </span><span class='line'>
 </span><span class='line'>&lt;ul>

