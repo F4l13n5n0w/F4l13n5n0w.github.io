@@ -1,10 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>http://f4l13n5n0w.github.io/blog/2017/01/08/vulnhub-billy-madison-1-dot-1/</loc>
-    <lastmod>2017-01-08T01:55:38-05:00</lastmod>
-  </url>
-  <url>
     <loc>http://f4l13n5n0w.github.io/blog/2016/11/29/vulnhub-breach-1/</loc>
     <lastmod>2016-11-29T06:09:35-05:00</lastmod>
   </url>
@@ -337,20 +333,5 @@
   </url>
   <url>
     <loc>http://f4l13n5n0w.github.io/blog/categories/ssl/</loc>
-  </url>
-  <url>
-    <loc>http://f4l13n5n0w.github.io/blog/categories/smb-enum-shares-dot-nse/</loc>
-  </url>
-  <url>
-    <loc>http://f4l13n5n0w.github.io/blog/categories/ports-knocking/</loc>
-  </url>
-  <url>
-    <loc>http://f4l13n5n0w.github.io/blog/categories/email-phishing/</loc>
-  </url>
-  <url>
-    <loc>http://f4l13n5n0w.github.io/blog/categories/truecrack/</loc>
-  </url>
-  <url>
-    <loc>http://f4l13n5n0w.github.io/blog/categories/veracrypt/</loc>
   </url>
 </urlset>
