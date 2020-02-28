@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: php lfi | F4l13n5n0w]]></title>
+  <link href="http://f4l13n5n0w.github.io/blog/categories/php-lfi/atom.xml" rel="self"/>
+  <link href="http://f4l13n5n0w.github.io/"/>
+  <updated>2017-04-08T06:55:00-04:00</updated>
+  <id>http://f4l13n5n0w.github.io/</id>
+  <author>
+    <name><![CDATA[F4l13n5n0w]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[[PentesterLab] PHP LFI &amp; Post Exploitation]]></title>
+    <link href="http://f4l13n5n0w.github.io/blog/2015/05/31/pentesterlab-php-lfi-and-post-exploitation/"/>
+    <updated>2015-05-31T05:19:10-04:00</updated>
+    <id>http://f4l13n5n0w.github.io/blog/2015/05/31/pentesterlab-php-lfi-and-post-exploitation</id>
+    <content type="html"><![CDATA[<p>&ldquo;This course details the discovery and the exploitation of PHP include vulnerabilities in a limited environment.
+Then it introduces the basics of post exploitation: shell, reverse-shell and TCP redirection.&rdquo; &ndash; <a href="https://www.pentesterlab.com/">PentesterLab</a></p>
+
+<p>More information and ISO download please check <a href="https://www.pentesterlab.com/exercises/php_include_and_post_exploitation/">here</a>. The official <a href="https://www.pentesterlab.com/exercises/php_include_and_post_exploitation/course">course</a> is highly recommanded to read.</p>
+
+<p>Difficulty: 2 / 5</p>
+
+<!-- more -->
+
+
+<h2>Links</h2>
+
+<p>watch video online:
+<iframe src='http://player.vimeo.com/video/101763491?byline=0&amp;portrait=0&amp;color=c9ff23' width='720' height='360' frameborder='0' webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe></p>
+
+<h2>Method</h2>
+
+<ul>
+<li>Scanned the network to discover the target server [Net Discover]</li>
+<li>Port scanned the target to determine the running services on the target [Unicorn Scan]</li>
+<li>Interacted with the web server, found the Local File Include (LFI) vulnerable point and a page with upload function. [Firefox]</li>
+<li>Construct and upload a PHP shell onto the web server (have to bypass server end file validation). [Burp proxy]</li>
+<li>Gain remote access by running the PHP shell via LFI vulnerability which we found before. [Burp proxy]</li>
+</ul>
+
+
+<h2>Tools</h2>
+
+<p>All the tools used here can be found in Kali linux
+* <a href="http://nixgeneration.com/~jaime/netdiscover/">Net Discover</a>
+* <a href="http://www.unicornscan.org/">Unicorn Scan</a>
+* <a href="https://www.mozilla.org/en-US/firefox/new/">Firefox</a>
+* <a href="http://netcat.sourceforge.net/">Netcat</a>
+* <a href="http://pentestmonkey.net/tools/web-shells/php-reverse-shell">php-reverse-shell</a>
+* <a href="https://www.gnu.org/software/wget/">Wget</a></p>
+
+<h2>Walkthrough</h2>
+
+<p>By reading the training <a href="https://www.pentesterlab.com/exercises/php_include_and_post_exploitation/course">course</a>, we know what kind of vulnerabilities should be targeted to. (PHP Include vulnerability is focused on this course)</p>
+
+<h3>Find the LFI weakness</h3>
+
+<p>The attacker interacts with the web server, by using Firefox browser to graphically render the web application on the target. Upon viewing the page, the attacker know that this site is calling for papers for a conference.</p>
+
+<p>On the right hand side, which is the navigation menu to <font color="red"><em>home</em></font> (show the home page), <font color="red"><em>submit</em></font> (jump to paper upload form page) and <font color="red"><em>login</em></font> (which asks the attacker to login).</p>
+
+<p>The attacker noticed the URL’s parameter is <code>?page=submit</code> in submit page and <code>?page=login</code> in login page. After the attacker tried to replace the parameter <code>submit</code> in submit page to <code>./login</code> and the login page is presented from the web server. That means here is the LFI vulnerable point.</p>
+
+<p>In order to double check this vulnerability, the attacker construct the following URL <code>http://10.10.10.130/index.php?page=/etc/passwd</code> to extract the default passwd file in Linux. The attacker also check if the server is vulnerable to RFI by constructing the following URL <code>http://10.10.10.130/index.php?page=http://www.google.com/?</code>. However the server sent back error information which is illustrated that the PHP function for Remote file include is currently turned off (<font color="red"><em>allow_url_fopen = On but allow_url_include = Off</em></font>).</p>
+
+<h3>Find the way to upload file (web shell) and the path where the uploaded file saved</h3>
+
+<p>In the submit page, the attacker only can upload a pdf file to the server (<em>white list and file content is validated on the server end</em>).</p>
+
+<p>Then the attacker input everything the form required and submit a normal pdf file. After that, successful uploaded page is presented. The attacker login to the web server with the information he just provided in the submit form and he found the uploaded PDF file is saved under the <code>uploads</code> folder.</p>
+
+<h3>Bypass file upload validation</h3>
+
+<p>The attacker can only upload a PDF file due to the white list and file content validation is running on the server side. However, many file content validation only check file header which usually first bytes of a file. So the attacker create a fake PDF file (evil.pdf) which has normal PDF header and followed by the PHP shell code (<em>here the attacker using <a href="http://pentestmonkey.net/tools/web-shells/php-reverse-shell">Pentest Monkey’s PHP reserve shell</a>, which is able to connect back from the target to the attacker</em>).</p>
+
+<p>Then the attacker upload the file <code>evil.php</code> to the server. Because it is only executed when someone visits the page, the attacker quickly creates a listener to wait for the PHP shell to connect back.</p>
+
+<p>After the attacker browse the page on the server, it causes the PHP code to be executed and a connection back to the attacker. Now, the attacker has an interactive shell on the target.</p>
+
+<h2>Reference:</h2>
+
+<ol>
+<li><a href="https://www.owasp.org/index.php/Testing_for_Local_File_Inclusion">OWASP Test LFI</a></li>
+<li><a href="http://en.wikipedia.org/wiki/Passwd">passwd file</a></li>
+<li><a href="http://php.net/manual/en/filesystem.configuration.php">php.ini configuration file</a></li>
+<li><a href="https://www.owasp.org/index.php/Unrestricted_File_Upload">Bypass file upload validation</a></li>
+</ol>
+
+]]></content>
+  </entry>
+  
+</feed>

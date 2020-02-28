@@ -1,0 +1,245 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<script data-cfasync="false" type="text/javascript" src="//use.typekit.net/axj3cfp.js"></script>
+	<script data-cfasync="false" type="text/javascript">try{Typekit.load();}catch(e){}</script>
+	<meta charset="utf-8">
+	<title>[经验分享] OSCP 渗透测试认证  | F4l13n5n0w</title>
+
+<meta name="author" content="F4l13n5n0w"> 
+
+<meta name="description" content="This is a description"> <meta name="keywords" content="">
+
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+	<link href="/atom.xml" rel="alternate" title="F4l13n5n0w" type="application/atom+xml">
+	<link rel="canonical" href="">
+	<link href="/favicon.png" rel="shortcut icon">
+	<link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<link href="/stylesheets/font-awesome.min.css" rel="stylesheet" type="text/css">
+	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	<script type="text/javascript" src="/javascripts/jquery.fancybox.pack.js"></script>
+
+<script language="Javascript" type="text/javascript">
+$(document).ready(
+  function() {
+    (function($) {
+      $(".fancybox[data-content-id]").each(function() {
+        this.href = $(this).data('content-id');
+      });
+      $(".fancybox").fancybox({
+        beforeLoad: function() {
+          var el, 
+              id = $(this.element).data('title-id');
+
+          if (id) {
+            el = $('#' + id);
+
+            if (el.length) {
+              this.title = el.html();
+            }
+          }
+          if ($(this).data('content')) {
+            this.content = $(this).data('content');
+          }
+        },
+        helpers: {
+          title: {
+            type: 'inside'
+          }
+        }
+      });
+    })(jQuery);
+  }
+);
+</script>
+
+	<link href='https://fonts.googleapis.com/css?family=Delius' rel='stylesheet' type='text/css'>
+</head>
+
+
+
+<body>
+	<header id="header" class="inner"><h1><a href="/">F4l13n5n0w</a></h1>
+<h4>Info Security & Pen Testing learning notes</h4>
+<nav id="main-nav"><ul>
+	<li><a href="/about">瓷 | About</a></li>
+	<li><a href="/">段子 | Blogging</a></li>
+	<li><a href="/code-snippets">玩意儿 | Coding</a></li>
+	<li><a href="/reading-list">藏♥品 | Reading</a></li>
+</ul>
+</nav>
+<nav id="mobile-nav">
+	<div class="alignleft menu">
+		<a class="button">Menu</a>
+		<div class="container"><ul>
+	<li><a href="/about">瓷 | About</a></li>
+	<li><a href="/">段子 | Blogging</a></li>
+	<li><a href="/code-snippets">玩意儿 | Coding</a></li>
+	<li><a href="/reading-list">藏♥品 | Reading</a></li>
+</ul>
+</div>
+	</div>
+	<div class="alignright search">
+		<a class="button"></a>
+		<div class="container">
+			<form action="https://www.google.com/search" method="get">
+				<input type="text" name="q" results="0">
+				<input type="hidden" name="q" value="site:f4l13n5n0w.github.io">
+			</form>
+		</div>
+	</div>
+</nav>
+
+
+</header>
+
+	<div id="content" class="inner"><article class="post">
+	<h2 class="title">[经验分享] OSCP 渗透测试认证</h2>
+	<div class="entry-content"><p>“120天的旅程即将结束，以一场历时24小时没有选择题的考试，收获屠龙路上第一座里程碑。…” 这是我通过OSCP认证考试时，第一时间的感受。自豪和欣喜之情不亚于2008年我拿下CCIE R&amp;S的时候。
+关于 PWK (Pentesting with Kali Linux) 和OSCP (Offensive Security Certified Professional)，我想很多人会觉着陌生。但说起Offensive Security，BackTrack，Kali，NetHunter和Metasploit，圈里的朋友应该就熟悉多了。</p>
+
+<!-- more -->
+
+
+<p><img class="center" src="/downloads/oscp-certs.png" width="250" height="150"></p>
+
+<p>作为在老外圈子里备受推崇的渗透测试技术类认证，国外从业人员对它的介绍和评价已经足够丰富了：</br>
+<a href="http://netsec.ws/?p=398">http://netsec.ws/?p=398</a></br>
+<a href="http://www.jasonbernier.com/oscp-review/">http://www.jasonbernier.com/oscp-review/</a></br>
+<a href="http://leonjza.github.io/blog/2014/11/22/trying-harder-oscp-and-me/">http://leonjza.github.io/blog/2014/11/22/trying-harder-oscp-and-me/</a></br>
+<a href="http://www.securitysift.com/offsec-pwb-oscp/">http://www.securitysift.com/offsec-pwb-oscp/</a></br>
+<a href="http://wp.sgrosshome.com/2014/07/22/offensive-security-certified-professional-my-experience-and-review/">http://wp.sgrosshome.com/2014/07/22/offensive-security-certified-professional-my-experience-and-review/</a></br>
+<a href="http://www.primalsecurity.net/0x2-course-review-penetration-testing-with-kali-linux-oscp/">http://www.primalsecurity.net/0x2-course-review-penetration-testing-with-kali-linux-oscp/</a></br>
+<a href="https://www.rcesecurity.com/2013/05/oscp-course-and-exam-review/">https://www.rcesecurity.com/2013/05/oscp-course-and-exam-review/</a></br>
+<a href="http://buffered.io/posts/oscp-and-me/">http://buffered.io/posts/oscp-and-me/</a></br>
+<a href="http://www.hackingtheperimeter.com/2014/12/introduction-id-wanted-to-take-on-oscp.html">http://www.hackingtheperimeter.com/2014/12/introduction-id-wanted-to-take-on-oscp.html</a></br></p>
+
+<p>然而，遗憾的发现，并没有关于这个认证的中文介绍。也许是因为语言问题，也许是因为这个认证还在起步阶段没有宣传吧。但是不同于CEH等一系列的纸上谈兵，这是一个真枪实弹的学习经历。不同于现在火热的Web攻击，这个认证更偏重于传统的内网渗透技术。</p>
+
+<h2>关于教材</h2>
+
+
+<p>300多页的教材涵盖了所有从基础知识到进阶的渗透测试技巧（当然不是深入）。所以对于没有渗透经验的朋友（但还是需要基本计算机和网络的知识，如果有编程基础会更好但不是必须），这是一个很好的入门级课程。关于这个课程的具体内容可以查看<a href='https://www.offensive-security.com/documentation/penetration-testing-with-kali.pdf'>这里</a>。</p>
+
+<h2>关于PWK Labs</h2>
+
+
+<p>相对于其他认证课程来说，OSCP与众不同也是最吸引人的是它设计详实的Online Lab（包括4个子网，57台主机/服务器，每一台主机/服务器都包含Offensive Security团队在真实工作环境中遇到的漏洞）。我的起点是VPN连接到Public Network中的一台主机，终点是渗透进入到Admin Network。 57台设备（除掉网关/防火墙）都是目标，都存在漏洞可以被攻破并获得最高权限。所以获取所有设备的最高权限（ROOT/SYSTEM）并读取证明文件（proof.txt或者network-secret.txt）也就是终极目标。在实现这个终极目标中，你不仅会学习各种exploits利用，弱密码，Web漏洞以及一系列提权技巧和漏洞利用。除了技术层面，更重要的是你能学到耐心和思路。漏洞就在那里，如果没找到只能是因为不够仔细和耐心，”TRY HARDER”是整个课程的标语。每攻破一个主机，都需要在后边自主的学习，查资料，有时还需要灵光一闪的运气。更难得的是，lab里边50多台主机服务器不是独立无关的。有时候你需要攻破特定主机并从中获取相应信息才能帮助你攻破其他的主机。而整个Lab里的高潮恐怕要算是端口转发（port forwarding）和Pivoting（实在不会翻译，类似于利用跳板进入不可路由网络）。</p>
+
+<h2>关于考试</h2>
+
+
+<p>OSCP的认证考试也是另类的存在，考生拥有24小时的时间（实际是23小时45分钟）去完成考试，具体如何分配时间由考生自己决定。题目是5台主机（随机抽取），目标是攻入并拿到最高权限（ROOT/SYSTEM）。战利品有local.txt（一般权限可得）和proof.txt（最高权限可得），分别对应不同的分数。满分100分，70分可以通过考试。24小时结束之后，你还有24小时去完成并提交考试报告（需要详细说明攻击步骤和里程碑截屏来证明确实攻破并获得相应权限）。</p>
+
+<h2>我的经验</h2>
+
+
+<p>首先，虽然课程本身是没有门槛的，但是购买Lab机时还是不便宜的。对渗透了解的越少你所需要的时间就越多，所以我还是建议先对渗透测试有一定了解之后再选择这个课程，有几个非常好的热身网站推荐给大家：</br>
+<a href="http://vulnhub.com/">http://vulnhub.com/</a></br>
+<a href="https://www.pentesterlab.com/">https://www.pentesterlab.com/</a></br></p>
+
+<p>下面就是我的120天学习经历</p>
+
+<p>由于不知道水深水浅，一开始买了60天的Lab时间。拿到教材和视频之后，大概用了一周多的时间把教材和视频过完，并完成课后练习题（这个时间取决于你的基础有多少，每天4-6个小时学习的话应该最多不会超过3周）。</p>
+
+<p>终于可以摩拳擦掌进入在线Lab了。我的起点是Public Network里的一台电脑，利用课程里学到的知识对目标网络进行信息收集和枚举（enumeration）。Nmap是用的最多的工具之一。目标主机/服务器有着不同的难度，所以我的策略是先从头开始一个一个过，拿下简单的，如果没思路了就留下，开始下一个。过完一遍之后，再翻过头来做更仔细的枚举（enumeration）和上网查资料，直到发现漏洞。几乎所有的主机都存在“已知”漏洞，所以剩下的工作就是仔细挖掘把它找出来。然而现实并不像想象的那么简单，很多时候的感觉就是“你明明知道漏洞就在那里却找不到”的崩溃。每一台攻破的机器都包含一个proof.txt战利品文件用来证明该主机已经被征服，有时候还会发现network-secrets.txt文件用来在control panel里解开不同的子网（IT, DEV and Admin）。有些主机里还包含攻克其他主机的线索，所以对每台被攻破的主机都需要仔细检查一番，搜集尽可能多的线索。</p>
+
+<p>很快的60天的Lab时间就用完了，我只拿下了30几台主机并解锁了2个子网（IT和DEV）。我显然还没有准备好考试，于是又续了30天的Lab。这30天里剩下的都是一些硬骨头了，更多的的利用Pivoting拿下IT和DEV子网里的主机，并解锁了Admin子网。时间又一次接近尾声，还剩下不到10台主机（其中包括“著名的”pain，sufferance和humble）。我再一次续了30天，我想拿下所有的主机。最终，除了humble和Admin子网里的Jack（获得shell但没能提权）没有拿下，我攻破并提权了其他所有的50多台主机。我想，我应该去考试了。之后花了我大概一周的时间整理出Lab实验报告，一共是369页。</p>
+
+<p>我约的考试是从周五晚上7点开始，时长23小时45分钟。一共五台目标机器跟Lab里的一样包含已知漏洞。总分100分，70分过。</p>
+
+<p>晚上8点27分，拿下第一台主机。
+10点，第二台主机。
+凌晨1点27分，第三台主机也被攻破。
+然后一直到凌晨5点多，再没有建树。困得不行的我，决定小睡三小时，闹铃上到早上8点半起。截止到这时候，我只有50分。
+8点半起来继续研究，终于10点52分，拿下第四台主机（我认为是最难的一台）。
+这时已经拿到75分，可以过了。中午简单的吃了些午饭，回来继续最后一个主机。</p>
+
+<p>又过了几个小时的网上搜索，修改和测试，终于在下午2点35分的时候攻破最后一台主机。这时我拿到了100分。在反复检查和做好所有截屏工作之后，我决定先去好好的睡一觉。24小时的考试结束后，我还有24小时的时间整理和提交考试报告。
+一觉睡到晚上9点多，起来写报告。因为只有五台主机，又有了之前Lab报告的经验，截屏和记录工作做的还不错，报告花了我大概2两个多小时就结束了。之后就是打包上传，然后再去睡个好觉 :)</p>
+
+<p>过了一天，收到了下边的邮件，写下了开头的那句话。</p>
+
+<p><img class="center" src="/downloads/oscp.png">
+最后，感谢IRC里的admin们和所有聊过天，帮助过我的朋友：</p>
+
+<ul style="list-style-type:disc">
+<li>goodbestguy</li>
+<li>haken29a</li>
+<li>loneferret</li>
+<li>bolexxx</li>
+<li>g0tmi1k_</li>
+<li>stormtide31</li>
+<li>Zipkoppie</li>
+<li>B34</li>
+</ul>
+
+
+<p>最最后，发几个对Lab和考试有帮助的总结帖子（cheat sheets）:</p>
+
+<p><ul style="list-style-type:disc">
+<li><a href='http://pentestmonkey.net/cheat-sheet/shells/reverse-shell-cheat-sheet'>Reverse shell cheat sheet</a></li>
+<li><a href='https://blog.g0tmi1k.com/2011/08/basic-linux-privilege-escalation/'>Basic Linux Privilege Escalation</a></li>
+<li><a href='http://netsec.ws/?p=331'>Creating Metasploit Payloads</a></li>
+<li><a href='https://sathisharthars.wordpress.com/2015/01/28/oscp-offensive-security-certified-professional-handy-tips-and-tricks/'>OSCP Handy Tips and Tricks</a></li></p>
+</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+2015-05-05 06:48:31 -0400</div>
+	
+
+<div class="tags">
+
+	<a class='category' href='/blog/categories/oscp/'>oscp</a>, <a class='category' href='/blog/categories/pwk/'>pwk</a>
+
+</div>
+
+
+	
+</div></article>
+
+	<div class="share">
+	<div class="addthis_toolbox addthis_default_style ">
+	
+	
+	<a class="addthis_button_tweet"></a>
+	
+	
+<!---	<a class="addthis_counter addthis_pill_style"></a> --->
+	</div>
+  <script type="text/javascript" src="http://s7.addthis.com/js/250/addthis_widget.js#pubid="></script>
+</div>
+
+
+</div>
+	<footer id="footer" class="inner">Copyright &copy; 2017
+
+    <font color="green">F4l13n5n0w</font>
+
+<br>
+Powered by Octopress.
+</footer>
+	<script src="/javascripts/slash.js"></script>
+<script src="/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,314 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<script data-cfasync="false" type="text/javascript" src="//use.typekit.net/axj3cfp.js"></script>
+	<script data-cfasync="false" type="text/javascript">try{Typekit.load();}catch(e){}</script>
+	<meta charset="utf-8">
+	<title>[Notes] Setup jekyll Harmony theme on GitHub  | F4l13n5n0w</title>
+
+<meta name="author" content="F4l13n5n0w"> 
+
+<meta name="description" content="This is a description"> <meta name="keywords" content="">
+
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+	<link href="/atom.xml" rel="alternate" title="F4l13n5n0w" type="application/atom+xml">
+	<link rel="canonical" href="">
+	<link href="/favicon.png" rel="shortcut icon">
+	<link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<link href="/stylesheets/font-awesome.min.css" rel="stylesheet" type="text/css">
+	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	<script type="text/javascript" src="/javascripts/jquery.fancybox.pack.js"></script>
+
+<script language="Javascript" type="text/javascript">
+$(document).ready(
+  function() {
+    (function($) {
+      $(".fancybox[data-content-id]").each(function() {
+        this.href = $(this).data('content-id');
+      });
+      $(".fancybox").fancybox({
+        beforeLoad: function() {
+          var el, 
+              id = $(this.element).data('title-id');
+
+          if (id) {
+            el = $('#' + id);
+
+            if (el.length) {
+              this.title = el.html();
+            }
+          }
+          if ($(this).data('content')) {
+            this.content = $(this).data('content');
+          }
+        },
+        helpers: {
+          title: {
+            type: 'inside'
+          }
+        }
+      });
+    })(jQuery);
+  }
+);
+</script>
+
+	<link href='https://fonts.googleapis.com/css?family=Delius' rel='stylesheet' type='text/css'>
+</head>
+
+
+
+<body>
+	<header id="header" class="inner"><h1><a href="/">F4l13n5n0w</a></h1>
+<h4>Info Security & Pen Testing learning notes</h4>
+<nav id="main-nav"><ul>
+	<li><a href="/about">瓷 | About</a></li>
+	<li><a href="/">段子 | Blogging</a></li>
+	<li><a href="/code-snippets">玩意儿 | Coding</a></li>
+	<li><a href="/reading-list">藏♥品 | Reading</a></li>
+</ul>
+</nav>
+<nav id="mobile-nav">
+	<div class="alignleft menu">
+		<a class="button">Menu</a>
+		<div class="container"><ul>
+	<li><a href="/about">瓷 | About</a></li>
+	<li><a href="/">段子 | Blogging</a></li>
+	<li><a href="/code-snippets">玩意儿 | Coding</a></li>
+	<li><a href="/reading-list">藏♥品 | Reading</a></li>
+</ul>
+</div>
+	</div>
+	<div class="alignright search">
+		<a class="button"></a>
+		<div class="container">
+			<form action="https://www.google.com/search" method="get">
+				<input type="text" name="q" results="0">
+				<input type="hidden" name="q" value="site:f4l13n5n0w.github.io">
+			</form>
+		</div>
+	</div>
+</nav>
+
+
+</header>
+
+	<div id="content" class="inner"><article class="post">
+	<h2 class="title">[Notes] Setup Jekyll Harmony Theme on GitHub</h2>
+	<div class="entry-content"><p><strong><font color="red">[!!]</font></strong> Now I have moved my blog back to <a href="http://octopress.org/" title="Octopress -- A blogging framework for hackers">Octopress</a> with <a href="https://github.com/macjasp/cleanpress" title="Octopress Theme CleanPress">CleanPress</a> theme. However the last two days playing with Harmony pushed me to get a further understanding about <a href="https://github.com/" title="GitHub">github</a>, <a href="https://pages.github.com/" title="GitHub Pages">github pages</a> and <a href="https://jekyllrb.com/" title="All about Jekyll">jekyll</a>.</p>
+
+<!-- more -->
+
+
+<hr />
+
+<p>I am using the Jekyll theme: <a href="https://github.com/gayanvirajith/Harmony" title="Jekyll Theme Harmony">Harmony</a></p>
+
+<p>If you are new to github/git, the following link is highly recommanded to check first: <a href="https://try.github.io/levels/1/challenges/1" title="Try github in 15 mins">Learn git in 15 mins</a></p>
+
+<p>If you want to try it on your local system, you probably will be asked to install the latest Ruby. Because Jekyll requires Ruby 2.0.0 or above, you can <a href="https://rvm.io/rvm/install" title="Install RVM">install RVM</a> in following commands (in this case I use Kali Linux, step this if you are using Kali 2):</p>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="c"># install RVM mpapis public key</span>
+gpg --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3
+<span class="c"># download and install RVM stable with latest ruby</span>
+<span class="se">\c</span>url -sSL https://get.rvm.io <span class="p">|</span> bash -s stable --ruby
+<span class="c"># after installed, to start using RVM</span>
+<span class="nb">source</span> /usr/local/rvm/scripts/rvm
+<span class="c"># check current ruby version</span>
+ruby --version</code></pre></div>
+
+
+<h2>Set up jerkll theme on local system (Kali Linux):</h2>
+
+<ol>
+<li><p><a href="https://help.github.com/articles/create-a-repo/" title="Create a Repo">Create a Repo</a> on github (Note: In order to use Free github page domain, this Repo must use your github username as the repo name: <code>f4l13n5n0w.github.io</code> in my case</p></li>
+<li><p>run the following commands in my Kali linux:</p></li>
+</ol>
+
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="nb">cd</span> /opt
+<span class="c"># download Jekyll theme on my local system</span>
+git clone https://github.com/gayanvirajith/harmony.git
+<span class="nb">cd </span>harmony
+<span class="c"># install bundler</span>
+gem install bundler
+<span class="c"># install dependencies by using bundle</span>
+bundle install
+<span class="c"># set it up on local, will listen on http://127.0.0.1:4000</span>
+jekyll serve</code></pre></div>
+
+
+<p>You might get the following error when run <code>jekyll serve</code>.</p>
+
+<pre><code>root@kali:/opt/harmony# jekyll serve
+/usr/local/rvm/gems/ruby-2.2.1/gems/execjs-2.6.0/lib/execjs/runtimes.rb:48:in `autodetect': Could not find a JavaScript runtime. See https://github.com/rails/execjs for a list of available runtimes. (ExecJS::RuntimeUnavailable)
+    from /usr/local/rvm/gems/ruby-2.2.1/gems/execjs-2.6.0/lib/execjs.rb:5:in `&lt;module:ExecJS&gt;'
+    from /usr/local/rvm/gems/ruby-2.2.1/gems/execjs-2.6.0/lib/execjs.rb:4:in `&lt;top (required)&gt;'
+    from /usr/local/rvm/gems/ruby-2.2.1/gems/coffee-script-2.4.1/lib/coffee_script.rb:1:in `require'
+    from /usr/local/rvm/gems/ruby-2.2.1/gems/coffee-script-2.4.1/lib/coffee_script.rb:1:in `&lt;top (required)&gt;'
+    from /usr/local/rvm/gems/ruby-2.2.1/gems/coffee-script-2.4.1/lib/coffee-script.rb:1:in `require'
+    from /usr/local/rvm/gems/ruby-2.2.1/gems/coffee-script-2.4.1/lib/coffee-script.rb:1:in `&lt;top (required)&gt;'
+    from /usr/local/rvm/gems/ruby-2.2.1/gems/jekyll-coffeescript-1.0.1/lib/jekyll-coffeescript.rb:2:in `require'
+    from /usr/local/rvm/gems/ruby-2.2.1/gems/jekyll-coffeescript-1.0.1/lib/jekyll-coffeescript.rb:2:in `&lt;top (required)&gt;'
+    from /usr/local/rvm/gems/ruby-2.2.1/gems/jekyll-2.4.0/lib/jekyll/deprecator.rb:46:in `require'
+    from /usr/local/rvm/gems/ruby-2.2.1/gems/jekyll-2.4.0/lib/jekyll/deprecator.rb:46:in `block in gracefully_require'
+    from /usr/local/rvm/gems/ruby-2.2.1/gems/jekyll-2.4.0/lib/jekyll/deprecator.rb:44:in `each'
+    from /usr/local/rvm/gems/ruby-2.2.1/gems/jekyll-2.4.0/lib/jekyll/deprecator.rb:44:in `gracefully_require'
+    from /usr/local/rvm/gems/ruby-2.2.1/gems/jekyll-2.4.0/lib/jekyll.rb:141:in `&lt;top (required)&gt;'
+    from /usr/local/rvm/gems/ruby-2.2.1/gems/jekyll-2.4.0/bin/jekyll:6:in `require'
+    from /usr/local/rvm/gems/ruby-2.2.1/gems/jekyll-2.4.0/bin/jekyll:6:in `&lt;top (required)&gt;'
+    from /usr/local/rvm/gems/ruby-2.2.1/bin/jekyll:23:in `load'
+    from /usr/local/rvm/gems/ruby-2.2.1/bin/jekyll:23:in `&lt;main&gt;'
+    from /usr/local/rvm/gems/ruby-2.2.1/bin/ruby_executable_hooks:15:in `eval'
+    from /usr/local/rvm/gems/ruby-2.2.1/bin/ruby_executable_hooks:15:in `&lt;main&gt;'
+</code></pre>
+
+<p>In order to fix it up, you need to insert <code>gem 'therubyracer'</code> into the file <code>Gemfile</code> as follow and run <code>bundle install</code> again (Note: github-page server do not have this problem):</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="l-Scalar-Plain">source &#39;https://rubygems.org&#39;</span>
+</span><span class='line'>
+</span><span class='line'><span class="l-Scalar-Plain">require &#39;json&#39;</span>
+</span><span class='line'><span class="l-Scalar-Plain">require &#39;open-uri&#39;</span>
+</span><span class='line'><span class="l-Scalar-Plain">versions = JSON.parse(open(&#39;https://pages.github.com/versions.json&#39;).read)</span>
+</span><span class='line'>
+</span><span class='line'><span class="l-Scalar-Plain">gem &#39;therubyracer&#39;</span>
+</span><span class='line'><span class="l-Scalar-Plain">gem &#39;github-pages&#39;, versions[&#39;github-pages&#39;]</span>
+</span><span class='line'><span class="l-Scalar-Plain">gem &#39;rake&#39;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>If everything is good, after run <code>jekyll serve</code>, you will be able to access your blog on <code>http://127.0.0.1:4000</code></p>
+
+<p>Next important thing is to modify the configuration file <code>_config.yml</code>.</p>
+
+<p>The paramters <code>baseurl</code> and <code>url</code> have to be set correctly in order to make your site works</p>
+
+<p><font color="red">Note:</font>
+If you are going to set the blog under the root directory, you have to set <code>baseurl</code> to <code> or ''</code> as follow (<em><font color="red">DO NOT</font> set it to &lsquo;/&rsquo;</em>):</p>
+
+<pre><code># Base URL
+baseurl: 
+
+# Site live URL
+# url: http://f4l13n5n0w.github.io
+
+# Localhost 
+url: http://127.0.0.1:4000  
+</code></pre>
+
+<p>Set <code>url</code> to <code>http://127.0.0.1:4000</code> when developing locally and <font color="red">DO NOT</font> forget to change it back to your github page&rsquo;s link (in my case is <a href="http://f4l13n5n0w.github.io">http://f4l13n5n0w.github.io</a>)</p>
+
+<h2>Update your site to github</h2>
+
+<p>After you customized your blog locally, using the following code to publish it to github.</p>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="nb">cd</span> /opt/harmony
+rm -rf _site
+<span class="nb">cd</span> /opt
+<span class="c"># git clone my blog Repo on my local system</span>
+git clone https://github.com/F4l13n5n0w/F4l13n5n0w.github.io.git
+<span class="nb">cd </span>F4l13n5n0w.github.io
+<span class="c"># copy all the files from Jekyll theme to my blog repo</span>
+cp -rf ../harmony/* ./
+git add --all
+git commit -m <span class="s1">&#39;Initial website&#39;</span>
+<span class="c"># push it back to github, now wait couple of seconds or even minutes, you will find your blog already up from the github.io link (in my case: http://f4l13n5n0w.github.io)</span>
+git push origin master</code></pre></div>
+
+
+<h2>Further reading</h2>
+
+<ul>
+<li><a href="https://daringfireball.net/projects/markdown/syntax">Markdown syntax</a></li>
+<li><a href="https://daringfireball.net/projects/markdown/basics">Markdown basics</a></li>
+<li><a href="https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet">Markdown cheatsheet</a></li>
+<li><a href="https://help.github.com/index.html">GitHub Help</a></li>
+</ul>
+
+
+<h2>Special Thanks</h2>
+
+<p>After two nights scratching hair and friends' help, I finally got my blog back with refresh theme!</p>
+
+<p><a href="http://www.anthonyferrillo.net/blog/">Anthony Ferrillo</a>
+Bumped into his blog when I was checking new challenges on <a href="https://www.vulnhub.com/" title="VulnHub">VulnHub</a>, then I make myself incorrigible to upgrade my blog to the new beautiful theme. T.T</p>
+
+<p><a href="http://gayan.me/">Gayan Virajith</a>
+The coder of the Harmony theme, whom is very patient and helpful. Very nice and tidy theme, great job~</p>
+
+<p>Special Thanks to you guys for your time and quick reply when I got stuck in setting this up, help and guide me to put it through. All great people and nice to chat with you~</p>
+
+<!--- Reference -->
+
+
+
+</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+2015-10-03 07:05:12 -0400</div>
+	
+
+<div class="tags">
+
+	<a class='category' href='/blog/categories/blog/'>blog</a>
+
+</div>
+
+
+	
+</div></article>
+
+	<div class="share">
+	<div class="addthis_toolbox addthis_default_style ">
+	
+	
+	<a class="addthis_button_tweet"></a>
+	
+	
+<!---	<a class="addthis_counter addthis_pill_style"></a> --->
+	</div>
+  <script type="text/javascript" src="http://s7.addthis.com/js/250/addthis_widget.js#pubid="></script>
+</div>
+
+
+</div>
+	<footer id="footer" class="inner">Copyright &copy; 2017
+
+    <font color="green">F4l13n5n0w</font>
+
+<br>
+Powered by Octopress.
+</footer>
+	<script src="/javascripts/slash.js"></script>
+<script src="/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
+
+
+
+
+
+</body>
+</html>

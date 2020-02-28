@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: play framework | F4l13n5n0w]]></title>
+  <link href="http://f4l13n5n0w.github.io/blog/categories/play-framework/atom.xml" rel="self"/>
+  <link href="http://f4l13n5n0w.github.io/"/>
+  <updated>2017-04-08T06:55:00-04:00</updated>
+  <id>http://f4l13n5n0w.github.io/</id>
+  <author>
+    <name><![CDATA[F4l13n5n0w]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[[PentesterLab] Play Session Injection]]></title>
+    <link href="http://f4l13n5n0w.github.io/blog/2015/05/09/pentesterlab-play-session-injection/"/>
+    <updated>2015-05-09T07:34:13-04:00</updated>
+    <id>http://f4l13n5n0w.github.io/blog/2015/05/09/pentesterlab-play-session-injection</id>
+    <content type="html"><![CDATA[<p>This is an exercise from <a href='https://www.pentesterlab.com/'>PentesterLab</a> to reproduce &amp; demonstrate how to exploit XSS and SQL injection vulnerabilities. More information and ISO download please check <a href='https://ptl.io/play_session_injection.iso'>here</a>. The <a href='https://www.pentesterlab.com/exercises/play_session_injection/course'>official course</a> is highly recommended to read, which explains how the vulnerabilities happened and the ways to exploit.</p>
+
+<p>Difficulty: 3 / 5</p>
+
+<!-- more -->
+
+
+
+
+<h2>Links</h2>
+
+
+<p>watch video online:
+<iframe src='http://player.vimeo.com/video/103324009?byline=0&amp;portrait=0&amp;color=c9ff23' width='720' height='360' frameborder='0' webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe></p>
+
+<h2>Method</h2>
+
+
+<ul style="list-style-type:disc">
+<li>Scanned the network to discover the target server [Net Discover]</li>
+<li>Port scanned the target to discover the running services and open ports [nmap]</li>
+<li>Interacted with the web server, found the (Cross Site Script) XSS vulnerable point. [Firefox]</li>
+<li>Register two new accounts which username are test and test2, analyze both session cookies to figure out the cookie’s construction rules. Inject evil codes into the session cookie to bypass the validation schedule. [firebug / Burp proxy]</li>
+<li>For goal one, inject “admin:1” to login with administration privilege. For goal two, inject “user:admin1” to login as admin user “admin1” with administration privilege. [Burp proxy]</li>
+</ul>
+
+
+<h2>Tools</h2>
+
+
+<p>All the tools used here can be found in Kali Linux</p>
+
+<ul style="list-style-type:disc">
+<li><a href='http://nixgeneration.com/~jaime/netdiscover/'>Net Discover</a></li>
+<li><a href='https://nmap.org/'>Nmap</a></li>
+<li><a href='https://www.mozilla.org/en-US/firefox/new/'>Firefox</a></li>
+<li><a href='http://getfirebug.com/'>Firebug</a></li>
+<li><a href='http://portswigger.net/burp/'>Burp suite</a></li>
+</ul>
+
+
+<h2>Walkthrough</h2>
+
+
+<p>By reading the training <a href='https://www.pentesterlab.com/exercises/play_session_injection/course'>pdf</a>, we know that there is a session injection in Play framework. (In this exercise, we have two goals to achieve. First one is to login as anyone but have administration privilege; Second one is to login as administrator name is “admin1”).</p>
+
+<h3>Find the Play session cookie</h3>
+
+
+<p>The attacker interacts with the web server, by using “Firefox” browser to graphically render the web application on the target. Upon viewing the page, the attacker know that this there are two goals need to be achieved. First one is create a user with admin privilege and the second one is to login as the user “admin1”. On the top left hand side, is the navigation menu to “Register”(which asks the attacker to register a new account), “Login”(which asks the attacker to login). The attacker tried to register a new account which the name is “test”, then run Burp proxy and login with the “test” account. After checking the request intercepted by Burp proxy, the attacker found that the session information is saved in the cookie called “PLAY_SESSION”. The cookie value is in the following format:<br>
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>PLAY_SESSION=xxx(some hash code)xxx%00&lt;strong>AT%3Axxx(authenticityToken)xxx%00%00user%3Atest%00</span></code></pre></td></tr></table></div></figure>
+In order to analyze the session cookie, the attacker register another new account which name is &ldquo;test2&rdquo; and the session cookie value is
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>PALY_SESSION=xxx(some hash code)xxx%00&lt;/strong>AT%3Axxx(authenticityToken)xxx%00%00user%3Atest2%00</span></code></pre></td></tr></table></div></figure>
+Here we can see that the username would be an injection point. And the encoding format is “<font color='blue'>%00key%3Avalue%00</font>” (here %3A is URL encoded “:” and %00 means NULL for termination).</p>
+
+<h3>First goal is to login as anyone but have admin privilege</h3>
+
+
+<p>In order to login as any user (here the attacker choose user “test2”) with admin privilege, the attacker have to inject evil code into the Play session. As we found that username is an injection point in the session, the attacker need to construct the Play session like this:</p>
+
+<p><font color='blue'>PLAY_SESSION=xxx(hash code)xxx%00__AT%3Axxx(authenticityToken)xxx%00%00user%3A<font color='red'>test2%00%00admin%3A1</font>%00</font></p>
+
+
+<p>Here admin%3A1 means “admin:1” which usually indicates admin privilege). In order to construct the above Play session, the attacker have to register a new account which user name is “<font color='red'>test2%00%00admin%3A1</font>”. (note: Burp proxy is needed here to fulfill this injection.</p>
+
+<h3>Second goal is to login as admin user “admin1”</h3>
+
+
+<p>Same as above, in order to login as admin user “admin1”, the attacker have to inject evil code into the Play session. The attacker need to construct the Play session like this:</p>
+
+<p><font color='blue'>PLAY_SESSION=xxx(hash code)xxx%00__AT%3Axxx(authenticityToken)xxx%00%00user%3A<font color='red'>test2%00%00user%3Aadmin1</font>%00</font></p>
+
+
+<p></p>
+
+<p>In order to construct the above Play session, the attacker have to register a new account which user name is “<font color='red'>test2%00%00user%3Aadmin1</font>”. (note: Burp proxy is needed here to fulfill this injection)</p>
+]]></content>
+  </entry>
+  
+</feed>
