@@ -4,7 +4,7 @@
   <title><![CDATA[Category: mr-robot | F4l13n5n0w]]></title>
   <link href="http://f4l13n5n0w.github.io/blog/categories/mr-robot/atom.xml" rel="self"/>
   <link href="http://f4l13n5n0w.github.io/"/>
-  <updated>2016-12-05T05:36:53-05:00</updated>
+  <updated>2020-02-29T10:37:53+11:00</updated>
   <id>http://f4l13n5n0w.github.io/</id>
   <author>
     <name><![CDATA[F4l13n5n0w]]></name>
@@ -16,7 +16,7 @@
   <entry>
     <title type="html"><![CDATA[[VulnHub] Mr-Robot: 1]]></title>
     <link href="http://f4l13n5n0w.github.io/blog/2016/08/10/vulnhub-mr-robot-1/"/>
-    <updated>2016-08-10T06:46:39-04:00</updated>
+    <updated>2016-08-10T20:46:39+10:00</updated>
     <id>http://f4l13n5n0w.github.io/blog/2016/08/10/vulnhub-mr-robot-1</id>
     <content type="html"><![CDATA[<p>&ldquo;Based on the show, Mr. Robot. This VM has three keys hidden in different locations. Your goal is to find all three. Each key is progressively difficult to find. The VM isn&rsquo;t too difficult. There isn&rsquo;t any advanced exploitation or reverse engineering. The level is considered beginner-intermediate.&rdquo; &ndash; <a href="https://www.vulnhub.com/author/jason,292/">Jason</a></p>
 

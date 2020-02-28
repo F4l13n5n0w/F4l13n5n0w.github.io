@@ -4,7 +4,7 @@
   <title><![CDATA[Category: freshly | F4l13n5n0w]]></title>
   <link href="http://f4l13n5n0w.github.io/blog/categories/freshly/atom.xml" rel="self"/>
   <link href="http://f4l13n5n0w.github.io/"/>
-  <updated>2016-12-05T05:36:53-05:00</updated>
+  <updated>2020-02-29T10:37:53+11:00</updated>
   <id>http://f4l13n5n0w.github.io/</id>
   <author>
     <name><![CDATA[F4l13n5n0w]]></name>
@@ -16,7 +16,7 @@
   <entry>
     <title type="html"><![CDATA[[Vulnhub]TopHatSec: Freshly]]></title>
     <link href="http://f4l13n5n0w.github.io/blog/2015/06/13/vulnhub-tophatsec-freshly/"/>
-    <updated>2015-06-13T04:57:26-04:00</updated>
+    <updated>2015-06-13T18:57:26+10:00</updated>
     <id>http://f4l13n5n0w.github.io/blog/2015/06/13/vulnhub-tophatsec-freshly</id>
     <content type="html"><![CDATA[<p>&ldquo;The goal of this challenge is to break into the machine via the web and find the secret hidden in a sensitive file. If you can find the secret, send me an email for verification. :)
 There are a couple of different ways that you can go with this one. Good luck!&rdquo; &ndash; <a href="http://www.top-hat-sec.com/">TopHatSec</a></p>

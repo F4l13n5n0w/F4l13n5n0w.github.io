@@ -4,7 +4,7 @@
   <title><![CDATA[Category: ssl | F4l13n5n0w]]></title>
   <link href="http://f4l13n5n0w.github.io/blog/categories/ssl/atom.xml" rel="self"/>
   <link href="http://f4l13n5n0w.github.io/"/>
-  <updated>2016-12-05T05:36:53-05:00</updated>
+  <updated>2020-02-29T10:37:53+11:00</updated>
   <id>http://f4l13n5n0w.github.io/</id>
   <author>
     <name><![CDATA[F4l13n5n0w]]></name>
@@ -16,7 +16,7 @@
   <entry>
     <title type="html"><![CDATA[[VulnHub] Breach: 1]]></title>
     <link href="http://f4l13n5n0w.github.io/blog/2016/11/29/vulnhub-breach-1/"/>
-    <updated>2016-11-29T06:09:35-05:00</updated>
+    <updated>2016-11-29T22:09:35+11:00</updated>
     <id>http://f4l13n5n0w.github.io/blog/2016/11/29/vulnhub-breach-1</id>
     <content type="html"><![CDATA[<p>&ldquo;First in a multi-part series, Breach 1.0 is meant to be beginner to intermediate boot2root/CTF challenge. Solving will take a combination of solid information gathering and persistence. Leave no stone unturned.</p>
 

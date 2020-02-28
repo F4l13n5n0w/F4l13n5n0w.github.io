@@ -4,7 +4,7 @@
   <title><![CDATA[Category: sectalks | F4l13n5n0w]]></title>
   <link href="http://f4l13n5n0w.github.io/blog/categories/sectalks/atom.xml" rel="self"/>
   <link href="http://f4l13n5n0w.github.io/"/>
-  <updated>2016-12-05T05:36:53-05:00</updated>
+  <updated>2020-02-29T10:37:53+11:00</updated>
   <id>http://f4l13n5n0w.github.io/</id>
   <author>
     <name><![CDATA[F4l13n5n0w]]></name>
@@ -16,7 +16,7 @@
   <entry>
     <title type="html"><![CDATA[[VulnHub] SecTalks: BNE0x03 - Simple]]></title>
     <link href="http://f4l13n5n0w.github.io/blog/2016/06/08/vulnhub-sectalks-bne0x03-simple/"/>
-    <updated>2016-06-08T08:07:21-04:00</updated>
+    <updated>2016-06-08T22:07:21+10:00</updated>
     <id>http://f4l13n5n0w.github.io/blog/2016/06/08/vulnhub-sectalks-bne0x03-simple</id>
     <content type="html"><![CDATA[<p>&ldquo;Simple CTF is a boot2root that focuses on the basics of web based hacking. Once you load the VM, treat it as a machine you can see on the network, i.e. you don&rsquo;t have physical access to this machine. Therefore, tricks like editing the VM&rsquo;s BIOS or Grub configuration are not allowed. Only remote attacks are permitted. /root/flag.txt is your ultimate goal.&rdquo; &ndash; <a href="https://www.vulnhub.com/author/robert-winkel,190/">Robert Winkel</a></p>
 
